@@ -23,18 +23,18 @@ dist/  →  Cloudflare Pages
 
 ## Rodando local
 
-Precisa de Node 22.18 ou mais novo.
+Precisa de Node 22.18 ou mais novo e [pnpm](https://pnpm.io) (`corepack enable` já resolve).
 
 ```sh
-npm install
-npm run build            # baixa a planilha e gera o site em dist/
-npm run preview          # serve o dist/ em http://localhost:4321
+pnpm install
+pnpm build              # baixa a planilha e gera o site em dist/
+pnpm preview            # serve o dist/ em http://localhost:4321
 
-npm run build:offline    # usa data/fixture/*.csv em vez da planilha
-npm run planilha         # só baixa a planilha (rode antes do `npm run dev`)
-npm run dev
-npm test
-npm run check            # TypeScript
+pnpm build:offline      # usa data/fixture/*.csv em vez da planilha
+pnpm planilha           # só baixa a planilha (rode antes do `pnpm dev`)
+pnpm dev
+pnpm test
+pnpm check              # TypeScript
 ```
 
 A planilha precisa estar como **"qualquer pessoa com o link pode ver"**. Para usar outra, defina `SHEET_ID`.
