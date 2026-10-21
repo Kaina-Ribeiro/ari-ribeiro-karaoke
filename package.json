@@ -1,0 +1,29 @@
+{
+  "name": "ari-ribeiro-karaoke",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "planilha": "node scripts/planilha.ts",
+    "planilha:offline": "node scripts/planilha.ts --offline",
+    "dev": "pnpm planilha && astro dev",
+    "build": "pnpm planilha && astro build",
+    "build:offline": "pnpm planilha:offline && astro build",
+    "preview": "astro preview",
+    "test": "vitest run",
+    "check": "tsc --noEmit",
+    "dev:offline": "pnpm planilha:offline && astro dev"
+  },
+  "dependencies": {
+    "astro": "7.3.8"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  },
+  "packageManager": "pnpm@10.28.0"
+}

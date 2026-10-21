@@ -1,0 +1,153 @@
+---
+import "../styles/global.css";
+import manifesto from "../data/gerado/manifesto.json";
+import { letraDe } from "../lib/texto.ts";
+
+const titulo = "Ari Ribeiro Karaokê · Catálogo de músicas";
+const descricao = "Catálogo oficial do Ari Ribeiro Karaokê. Busca por código, cantor, música ou pelo começo da letra e manda o pedido pro KJ no Zap.";
+const atualizado = new Date(manifesto.geradoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+const cliente = { total: manifesto.total, temLetras: manifesto.temLetras, catalogo: manifesto.catalogo, letras: manifesto.letras };
+const corta = (t: string) => (t.length > 110 ? t.slice(0, 110).replace(/\s\S*$/, "") + "…" : t);
+
+// letras das primeiras linhas, pra marcar onde começa cada letra do índice
+let anterior = "";
+const primeiras = manifesto.primeiras.map((m) => {
+  const L = letraDe(m.artista);
+  const divisor = L !== anterior ? L : null;
+  anterior = L;
+  return { ...m, divisor };
+});
+const ZAP = "5512991167274";
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{titulo}</title>
+    <meta name="description" content={descricao} />
+    <meta name="theme-color" content="#0f6b36" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:title" content={titulo} />
+    <meta property="og:description" content={descricao} />
+    <meta property="og:image" content="/img/logo.png" />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,600&family=Space+Mono:wght@400;700&display=swap" />
+    <link rel="preload" href={manifesto.catalogo} as="fetch" crossorigin />
+    {manifesto.temLetras && <link rel="preload" href={manifesto.letras} as="fetch" crossorigin />}
+  </head>
+  <body>
+    <header class="cab g"><div class="in">
+      <a class="marca" href="#topo"><img src="/img/logo-redonda.webp" width="46" height="46" alt="Logo Ari Ribeiro Karaokê" /><b>Ari Ribeiro<span>karaokê</span></b></a>
+      <nav><a href="#catalogo">Catálogo</a><a href="#festa">Pra sua festa</a><a href="#contato">Contato</a></nav>
+      <button class="btn-comanda" id="abreComanda">Comanda <span class="n" id="nComanda">0</span></button>
+    </div></header>
+
+    <main id="topo">
+      <section class="cartaz g"><div class="in">
+        <div>
+          <p class="sobre">Catálogo oficial do Ari</p>
+          <h1 class="letreiro" id="letreiro" aria-label="Solta a voz, o palco é seu">
+            <span class="bola" id="bola" aria-hidden="true"></span>
+            <span class="l"><span class="w">Solta</span></span>
+            <span class="l"><span class="w">a</span> <span class="w">voz,</span></span>
+            <span class="l"><span class="w serif">o palco é</span> <span class="w ouro">seu.</span></span>
+          </h1>
+          <p class="lede">Acha a música, anota o <b>código</b> e manda pro KJ. Busca por número, cantor, nome da música ou pelo comecinho da letra.</p>
+        </div>
+        <div class="poster" aria-hidden="true">
+          <span class="fita a"></span><span class="fita b"></span>
+          <div class="folha">
+            <div class="area"><img src="/img/ari-cantando.webp" width="644" height="720" alt="" fetchpriority="high" /></div>
+            <div class="rodape"><b>Com Ari<br />Ribeiro</b><span>aqui a diversão<br />é garantida</span></div>
+          </div>
+        </div>
+      </div></section>
+
+      <section class="busca g" id="catalogo"><div class="in">
+        <div class="campo">
+          <label for="q">O que vai cantar?</label>
+          <input id="q" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Código, cantor, música ou letra" />
+          <button class="x" id="limpa" hidden>Limpar</button>
+        </div>
+        <div class="dicas">Tenta aí: <button data-q="4973">4973</button><button data-q="14 bis">14 Bis</button><button data-q="cancao">cancao</button><button data-q="tak on me">tak on me</button><span>ou cola o começo da letra</span></div>
+      </div></section>
+
+      <section class="catalogo g"><div class="in">
+        <nav class="az" id="az" aria-label="Cantores de A a Z"></nav>
+        <div>
+          <div class="topo-cat">
+            <h2 id="tituloCat">Repertório <em id="contaCat">{manifesto.total.toLocaleString("pt-BR")} músicas</em></h2>
+            <div class="abas" id="abas" role="group" aria-label="Filtrar"></div>
+            <label class="ordem" for="ordem">Ordem
+              <select id="ordem"><option value="art">Cantor</option><option value="tit">Música</option><option value="cod">Código</option></select>
+            </label>
+          </div>
+          <div id="lista">
+            <div class="tabela">
+              <div class="cabecalho" aria-hidden="true"><span>Código</span><span>Cantor</span><span>Música</span><span>Começo da letra</span><span></span></div>
+              <ul class="musicas">
+                {primeiras.map((m) => (
+                  <Fragment>
+                    {m.divisor && <li class="faixa-letra" id={`letra-${m.divisor === "#" ? "num" : m.divisor}`}>{m.divisor}</li>}
+                    <li class="faixa-m" data-cod={m.codigo}>
+                      <span class="cod">{m.codigo}</span>
+                      <span class="art">{m.artista}</span>
+                      <span class="tit">{m.titulo}{m.pacote === "nova" && <span class="tag nova">nova</span>}{m.pacote === "exc" && <span class="tag exc">só no Ari</span>}</span>
+                      <span class={m.trecho ? "let" : "let vazia"}>{m.trecho ? corta(m.trecho) : <span class="sem">—</span>}</span>
+                      <span class="bts"></span>
+                    </li>
+                  </Fragment>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div></section>
+
+      <section class="festa g" id="festa"><div class="in">
+        <h2>Leva o Ari<br /><em>pra sua festa</em></h2>
+        <p class="sub">Karaokê, telão, kit festa completo e fotografia. Chama no Zap e fecha direto com ele.</p>
+        <div class="cartazes">
+          {manifesto.servicos.map((s) => (
+            <a class="cz" target="_blank" rel="noopener" href={`https://wa.me/${ZAP}?text=${encodeURIComponent("Oi Ari! Quero saber sobre: " + s.titulo)}`}>
+              <span class="k">{s.destaque}</span><b>{s.titulo}</b><p>{s.descricao}</p><span class="ir">Chamar no Zap →</span>
+            </a>
+          ))}
+        </div>
+      </div></section>
+    </main>
+
+    <footer class="g" id="contato"><div class="in">
+      <p class="wordmark">Ari Ribeiro <em>karaokê</em></p>
+      <div class="contatos">
+        <div><small>WhatsApp</small><a class="num" href={`https://wa.me/${ZAP}`} target="_blank" rel="noopener">(12) 99116-7274</a></div>
+        <div><small>Instagram e Facebook</small><a href="https://www.instagram.com/ariribeirokaraoke/" target="_blank" rel="noopener">@ariribeirokaraoke</a></div>
+        <div><small>Catálogo</small>Atualizado em {atualizado}</div>
+      </div>
+    </div></footer>
+
+    <div class="veu" id="veu"></div>
+    <aside class="comanda" id="comanda" aria-label="Comanda" aria-hidden="true">
+      <button class="fecha" id="fechaComanda" aria-label="Fechar comanda">×</button>
+      <div class="cab-c"><b>Comanda</b><span>Ari Ribeiro Karaokê</span></div>
+      <ol id="itens"></ol>
+      <div class="pe">
+        <div class="total"><span>Músicas</span><span id="totalC">0</span></div>
+        <label for="cantor">Quem vai cantar</label>
+        <input id="cantor" placeholder="Seu nome" autocomplete="name" />
+        <a class="bt zap" id="mandar" target="_blank" rel="noopener" href={`https://wa.me/${ZAP}`}>Mandar pro KJ no Zap →</a>
+      </div>
+    </aside>
+    <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+
+    <script type="application/json" id="manifesto" set:html={JSON.stringify(cliente)}></script>
+    <script>
+      import "../scripts/letreiro.ts";
+      import "../scripts/catalogo.ts";
+    </script>
+  </body>
+</html>

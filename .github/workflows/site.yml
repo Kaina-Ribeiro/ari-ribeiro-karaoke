@@ -1,0 +1,52 @@
+name: Site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 * * * *" # toda hora: pega as músicas novas da planilha
+  workflow_dispatch:
+
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PROJETO: ari-ribeiro-karaoke
+  SITE_URL: ${{ vars.SITE_URL || 'https://ari-ribeiro-karaoke.pages.dev' }}
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm test
+      - run: pnpm build
+
+      - name: A planilha mudou?
+        id: muda
+        run: |
+          no_ar=$(curl -fsS "$SITE_URL/versao.txt" || true)
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$no_ar" = "$(cat dist/versao.txt)" ]; then
+            echo "Planilha igual ao que está no ar, nada pra publicar."
+            echo "publica=nao" >> "$GITHUB_OUTPUT"
+          else
+            echo "publica=sim" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publica na Cloudflare Pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && steps.muda.outputs.publica == 'sim'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm dlx wrangler@4 pages project create "$PROJETO" --production-branch=main 2>/dev/null || true
+          pnpm dlx wrangler@4 pages deploy dist --project-name="$PROJETO" --branch=main --commit-dirty=true
