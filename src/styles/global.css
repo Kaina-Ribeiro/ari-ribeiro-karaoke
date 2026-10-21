@@ -67,7 +67,7 @@ header.cab{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;backgroun
 .poster{position:relative;justify-self:center;width:min(100%,400px);transform:rotate(2.5deg);margin-top:8px}
 .poster .folha{background:var(--luz);padding:14px 14px 18px;box-shadow:10px 12px 0 rgba(0,0,0,.28)}
 .poster .area{position:relative;aspect-ratio:322/360;background:radial-gradient(circle at 50% 40%,transparent 0 38%,var(--luz) 75%),radial-gradient(rgba(22,19,15,.55) 1.5px,transparent 1.8px) 0 0/9px 9px,var(--luz)}
-.poster .area img{position:absolute;left:50%;bottom:0;width:116%;max-width:none;transform:translateX(-50%);filter:drop-shadow(6px 8px 0 rgba(22,19,15,.25));pointer-events:none}
+.poster .area img{position:absolute;left:50%;bottom:0;width:116%;height:auto;max-width:none;transform:translateX(-50%);filter:drop-shadow(6px 8px 0 rgba(22,19,15,.25));pointer-events:none}
 .poster .rodape{display:flex;justify-content:space-between;align-items:end;gap:10px;color:var(--tinta);margin-top:10px}
 .poster .rodape b{font:900 2.2rem/.85 var(--d-cartaz);text-transform:uppercase}
 .poster .rodape span{font:italic 400 1.25rem/1 var(--d-serif);text-align:right}
