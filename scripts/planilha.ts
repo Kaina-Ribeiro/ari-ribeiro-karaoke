@@ -5,14 +5,14 @@
  *   src/data/gerado/manifesto.json    nomes dos arquivos, primeiras músicas pro HTML estático, serviços
  *   public/versao.txt                 impressão digital dos dados, pro deploy saber se precisa publicar
  *
- * SHEET_OFFLINE=1 usa data/fixture/*.csv em vez da planilha (pra rodar sem internet).
+ * `--offline` (ou SHEET_OFFLINE=1) usa data/fixture/*.csv em vez da planilha (pra rodar sem internet).
  */
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { comoObjetos, compacta, lerCsv, montaMusicas, montaServicos } from "../src/lib/planilha.ts";
 
 const PLANILHA = process.env.SHEET_ID ?? "1I6ONYmebHrU7yHE_CdUsCplEuZmTYajZJpJhZmQjjV4";
-const OFFLINE = process.env.SHEET_OFFLINE === "1";
+const OFFLINE = process.argv.includes("--offline") || process.env.SHEET_OFFLINE === "1";
 const PRIMEIRAS = 50;
 
 async function aba(nome: string, fixture: string): Promise<Record<string, string>[]> {

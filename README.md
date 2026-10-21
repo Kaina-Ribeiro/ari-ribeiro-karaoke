@@ -31,8 +31,9 @@ pnpm build              # baixa a planilha e gera o site em dist/
 pnpm preview            # serve o dist/ em http://localhost:4321
 
 pnpm build:offline      # usa data/fixture/*.csv em vez da planilha
-pnpm planilha           # só baixa a planilha (rode antes do `pnpm dev`)
-pnpm dev
+pnpm dev                # baixa a planilha e sobe o servidor de desenvolvimento
+pnpm dev:offline        # mesma coisa, com a planilha de exemplo
+pnpm planilha           # só baixa a planilha de novo (o dev não recarrega sozinho)
 pnpm test
 pnpm check              # TypeScript
 ```

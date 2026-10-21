@@ -8,13 +8,14 @@
   },
   "scripts": {
     "planilha": "node scripts/planilha.ts",
-    "planilha:offline": "SHEET_OFFLINE=1 node scripts/planilha.ts",
-    "dev": "astro dev",
+    "planilha:offline": "node scripts/planilha.ts --offline",
+    "dev": "pnpm planilha && astro dev",
     "build": "pnpm planilha && astro build",
     "build:offline": "pnpm planilha:offline && astro build",
     "preview": "astro preview",
     "test": "vitest run",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "dev:offline": "pnpm planilha:offline && astro dev"
   },
   "dependencies": {
     "astro": "7.3.8"
