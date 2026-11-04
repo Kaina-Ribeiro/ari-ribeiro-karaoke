@@ -36,6 +36,23 @@ describe("montaMusicas", () => {
     expect(m[1].pacote).toBe("nova");
     expect(m[2].pacote).toBe("exc");
   });
+  it("junta cantor com pontuação diferente e tira da caixa alta", () => {
+    const g = montaMusicas(csv(`codigo,cantor,titulo,trecho,pacote
+1,Guns n´ Roses,PATIENCE,Shed a tear ´cause I´m missing you,
+2,Guns n´ Roses,NOVEMBER RAIN,,
+3,Guns N Roses,YESTERDAYS,,14A(Int)
+4,ALICE IN CHAINS,MAN IN THE BOX,,13C`));
+    expect(g.map((x) => x.artista)).toEqual(["Guns n’ Roses", "Guns n’ Roses", "Guns n’ Roses", "Alice in Chains"]);
+    expect(g[0].trecho).toBe("Shed a tear ’cause I’m missing you");
+  });
+  it("descarta trecho que é marcador da planilha", () => {
+    const g = montaMusicas(csv(`codigo,cantor,titulo,trecho,pacote
+1,Abba,LAY ALL YOUR LOVE ON ME,0,14B INTER
+2,Abba,DANCING QUEEN,COM VOCAIS,COM VOCAIS
+3,Abba,SOS,...,
+4,Abba,FERNANDO,Can you hear the drums Fernando,`));
+    expect(g.map((x) => x.trecho)).toEqual(["", "", "", "Can you hear the drums Fernando"]);
+  });
 });
 
 describe("compacta", () => {

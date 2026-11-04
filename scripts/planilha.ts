@@ -11,7 +11,8 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { comoObjetos, compacta, lerCsv, montaMusicas, montaServicos } from "../src/lib/planilha.ts";
 
-const PLANILHA = process.env.SHEET_ID ?? "1I6ONYmebHrU7yHE_CdUsCplEuZmTYajZJpJhZmQjjV4";
+// só leitura: o site nunca escreve na planilha
+const PLANILHA = process.env.SHEET_ID ?? "1kTKJlUTVK0CX6pM_mRugkmqIu9Hz9Wpx";
 const OFFLINE = process.argv.includes("--offline") || process.env.SHEET_OFFLINE === "1";
 const PRIMEIRAS = 50;
 

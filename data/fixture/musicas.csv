@@ -1,34 +1,96 @@
-codigo,cantor,titulo,trecho,pacote,duplicados,duplicado
-6549,365,SÃO PAULO,,Ari Ribeiro karaoke,FALSE,FALSE
-00550,1 KILO ACÚSTICO,DEIXE ME IR,,ARI EXCLUSIVO,FALSE,FALSE
-4920,10 cc,I´M NOT IN LOVE,,Ari Ribeiro karaoke,FALSE,FALSE
-19807,10.000 Maniacs,MORE THAN THIS,,Ari Ribeiro karaoke,FALSE,FALSE
-3755,14 Bis,LINDA JUVENTUDE,,Ari Ribeiro karaoke,FALSE,FALSE
-6074,14 Bis,PLANETA SONHO,,Ari Ribeiro karaoke,FALSE,FALSE
-6197,14 Bis,TODO AZUL DO MAR,,Ari Ribeiro karaoke,FALSE,FALSE
-7392,14 Bis,NATURAL,,Ari Ribeiro karaoke,FALSE,FALSE
-7693,14 Bis,ROMANCE,,Ari Ribeiro karaoke,FALSE,FALSE
-9556,14 Bis,UMA VELHA CANÇÃO ROCK´N´ROLL,,Ari Ribeiro karaoke,FALSE,FALSE
-1039,14 Bis,BOLA DE MEIA BOLA DE GUDE,,Ari Ribeiro karaoke,FALSE,FALSE
-9033,3 Doors Down,HERE WITHOUT YOU,,Ari Ribeiro karaoke,FALSE,FALSE
-20379,30 Seconds to Mars,THE KILL (BURY ME),,13K,FALSE,FALSE
-2578,4 Non Blondes,SPACEMAN,,Ari Ribeiro karaoke,FALSE,FALSE
-9072,4 Non Blondes,WHAT´S UP,,Ari Ribeiro karaoke,FALSE,FALSE
-15225,5 a Seco - Maria Gadú,EM PAZ,,Ari Ribeiro karaoke,FALSE,FALSE
-19852,5 Seconds Of Summer,SHE LOOKS SO PERFECT,,Ari Ribeiro karaoke,FALSE,FALSE
-20533,5 Seconds of Summer,COMPLETE MESS,,14J,FALSE,FALSE
-15450,A Banda Mais Bonita da Cidade,CANÇÃO PRA NÃO VOLTAR,,Ari Ribeiro karaoke,FALSE,FALSE
-2748,A Banda Mais Bonita da Cidade,ORAÇÃO,,Ari Ribeiro karaoke,FALSE,FALSE
-15200,A Cor do Som,VIVA,,Ari Ribeiro karaoke,FALSE,FALSE
-6402,A Cor do Som,ABRI A PORTA,,Ari Ribeiro karaoke,FALSE,FALSE
-7175,A Cor do Som,MENINO DEUS,,Ari Ribeiro karaoke,FALSE,FALSE
-7480,A Cor do Som,ZANZIBAR,,Ari Ribeiro karaoke,FALSE,FALSE
-17247,A Cor do Som,SEMENTE DO AMOR,,37A,FALSE,FALSE
-19213,A Ha,HUNTING HIGH AND LOW,,Ari Ribeiro karaoke,FALSE,FALSE
-19400,A Ha,YOU ARE THE ONE,,Ari Ribeiro karaoke,FALSE,FALSE
-4973,A Ha,TAKE ON ME,,Ari Ribeiro karaoke,FALSE,FALSE
-19853,A Ha,STAY ON THESE ROADS,,Ari Ribeiro karaoke,FALSE,FALSE
-20034,A Ha,THERE'S NEVER A FOREVER THING,,Ari Ribeiro karaoke,FALSE,FALSE
-20094,A Ha,CRYING IN THE RAIN,,Ari Ribeiro karaoke,FALSE,FALSE
-20508,A Ha,TOUCHY!,,INTER 14G,FALSE,FALSE
-4938,A Teens,MAMMA MIA,,Ari Ribeiro karaoke,FALSE,FALSE
+"codigo","cantor","titulo","trecho","pacote","duplicados","duplicado"
+"6549","365","SÃO PAULO","Tem dias que eu digo não….","Ari Ribeiro karaoke","FALSE",""
+"00550","1 KILO ACÚSTICO","DEIXE ME IR","Menina me da sua mão","ARI EXCLUSIVO","FALSE",""
+"4920","10 cc","I´M NOT IN LOVE","I´m not in love so don´t forget it","Ari Ribeiro karaoke","FALSE",""
+"19807","10.000 Maniacs","MORE THAN THIS","I could feel at the time","Ari Ribeiro karaoke","FALSE",""
+"3755","14 Bis","LINDA JUVENTUDE","Zabelê, zumbi, besouro vespa fabricando...","Ari Ribeiro karaoke","FALSE",""
+"6074","14 Bis","PLANETA SONHO","Aqui ninguem mais ficará depois do sol...","Ari Ribeiro karaoke","FALSE",""
+"6197","14 Bis","TODO AZUL DO MAR","Foi assim como ver o mar...","Ari Ribeiro karaoke","FALSE",""
+"7392","14 Bis","NATURAL","Penso em você no seu jeito de falar","Ari Ribeiro karaoke","FALSE",""
+"7693","14 Bis","ROMANCE","Flores simples","Ari Ribeiro karaoke","FALSE",""
+"9556","14 Bis","UMA VELHA CANÇÃO ROCK´N´ROLL","Olhe oh oh oh venha solte seu corpo n","Ari Ribeiro karaoke","FALSE",""
+"1039","14 Bis","BOLA DE MEIA BOLA DE GUDE","Há um menino há um moleque...","Ari Ribeiro karaoke","FALSE",""
+"9033","3 Doors Down","HERE WITHOUT YOU","A hundred days had made me older","Ari Ribeiro karaoke","FALSE",""
+"20379","30 Seconds to Mars","THE KILL (BURY ME)","What if I wanted to break","13K","FALSE",""
+"2578","4 Non Blondes","SPACEMAN","Starry night bring me down","Ari Ribeiro karaoke","FALSE",""
+"9072","4 Non Blondes","WHAT´S UP","Twenty-five years and my life is still","Ari Ribeiro karaoke","FALSE",""
+"15225","5 a Seco - Maria Gadú","EM PAZ","Caiu do céu se revelou anjo da noite e das manhãs","Ari Ribeiro karaoke","FALSE",""
+"19852","5 Seconds Of Summer","SHE LOOKS SO PERFECT","He-ey e-hey... Simmer down simmer down","Ari Ribeiro karaoke","FALSE",""
+"20533","5 Seconds of Summer","COMPLETE MESS","Caught up in heaven but your heaven","14J","FALSE",""
+"15450","A Banda Mais Bonita da Cidade","CANÇÃO PRA NÃO VOLTAR","Não volte pra casa meu amor que aqui","Ari Ribeiro karaoke","FALSE",""
+"2748","A Banda Mais Bonita da Cidade","ORAÇÃO","Meu amor essa é a última oração","Ari Ribeiro karaoke","FALSE",""
+"15200","A Cor do Som","VIVA","Viva a alegria e viva o prazer","Ari Ribeiro karaoke","FALSE",""
+"6402","A Cor do Som","ABRI A PORTA","Abri a porta aparecí ...","Ari Ribeiro karaoke","FALSE",""
+"7175","A Cor do Som","MENINO DEUS","Menino Deus um corpo azul-dourado","Ari Ribeiro karaoke","FALSE",""
+"7480","A Cor do Som","ZANZIBAR","No azul de Jezebel no céu de Calcutá","Ari Ribeiro karaoke","FALSE",""
+"17247","A Cor do Som","SEMENTE DO AMOR","Sim é como a flor de água e ar luz e calor","37A","FALSE",""
+"19213","A Ha","HUNTING HIGH AND LOW","Here I am and within the reach","Ari Ribeiro karaoke","FALSE",""
+"19400","A Ha","YOU ARE THE ONE","You are the one who has done me in","Ari Ribeiro karaoke","FALSE",""
+"4973","A Ha","TAKE ON ME","We´re talking away","Ari Ribeiro karaoke","FALSE",""
+"19853","A Ha","STAY ON THESE ROADS","Cold has a voice","Ari Ribeiro karaoke","FALSE",""
+"20034","A Ha","THERE'S NEVER A FOREVER THING","Dearest close your eyes now","Ari Ribeiro karaoke","FALSE",""
+"20094","A Ha","CRYING IN THE RAIN","I'll never let you see","Ari Ribeiro karaoke","FALSE",""
+"20508","A Ha","TOUCHY!","Donna found us in her slow and dreamy way","INTER 14G","FALSE",""
+"4938","A Teens","MAMMA MIA","I´ve being cheated by you since I don´t","Ari Ribeiro karaoke","FALSE",""
+"4970","A Teens","SUPER TROUPER","Super trouper beams are gonna blind me","Ari Ribeiro karaoke","FALSE",""
+"7548","A Turma da Mônica","SER CRIANÇA É BOM","Ser criança é bom ser criança faz bem...","Ari Ribeiro karaoke","FALSE",""
+"00099","A Turma da Pisadinha","PLOC PLOC NELA","SE TU NÃO QUER","ARI EXCLUSIVO","FALSE",""
+"1543","A Turma Do Balão Mágico","BRUXINHA","Ô bruxinha bonitinha da vassoura de","Ari Ribeiro karaoke","FALSE",""
+"5608","A Vigília","ESTAMOS AQUI","Estamos aqui na casa de Deus...","Ari Ribeiro karaoke","FALSE",""
+"5614","A Vigília","JEOVÁ É O TEU CAVALEIRO","Jeová é o teu cavaleiro que...","Ari Ribeiro karaoke","FALSE",""
+"5617","A Vigília","JESUS TE ENTRONIZAMOS","Jesus nesta noite...","Ari Ribeiro karaoke","FALSE",""
+"5636","A Vigília","RENOVA-ME","Renova-me Senhor Jesus já não quero...","Ari Ribeiro karaoke","FALSE",""
+"9574","A Zorra","A COR DA ESPERANÇA","Sei","Ari Ribeiro karaoke","FALSE",""
+"19333","Abba","FERNANDO","Can you hear the drums Fernando","Ari Ribeiro karaoke","FALSE",""
+"19768","Abba","KNOWING ME KNOWING YOU","No more carefree laughter","Ari Ribeiro karaoke","FALSE",""
+"2533","Abba","MAMMA MIA","I´ve been cheated by you since I don´t","Ari Ribeiro karaoke","FALSE",""
+"4574","Abba","DANCING QUEEN","Yeah! You can dance you can jive","Ari Ribeiro karaoke","FALSE",""
+"4787","Abba","THE WINNER TAKES IT ALL","I don’t wanna talk...","Ari Ribeiro karaoke","FALSE",""
+"4877","Abba","CHIQUITITA","Chiquitita tell me what´s wrong","Ari Ribeiro karaoke","FALSE",""
+"9116","Abba","I HAVE A DREAM","I have a dream a song to sing…","Ari Ribeiro karaoke","FALSE",""
+"20243","Abba","GIMME! GIMME! GIMME! (A MAN AFTER MIDNIGHT)","Half past twelve and I watching","12D","FALSE",""
+"20411","Abba","DON'T SHUT ME DOWN","A while ago I heard the sound of children's","13P","FALSE",""
+"20455","Abba","LAY ALL YOUR LOVE ON ME","0","14B INTER","FALSE",""
+"20548","Abba","SOS","Where are those happy days they seem so hard","14L","FALSE",""
+"00499","Abba","Dancing Queen","COM VOCAIS","COM VOCAIS","FALSE",""
+"1804","Abelhudos","AS CRIANÇAS E OS ANIMAIS","Ê ô ê ô","Ari Ribeiro karaoke","FALSE",""
+"15049","Abílio Farias","CORAÇÃO INDECISO","Um coração indeciso busquei no céu um","Ari Ribeiro karaoke","FALSE",""
+"15130","Abílio Farias","O GENRO ODIADO","Desculpa mulher resolvi mil desculpas pedir","Ari Ribeiro karaoke","FALSE",""
+"1790","Abílio Farias","VOU FECHAR O CABARÉ","Esperei tanto","Ari Ribeiro karaoke","FALSE",""
+"6355","Absyntho","SÓ A LUA","Lembro que ela disse meio triste...","Ari Ribeiro karaoke","FALSE",""
+"19696","AC-DC","FOR THOSE ABOUT TO ROCK (WE SALUTE YOU)","We roll tonight to the guitar bite","Ari Ribeiro karaoke","FALSE",""
+"2606","AC-DC","HIGHWAY TO HELL","Livin´ easy lovin´ free","Ari Ribeiro karaoke","FALSE",""
+"5870","AC-DC","BACK IN BLACK","Back in black I hit the sack","Ari Ribeiro karaoke","FALSE",""
+"20370","AC-DC","YOU SHOOK ME ALL NIGHT LONG","She was a fast machine she kept her motor","13J","FALSE",""
+"19568","Ace of Base","DON´T TURN AROUND","Don´t tell me that you wanna leave","Ari Ribeiro karaoke","FALSE",""
+"19687","Ace of Base","BEAUTIFUL LIFE","You can do what you want just seize the day","Ari Ribeiro karaoke","FALSE",""
+"19795","Ace of Base","THE SIGN","I I got a new life","Ari Ribeiro karaoke","FALSE",""
+"4857","Ace of Base","ALL THAT SHE WANTS","She leads a lonely life","Ari Ribeiro karaoke","FALSE",""
+"9221","Ace of Base","HAPPY NATION","Laudate omnes gentes laudate","Ari Ribeiro karaoke","FALSE",""
+"1710","Adair Cardoso","QUE SE DANE O MUNDO","E que se dane o mundo e que se dane","Ari Ribeiro karaoke","FALSE",""
+"3726","Adalberto/Adriano","SEPARAÇÃO","Qual terá sido o motivo da nossa...","Ari Ribeiro karaoke","FALSE",""
+"19068","Adele","SKYFALL","This is the end hold your breath and count","Ari Ribeiro karaoke","FALSE",""
+"19362","Adele","HELLO","Hello it´s me","Ari Ribeiro karaoke","FALSE",""
+"19404","Adele","WHEN WE WERE YOUNG","Everybody loves the things you do","Ari Ribeiro karaoke","FALSE",""
+"19493","Adele","SEND MY LOVE (TO YOUR NEW LOVER)","This was all you none of it me put your hands all","Ari Ribeiro karaoke","FALSE",""
+"19534","Adele","ONE AND ONLY","You´ve been on my mind","Ari Ribeiro karaoke","FALSE",""
+"19678","Adele","WATER UNDER THE BRIDGE","If you´re not the one for me","Ari Ribeiro karaoke","FALSE",""
+"19741","Adele","MAKE YOU FEEL MY LOVE","When the rain is blowing in your face","Ari Ribeiro karaoke","FALSE",""
+"20039","Adele","TURNING TABLES","Close enough to start a war","Ari Ribeiro karaoke","FALSE",""
+"20091","Adele","ALL I ASK","I will leave my heart at the door","Ari Ribeiro karaoke","FALSE",""
+"2569","Adele","ROLLING IN THE DEEP","There´s a fire starting in my heart","Ari Ribeiro karaoke","FALSE",""
+"20302","ALICE IN CHAINS","MAN IN THE BOX","I'm the man in the box buried in my shit","13C","FALSE",""
+"20450","Guns N Roses","YESTERDAYS","Yesterday There Was So Man Things","14A(Int)","FALSE",""
+"19094","Guns n´ Roses","DON´T CRY","Talk to me softly there´s something in","Ari Ribeiro karaoke","FALSE",""
+"19140","Guns n´ Roses","PATIENCE","Shed a tear ´cause I´m missing you","Ari Ribeiro karaoke","FALSE",""
+"19146","Guns n´ Roses","SWEET CHILD ON MINE","She´s got a smile that it seems to me","Ari Ribeiro karaoke","FALSE",""
+"19630","Guns n´ Roses","SINCE I DON´T HAVE YOU","I don´t have plans and schemes","Ari Ribeiro karaoke","FALSE",""
+"2639","Guns n´ Roses","YOU COULD BE MINE","I´m a cold heartbreaker fit to burn and I´ll","Ari Ribeiro karaoke","FALSE",""
+"4930","Guns n´ Roses","KNOCKIN´ ON HEAVEN´S DOOR","Oooh","Ari Ribeiro karaoke","FALSE",""
+"9148","Guns n´ Roses","NOVEMBER RAIN","When I look into your eyes…","Ari Ribeiro karaoke","FALSE",""
+"4826","N´ Sync","I WANT YOU BACK","You´re all I ever wanted","Ari Ribeiro karaoke","FALSE",""
+"19243","NSYNC","BYE BYE BYE","Hey hey... Bye bye bye... I´m doing this tonight","Ari Ribeiro karaoke","FALSE",""
+"19276","NSYNC","THIS I PROMISE YOU","Ooohh ooohh... When the visions around you","Ari Ribeiro karaoke","FALSE",""
+"19289","NSYNC","GONE","There´s a thousand words that I could say","Ari Ribeiro karaoke","FALSE",""
+"19707","NSYNC","POP","Dirty pop sick and tired of hearing","Ari Ribeiro karaoke","FALSE",""
+"00495","Amy Winehouse","Me And Mr Jones","COM VOCAIS","COM VOCAIS","FALSE",""

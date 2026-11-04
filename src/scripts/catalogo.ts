@@ -14,27 +14,35 @@ let letras: string[] = [];          // texto original, pra mostrar
 let letrasBusca: string[] | undefined; // normalizado, pra buscar
 let carregandoLetras: Promise<void> | undefined;
 let ordenadas: Resultado[] = [];
-const st = { q: "", filtro: "todas" as "todas" | "fav" | Pacote, ordem: "art" as "art" | "tit" | "cod", pagina: 0 };
+const st = { q: "", filtro: "todas" as "todas" | "fav" | Pacote, pagina: 0 };
 
 /* ---------- armazenamento local (favoritas e comanda) ---------- */
-function ler<T>(chave: string, padrao: T): T {
-  try { return JSON.parse(localStorage.getItem(chave) ?? "") as T; } catch { return padrao; }
+/** Lista salva no aparelho. Qualquer coisa que não seja lista (dado velho, extensão mexendo) vira lista vazia. */
+function ler<T>(chave: string, ok: (x: unknown) => x is T): T[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(chave) ?? "[]");
+    return Array.isArray(v) ? v.filter(ok) : [];
+  } catch { return []; }
 }
 function grava(chave: string, valor: unknown) {
   try { localStorage.setItem(chave, JSON.stringify(valor)); } catch { /* modo anônimo: segue sem salvar */ }
 }
-let favs = new Set<string>(ler<string[]>("ari.favoritas", []));
 interface ItemComanda { cod: string; tit: string; art: string }
-let comanda = ler<ItemComanda[]>("ari.comanda", []);
+const ehTexto = (x: unknown): x is string => typeof x === "string";
+const ehItem = (x: unknown): x is ItemComanda =>
+  !!x && ["cod", "tit", "art"].every((k) => typeof (x as Record<string, unknown>)[k] === "string");
+let favs = new Set(ler("ari.favoritas", ehTexto));
+let comanda = ler("ari.comanda", ehItem);
 
 /* ---------- dados ---------- */
 async function carregaCatalogo() {
   const letrasJa = manifesto.temLetras ? carregaLetras() : undefined;
   const c: Catalogo = await (await fetch(manifesto.catalogo)).json();
   itens = c.musicas.map(([cod, a, tit, pk], i) => preparaItem(i, cod, c.artistas[a], tit, pk));
+  const letraArtista = c.artistas.map(letraDe);
+  letraItem = c.musicas.map(([, a]) => letraArtista[a]);
   // a primeira página veio com letra no HTML; espera as letras pra coluna não piscar "—"
   await letrasJa;
-  desenhaAZ();
   desenha();
 }
 function precisaLetras(q: string) {
@@ -88,14 +96,15 @@ function paginador(n: number) {
 }
 
 const ABAS: [typeof st.filtro, string][] = [["todas", "Todas"], ["fav", "★ Favoritas"], ["nova", "Novidades"], ["exc", "Só no Ari"]];
+// sem contagem nos botões: o total do filtro já aparece no título
 function desenhaAbas() {
-  const c: Record<string, number> = { todas: itens.length, fav: 0, nova: 0, exc: 0, base: 0 };
-  for (const m of itens) { c[m.pacote]++; if (favs.has(m.codigo)) c.fav++; }
-  $("#abas").innerHTML = ABAS.map(([k, l]) => `<button data-f="${k}" aria-pressed="${st.filtro === k}">${l}<sup>${c[k].toLocaleString("pt-BR")}</sup></button>`).join("");
+  $("#abas").innerHTML = ABAS.map(([k, l]) => `<button data-f="${k}" aria-pressed="${st.filtro === k}">${l}</button>`).join("");
 }
 
-function desenhaAZ() {
-  const tem = new Set(itens.map((m) => letraDe(m.artista)));
+let letraItem: string[] = []; // letra do índice de cada música, calculada uma vez
+function desenhaAZ(filtro: (m: Item) => boolean) {
+  const tem = new Set<string>();
+  for (const m of itens) if (filtro(m)) tem.add(letraItem[m.i]);
   $("#az").innerHTML = ["#", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
     .map((L) => (tem.has(L) ? `<a href="#letra-${L === "#" ? "num" : L}" data-letra="${L}">${L}</a>` : `<span>${L}</span>`)).join("");
 }
@@ -125,21 +134,22 @@ function desenha() {
 
   if (!rs.length && !exato && st.filtro === "fav" && !q) {
     h += `<div class="vazio"><h3>Nenhuma favorita ainda</h3><p>Toca na ☆ do lado de uma música pra guardar aqui. Fica salvo neste celular, pra próxima vez que vier cantar.</p><button class="bt" data-f="todas">Ver todas as músicas</button></div>`;
+  } else if (!rs.length && !exato && st.filtro !== "todas") {
+    // o filtro escondeu: a música pode existir no resto do catálogo
+    const nome = ABAS.find(([k]) => k === st.filtro)![1];
+    h += `<div class="vazio"><h3>Não tem em ${escapa(nome)}</h3><p>Nada com “${escapa(st.q)}” nesse filtro. Procura no catálogo inteiro.</p><button class="bt" data-f="todas">Procurar em todas</button></div>`;
   } else if (!rs.length && !exato) {
     const pedido = `https://wa.me/${ZAP}?text=` + encodeURIComponent(`Oi Ari! Procurei e não achei no catálogo: ${st.q}. Dá pra adicionar?`);
     h += `<div class="vazio"><h3>Essa ainda não tem</h3><p>Não achamos “${escapa(st.q)}”. Pede pro Ari, ele vê se entra no próximo pacote.</p><a class="bt zap" target="_blank" rel="noopener" href="${pedido}">Pedir música nova</a></div>`;
-  } else {
+  } else if (rs.length) { // só a telinha do código exato: sem tabela vazia embaixo
     const porArt = (a: Resultado, b: Resultado) => a.item.artista.localeCompare(b.item.artista, "pt") || a.item.titulo.localeCompare(b.item.titulo, "pt");
-    if (q) rs.sort((a, b) => b.nota - a.nota || porArt(a, b));
-    else if (st.ordem === "tit") rs.sort((a, b) => a.item.titulo.localeCompare(b.item.titulo, "pt"));
-    else if (st.ordem === "cod") rs.sort((a, b) => +a.item.codigo - +b.item.codigo);
-    else rs.sort(porArt);
+    rs.sort(q ? (a, b) => b.nota - a.nota || porArt(a, b) : porArt);
     ordenadas = rs;
     const paginas = Math.ceil(rs.length / POR_PAGINA);
     st.pagina = Math.min(st.pagina, Math.max(0, paginas - 1));
     let L0 = "", li = "";
     for (const r of rs.slice(st.pagina * POR_PAGINA, (st.pagina + 1) * POR_PAGINA)) {
-      if (!q && st.ordem === "art") {
+      if (!q) {
         const L = letraDe(r.item.artista);
         if (L !== L0) { li += `<li class="faixa-letra" id="letra-${L === "#" ? "num" : L}">${L}</li>`; L0 = L; }
       }
@@ -151,6 +161,7 @@ function desenha() {
   $("#lista").innerHTML = h;
   $("#limpa").hidden = !st.q;
   desenhaAbas();
+  desenhaAZ(filtro);
 }
 
 /* ---------- comanda ---------- */
@@ -163,10 +174,13 @@ function desenhaComanda() {
   $<HTMLAnchorElement>("#mandar").href = comanda.length ? zap(comanda, $<HTMLInputElement>("#cantor").value.trim()) : "https://wa.me/" + ZAP;
 }
 function abreComanda(abrir: boolean) {
-  $("#comanda").classList.toggle("on", abrir);
+  const c = $("#comanda");
+  if (c.classList.contains("on") === abrir) return;
+  c.classList.toggle("on", abrir);
   $("#veu").classList.toggle("on", abrir);
-  $("#comanda").setAttribute("aria-hidden", String(!abrir));
-  if (abrir) { desenhaComanda(); $("#fechaComanda").focus(); }
+  // fechada, fica fora do Tab e do leitor de tela; ao fechar, o foco volta pro botão
+  c.inert = !abrir;
+  if (abrir) { desenhaComanda(); $("#fechaComanda").focus(); } else $("#abreComanda").focus();
 }
 function aviso(t: string) {
   const a = $("#aviso");
@@ -203,13 +217,15 @@ function copia(li: HTMLElement) {
 
 /* ---------- eventos ---------- */
 const campo = $<HTMLInputElement>("#q");
-if (matchMedia("(max-width: 520px)").matches) campo.placeholder = "Código, cantor ou letra";
+const estreita = matchMedia("(max-width: 520px)");
+const ajustaPlaceholder = () => (campo.placeholder = estreita.matches ? "Código, cantor ou letra" : "Código, cantor, música ou letra");
+ajustaPlaceholder();
+estreita.addEventListener("change", ajustaPlaceholder);
 let espera: ReturnType<typeof setTimeout>;
 campo.addEventListener("input", () => {
   clearTimeout(espera);
   espera = setTimeout(() => { st.q = campo.value; st.pagina = 0; desenha(); }, 80);
 });
-$<HTMLSelectElement>("#ordem").addEventListener("change", (e) => { st.ordem = (e.target as HTMLSelectElement).value as typeof st.ordem; st.pagina = 0; desenha(); });
 $("#limpa").addEventListener("click", () => { campo.value = ""; st.q = ""; st.pagina = 0; desenha(); campo.focus(); });
 $("#cantor").addEventListener("input", desenhaComanda);
 $("#abreComanda").addEventListener("click", () => abreComanda(true));
@@ -239,7 +255,7 @@ document.addEventListener("click", (e) => {
   if (letra && itens.length) {
     e.preventDefault();
     const L = letra.dataset.letra!;
-    if (st.q || st.ordem !== "art") { st.q = ""; campo.value = ""; st.ordem = "art"; $<HTMLSelectElement>("#ordem").value = "art"; desenha(); }
+    if (st.q) { st.q = ""; campo.value = ""; desenha(); }
     const idx = ordenadas.findIndex((r) => letraDe(r.item.artista) === L);
     if (idx < 0) return;
     st.pagina = Math.floor(idx / POR_PAGINA);
@@ -253,9 +269,18 @@ document.addEventListener("click", (e) => {
 
 // outra aba mexeu nas favoritas ou na comanda: acompanha
 addEventListener("storage", (e) => {
-  if (e.key === "ari.favoritas") { favs = new Set(ler<string[]>("ari.favoritas", [])); desenha(); }
-  if (e.key === "ari.comanda") { comanda = ler<ItemComanda[]>("ari.comanda", []); desenhaComanda(); desenha(); }
+  if (e.key === "ari.favoritas") { favs = new Set(ler("ari.favoritas", ehTexto)); desenha(); }
+  if (e.key === "ari.comanda") { comanda = ler("ari.comanda", ehItem); desenhaComanda(); desenha(); }
 });
+
+/* ---------- busca grudada no topo ---------- */
+// mede a barra pro A–Z e o cabeçalho da lista grudarem logo abaixo dela
+const barra = $(".busca");
+const medeBarra = () => document.documentElement.style.setProperty("--alto-busca", barra.offsetHeight + "px");
+new ResizeObserver(medeBarra).observe(barra);
+medeBarra();
+// a sombra só aparece quando ela está grudada, pra mostrar que a lista passa por baixo
+new IntersectionObserver(([e]) => barra.classList.toggle("grudada", e.intersectionRatio < 1), { threshold: 1, rootMargin: "-1px 0px 0px 0px" }).observe(barra);
 
 desenhaComanda();
 carregaCatalogo().catch(() => aviso("Não deu pra carregar o catálogo. Tenta recarregar a página."));
