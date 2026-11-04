@@ -19,7 +19,8 @@
     "e2e": "playwright test",
     "build:painel-local": "node --env-file=.dev.vars scripts/planilha.ts && astro build",
     "painel": "node scripts/painel-local.ts",
-    "importa": "node scripts/importa.ts"
+    "importa": "node scripts/importa.ts",
+    "prints": "node scripts/prints.ts"
   },
   "dependencies": {
     "astro": "7.3.8",
