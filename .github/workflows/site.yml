@@ -5,9 +5,17 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: "17 * * * *" # toda hora: pega as músicas novas da planilha
+    - cron: "17 9 * * *" # todo dia às 06:17 de Brasília: pega as músicas novas da planilha (catálogo por link)
+  # o painel do Ari pede uma publicação a cada "Salvar" (API workflow_dispatch, com o id da publicação):
+  # o painel de produção pede no main, o de preview no branch painel
   workflow_dispatch:
+    inputs:
+      publicacao:
+        description: "Id da publicação no painel (vazio = publicação manual)"
+        required: false
+        default: ""
 
+# uma publicação por vez; se chegarem várias, o Actions descarta as da fila e fica só a mais nova
 concurrency:
   group: site-${{ github.ref }}
   cancel-in-progress: false
@@ -15,6 +23,7 @@ concurrency:
 env:
   PROJETO: ari-ribeiro-karaoke
   SITE_URL: ${{ vars.SITE_URL || 'https://ari-ribeiro-karaoke.pages.dev' }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 jobs:
   site:
@@ -27,32 +36,70 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      # qual painel: produção no main, preview nos outros branches; nenhum em pull request (build com a fixture)
+      - name: Escolhe o painel
+        if: github.event_name != 'pull_request'
+        env:
+          URL_PRODUCAO: ${{ secrets.PAINEL_URL }}
+          TOKEN_PRODUCAO: ${{ secrets.BUILD_TOKEN }}
+          URL_PREVIEW: ${{ secrets.PAINEL_URL_PREVIEW }}
+          TOKEN_PREVIEW: ${{ secrets.BUILD_TOKEN_PREVIEW }}
+          PEDIDO: ${{ inputs.publicacao }}
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            echo "PAINEL_URL=$URL_PRODUCAO" >> "$GITHUB_ENV"
+            echo "BUILD_TOKEN=$TOKEN_PRODUCAO" >> "$GITHUB_ENV"
+          else
+            echo "PAINEL_URL=$URL_PREVIEW" >> "$GITHUB_ENV"
+            echo "BUILD_TOKEN=$TOKEN_PREVIEW" >> "$GITHUB_ENV"
+          fi
+          # vazio na checagem diária e no push: o scripts/status.ts cria a publicação e grava o id aqui
+          echo "PUBLICACAO=$PEDIDO" >> "$GITHUB_ENV"
+
+      - name: Avisa o painel que começou
+        if: github.event_name != 'pull_request'
+        run: node scripts/status.ts rodando
+
       - run: pnpm check
       - run: pnpm test
-      # e2e roda na planilha de exemplo, então fica de fora da checagem de hora em hora (não muda nada lá)
+      # e2e roda na planilha de exemplo (pnpm painel); fica de fora do que o painel e a checagem diária pedem (não muda nada lá)
       - name: Testes e2e
-        if: github.event_name != 'schedule'
+        if: github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.publicacao == '')
         run: |
           pnpm exec playwright install --with-deps chromium webkit
           pnpm e2e
-      - run: pnpm build
 
-      - name: A planilha mudou?
+      - name: Gera o site
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then pnpm build:offline; else pnpm build; fi
+
+      - name: Algo mudou?
         id: muda
         run: |
           no_ar=$(curl -fsS "$SITE_URL/versao.txt" || true)
           if [ "${{ github.event_name }}" = "schedule" ] && [ "$no_ar" = "$(cat dist/versao.txt)" ]; then
-            echo "Planilha igual ao que está no ar, nada pra publicar."
+            echo "Igual ao que está no ar, nada pra publicar."
             echo "publica=nao" >> "$GITHUB_OUTPUT"
           else
             echo "publica=sim" >> "$GITHUB_OUTPUT"
           fi
 
+      # main = produção; workflow_dispatch noutro branch (painel de preview) = deploy de preview daquele branch
       - name: Publica na Cloudflare Pages
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && steps.muda.outputs.publica == 'sim'
+        if: github.event_name != 'pull_request' && steps.muda.outputs.publica == 'sim' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BRANCH: ${{ github.ref_name }}
         run: |
-          pnpm dlx wrangler@4 pages project create "$PROJETO" --production-branch=main 2>/dev/null || true
-          pnpm dlx wrangler@4 pages deploy dist --project-name="$PROJETO" --branch=main --commit-dirty=true
+          pnpm exec wrangler pages project create "$PROJETO" --production-branch=main 2>/dev/null || true
+          pnpm exec wrangler pages deploy dist --project-name="$PROJETO" --branch="$BRANCH" --commit-dirty=true
+
+      - name: Avisa o painel que está no ar
+        if: success() && github.event_name != 'pull_request'
+        run: node scripts/status.ts ok
+
+      - name: Avisa o painel que falhou
+        if: failure() && github.event_name != 'pull_request'
+        run: node scripts/status.ts falhou

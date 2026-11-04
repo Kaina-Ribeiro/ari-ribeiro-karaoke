@@ -72,6 +72,8 @@ header.cab{background:var(--papel);border-bottom:2px solid var(--tinta)}
 .poster .folha{background:var(--luz);padding:5cqi 5cqi 6cqi;box-shadow:3cqi 4cqi 0 rgba(0,0,0,.28)}
 .poster .area{position:relative;aspect-ratio:322/360;background:radial-gradient(circle at 50% 40%,transparent 0 38%,var(--luz) 75%),radial-gradient(rgba(22,19,15,.55) 1.5px,transparent 1.8px) 0 0/9px 9px,var(--luz)}
 .poster .area img{position:absolute;left:50%;bottom:0;width:116%;height:auto;max-width:none;transform:translateX(-50%);filter:drop-shadow(6px 8px 0 rgba(22,19,15,.25));pointer-events:none}
+/* foto sem fundo transparente (enviada pelo painel): preenche a área do pôster em vez de "sair" dele */
+.poster .area img.cheia{left:0;top:0;bottom:auto;width:100%;height:100%;object-fit:cover;transform:none;filter:none}
 .poster .rodape{display:flex;justify-content:space-between;align-items:end;gap:10px;color:var(--tinta);margin-top:3cqi}
 .poster .rodape b{font:900 12cqi/.85 var(--d-cartaz);text-transform:uppercase}
 .poster .rodape span{font:italic 400 7cqi/1 var(--d-serif);text-align:right}
@@ -179,6 +181,7 @@ mark{background:var(--luz);color:inherit;padding:0 1px}
 .bt{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 14px;font:800 .8rem var(--f-texto);text-transform:uppercase;letter-spacing:.06em;text-decoration:none;border:2px solid currentColor}
 .bt.cheio{background:var(--luz);color:var(--tinta);border-color:var(--luz)}
 .bt.zap{background:#25d366;color:#08240f;border-color:#25d366}
+.bt.zap[aria-disabled="true"]{background:transparent;color:#5c564c;border-color:#c9c2b3;border-style:dashed;cursor:not-allowed}
 
 .vazio{border:2px solid var(--tinta);padding:28px;margin-top:22px;display:grid;gap:12px;justify-items:start;background:var(--papel-2)}
 .vazio h3{font:900 clamp(2rem,6vw,3rem)/.9 var(--d-cartaz);text-transform:uppercase;margin:0}
@@ -205,6 +208,8 @@ mark{background:var(--luz);color:inherit;padding:0 1px}
 .cz:nth-child(3){background:var(--brasa);transform:rotate(-.6deg)}
 .cz:nth-child(4){background:#8fd0a5;transform:rotate(1.1deg)}
 .cz:hover{transform:rotate(0) translateY(-4px)}
+/* foto opcional do cartão: 16:9 de ponta a ponta no topo, como um recorte colado no cartaz */
+.cz .foto{display:block;width:calc(100% + 36px);max-width:none;margin:-20px -18px 2px;aspect-ratio:16/9;height:auto;object-fit:cover;border-bottom:2px solid var(--tinta)}
 .cz .k{font:700 .7rem var(--f-codigo);letter-spacing:.12em;text-transform:uppercase}
 .cz b{font:900 2.4rem/.85 var(--d-cartaz);text-transform:uppercase}
 .cz p{margin:0;flex:1}

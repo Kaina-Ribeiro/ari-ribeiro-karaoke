@@ -1,0 +1,5 @@
+# Só pra rodar local (pnpm painel). Nunca configure DEV_ADMIN_EMAIL na Cloudflare.
+DEV_ADMIN_EMAIL=gabriel@painel.test
+ADMIN_EMAILS=gabriel@painel.test
+BUILD_TOKEN=c683f6007466140a6035d071d01ef75a728f7d938c1242f2db1ba2be1a81c1a3
+PAINEL_URL=http://localhost:8788

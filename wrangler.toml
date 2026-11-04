@@ -1,0 +1,37 @@
+# Cloudflare Pages: site estático em dist/ + API em functions/ (código em api/).
+# Os IDs do D1 e os dados do Access são preenchidos na configuração única (README).
+# ADMIN_EMAILS NÃO fica aqui (o repositório é público): é segredo na Cloudflare
+# (`wrangler pages secret put ADMIN_EMAILS` em produção; Settings → Variables and Secrets → Preview no preview).
+name = "ari-ribeiro-karaoke"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"
+
+[vars]
+GH_REF = "main"
+ACCESS_TEAM = "tiny-darkness-7735"
+ACCESS_AUD = "25b1e3f7b77c4f834a6a087256f3d4493a5e12f60d8502b84829ebad2e29a0b1"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ari-painel"
+database_id = "5ed1a4bc-2f78-4e9a-8343-3f1f9220fc4a"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "ARQUIVOS"
+bucket_name = "ari-arquivos"
+
+[env.preview.vars]
+GH_REF = "painel" # o painel de preview publica o branch painel (preview), nunca a produção
+ACCESS_TEAM = "tiny-darkness-7735"
+ACCESS_AUD = "25b1e3f7b77c4f834a6a087256f3d4493a5e12f60d8502b84829ebad2e29a0b1"
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "ari-painel-preview"
+database_id = "e087b535-4b96-4dfd-89ea-6fdaf6fc14a5"
+migrations_dir = "migrations"
+
+[[env.preview.r2_buckets]]
+binding = "ARQUIVOS"
+bucket_name = "ari-arquivos-preview"

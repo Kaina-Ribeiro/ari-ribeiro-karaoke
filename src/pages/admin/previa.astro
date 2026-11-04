@@ -1,0 +1,54 @@
+---
+// Prévia do banner pro painel: o cartaz do site, com a mesma CSS, desenhado com os textos que chegam por postMessage.
+import "../../styles/global.css";
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Prévia do banner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" />
+    <style>body{overflow:hidden} .cartaz{pointer-events:none}</style>
+  </head>
+  <body>
+    <main>
+      <section class="cartaz g"><div class="in">
+        <div>
+          <h1 class="letreiro" id="letreiro"></h1>
+          <p class="lede" id="lede"></p>
+        </div>
+        <div id="poster"></div>
+      </div></section>
+    </main>
+    <script>
+      import { htmlLetreiro, htmlPoster, negrito, rotuloLetreiro } from "../../lib/painel/cartaz.ts";
+      import { escapa } from "../../lib/texto.ts";
+
+      interface Dados { linhas: string[]; frase: string; legenda: [string, string]; foto: { src: string; recortada: boolean } }
+
+      function desenha(d: Dados) {
+        const h1 = document.getElementById("letreiro")!;
+        h1.innerHTML = htmlLetreiro(d.linhas);
+        h1.setAttribute("aria-label", rotuloLetreiro(d.linhas));
+        // na prévia as palavras já aparecem "cantadas" (sem a bolinha)
+        h1.querySelectorAll(".w").forEach((w) => w.classList.add("cantada"));
+        document.getElementById("lede")!.innerHTML = negrito(d.frase).map((t) => (t.forte ? `<b>${escapa(t.texto)}</b>` : escapa(t.texto))).join("");
+        document.getElementById("poster")!.innerHTML = htmlPoster(d.legenda, d.foto);
+        // avisa a altura pro painel ajustar o quadro
+        parent.postMessage({ tipo: "altura-previa", altura: document.querySelector(".cartaz")!.getBoundingClientRect().height }, location.origin);
+      }
+
+      addEventListener("message", (ev) => {
+        if (ev.origin !== location.origin || ev.data?.tipo !== "banner") return;
+        desenha(ev.data.dados as Dados);
+      });
+      new ResizeObserver(() => parent.postMessage({ tipo: "altura-previa", altura: document.querySelector(".cartaz")!.getBoundingClientRect().height }, location.origin))
+        .observe(document.querySelector(".cartaz")!);
+      parent.postMessage({ tipo: "previa-pronta" }, location.origin);
+    </script>
+  </body>
+</html>

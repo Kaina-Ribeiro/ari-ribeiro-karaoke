@@ -21,6 +21,37 @@ test.describe("sem JavaScript", () => {
     const og = await page.locator('meta[property="og:image"]').getAttribute("content");
     expect(og).toMatch(/^https:\/\/.+\/img\/logo\.png$/);
   });
+
+  test("o banner vem do painel, igual ao de antes", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#letreiro")).toHaveAttribute("aria-label", "Solta a voz, o palco é seu");
+    await expect(page.locator("#letreiro .w")).toHaveText(["Solta", "a", "voz,", "o palco é", "seu."]);
+    await expect(page.locator("#letreiro .w.serif")).toHaveText("o palco é");
+    await expect(page.locator("#letreiro .w.ouro")).toHaveText("seu.");
+    await expect(page.locator(".lede")).toHaveText("Acha a música, anota o código e manda pro KJ.");
+    await expect(page.locator(".lede b")).toHaveText("código");
+    await expect(page.locator(".poster .rodape")).toContainText("Com Ari");
+    await expect(page.locator(".poster .area img")).toHaveAttribute("src", /^\/img\/painel\/\w+\.webp$/);
+  });
+
+  test("só o cartão com foto mostra foto, em 16:9", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator(".cz")).toHaveCount(4);
+    await expect(page.locator(".cz img")).toHaveCount(1);
+    const foto = page.locator(".cz").nth(3).locator("img.foto");
+    await foto.scrollIntoViewIfNeeded();
+    await expect.poll(() => foto.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth)).toBeTruthy();
+    const box = (await foto.boundingBox())!;
+    expect(box.width / box.height).toBeCloseTo(16 / 9, 1);
+  });
+
+  test("Zap de contato no rodapé e nos cartões", async ({ page }) => {
+    await page.goto("/");
+    expect(await zap(page, "#contato a.num")).toBe("https://wa.me/5512991167274");
+    await expect(page.locator("#contato a.num")).toHaveText("(12) 99116-7274");
+    expect(await zap(page, ".cz")).toMatch(/^https:\/\/wa\.me\/5512991167274\?text=Oi Ari! Quero saber sobre: /);
+    await expect(page.locator('#contato a[href="https://www.instagram.com/ariribeirokaraoke/"]')).toHaveText("@ariribeirokaraoke");
+  });
 });
 
 test.describe("busca e comanda sempre à mão", () => {
@@ -84,6 +115,7 @@ test.describe("busca", () => {
     await expect(page.locator(".telinha .big")).toHaveText("4973");
     await expect(page.locator(".telinha .nome")).toContainText("Take on Me");
     expect(await zap(page, ".telinha a.zap")).toContain("4973 · Take on Me");
+    expect(await zap(page, ".telinha a.zap")).toMatch(/^https:\/\/wa\.me\/5512981234567\?/); // "Pedir pro KJ"
     // só existe essa com esse código: nada de tabela vazia embaixo da telinha
     await expect(page.locator("#lista .tabela")).toHaveCount(0);
   });
@@ -118,6 +150,8 @@ test.describe("busca", () => {
     await busca(page, "zzzzqqq");
     await expect(page.locator(".vazio h3")).toHaveText("Essa ainda não tem");
     expect(await zap(page, ".vazio a.zap")).toContain("não achei no catálogo: zzzzqqq");
+    // pedido de música nova vai pro Zap de contato, não pro KJ
+    expect(await zap(page, ".vazio a.zap")).toMatch(/^https:\/\/wa\.me\/5512991167274\?/);
   });
 
   test("busca vazia num filtro oferece procurar em todas", async ({ page }) => {
@@ -206,6 +240,30 @@ test.describe("favoritas e comanda", () => {
 
     await page.reload();
     await expect(page.locator("#nComanda")).toHaveText("1");
+  });
+
+  test("comanda vazia não manda pro Zap; com 1 música, manda", async ({ page }) => {
+    const mandar = page.locator("#mandar");
+    await page.locator("#abreComanda").click();
+    await expect(mandar).toHaveAttribute("aria-disabled", "true");
+    await expect(mandar).not.toHaveAttribute("href", /.*/);
+    // aria-disabled faz o Playwright esperar pra sempre; quem usa consegue tocar, então força
+    // (depois que a comanda termina de descer na tela)
+    await expect(mandar).toBeInViewport({ ratio: 1 });
+    await mandar.click({ force: true });
+    await expect(page.locator("#aviso")).toHaveText("Põe pelo menos 1 música na comanda");
+    await page.keyboard.press("Escape");
+
+    await linhas(page).first().locator(".mais").click();
+    await page.locator("#abreComanda").click();
+    await expect(mandar).not.toHaveAttribute("aria-disabled", /.*/);
+    expect(await zap(page, "#mandar")).toContain("Quero cantar");
+    // a comanda vai pro Zap do KJ (na fixture, diferente do de contato)
+    expect(await zap(page, "#mandar")).toMatch(/^https:\/\/wa\.me\/5512981234567\?/);
+
+    // tirou a última: trava de novo
+    await page.locator("#itens [data-tira]").first().click();
+    await expect(mandar).toHaveAttribute("aria-disabled", "true");
   });
 
   test("abrir e fechar a comanda cuida do foco", async ({ page }) => {
