@@ -103,7 +103,8 @@ O Access é a porta: só entra quem recebe um código de 6 dígitos no e-mail ca
 4. Em *Login methods*, deixe só **One-time PIN** (código no e-mail).
 5. Crie uma *Policy* "Ari e Gabriel" com a ação **Allow**. Em *Include*, escolha *Emails* e coloque os dois e-mails.
 6. Salve e abra a aplicação. Em **Overview**, copie o **Application Audience (AUD) Tag**. Esse é o `ACCESS_AUD`.
-7. No `wrangler.toml`, preencha `ADMIN_EMAILS` (os mesmos dois e-mails, separados por vírgula), `ACCESS_TEAM` e `ACCESS_AUD`, em `[vars]` e em `[env.preview.vars]`.
+7. No `wrangler.toml`, preencha `ACCESS_TEAM` e `ACCESS_AUD`, em `[vars]` e em `[env.preview.vars]`.
+8. Os e-mails **não** vão no `wrangler.toml`: o repositório é público. Eles viram o segredo `ADMIN_EMAILS` (os mesmos e-mails da política, separados por vírgula). Em produção, use `pnpm exec wrangler pages secret put ADMIN_EMAILS --project-name ari-ribeiro-karaoke`. No preview, crie pelo navegador, como os outros segredos (passo 3).
 
 A API confere de novo o login: a assinatura, o AUD e se o e-mail está em `ADMIN_EMAILS`. Assim, mesmo um Access mal configurado não abre o painel.
 

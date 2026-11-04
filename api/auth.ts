@@ -21,7 +21,7 @@ export async function exigeAdmin(req: Request, env: Env, deps: Deps): Promise<{ 
       audience: env.ACCESS_AUD,
     });
     const email = typeof payload.email === "string" ? payload.email.toLowerCase() : "";
-    const lista = env.ADMIN_EMAILS.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    const lista = (env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
     return email && lista.includes(email) ? { email } : naoLogado();
   } catch {
     return naoLogado();

@@ -4,8 +4,8 @@ import type { JWTVerifyGetKey } from "jose";
 export interface Env {
   DB: D1Database;
   ARQUIVOS: R2Bucket;
-  /** e-mails que podem entrar no painel, separados por vírgula */
-  ADMIN_EMAILS: string;
+  /** e-mails que podem entrar no painel, separados por vírgula (segredo: o repositório é público) */
+  ADMIN_EMAILS?: string;
   ACCESS_TEAM?: string;
   ACCESS_AUD?: string;
   /** login de teste: só vale quando o host da requisição é localhost */

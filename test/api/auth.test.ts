@@ -35,6 +35,11 @@ describe("admin (Cloudflare Access)", () => {
   it("login de teste NÃO vale fora de localhost, mesmo configurado", async () => {
     expect((await dev.chamar(estado({}, "https://abc.ari-ribeiro-karaoke.pages.dev"))).status).toBe(401);
   });
+  it("sem o segredo ADMIN_EMAILS, recusa (401) em vez de quebrar", async () => {
+    const semLista = await criaAmbiente({ env: { ADMIN_EMAILS: undefined } });
+    expect((await semLista.chamar(await reqAdmin("GET", "/api/admin/estado"))).status).toBe(401);
+    await semLista.fecha();
+  });
   it("Access sem time/aud configurado recusa", async () => {
     const semAccess = await criaAmbiente({ env: { ACCESS_TEAM: "", ACCESS_AUD: "" } });
     expect((await semAccess.chamar(await reqAdmin("GET", "/api/admin/estado"))).status).toBe(401);
