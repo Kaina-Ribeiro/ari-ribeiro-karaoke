@@ -32,7 +32,7 @@ test.describe("busca e comanda sempre à mão", () => {
     await expect(page.locator("#q")).toBeInViewport();
   });
 
-  test("busca e comanda grudam no topo ao rolar a lista", async ({ page }) => {
+  test("ao rolar a lista, a busca gruda no topo e a comanda continua na tela", async ({ page }) => {
     await rolaPraLista(page);
     await expect(page.locator("#q")).toBeInViewport();
     await expect(page.locator("#abreComanda")).toBeInViewport();
@@ -43,21 +43,17 @@ test.describe("busca e comanda sempre à mão", () => {
     if (az.height < 100) expect(Math.abs(az.y - barra.height)).toBeLessThanOrEqual(2);
   });
 
-  test("a comanda não cobre os botões das músicas", async ({ page }) => {
-    await rolaPraLista(page);
+  test("a comanda fixa fica embaixo e não esconde o fim da página", async ({ page }) => {
     const c = (await page.locator("#abreComanda").boundingBox())!;
-    const barra = (await page.locator(".busca").boundingBox())!;
-    for (const b of await page.locator("#lista .faixa-m .bts button").all()) {
-      const m = await b.boundingBox();
-      // as linhas que já passaram por baixo da barra grudada não contam
-      if (!m || m.y < barra.y + barra.height) continue;
-      expect(m.x < c.x + c.width && c.x < m.x + m.width && m.y < c.y + c.height && c.y < m.y + m.height).toBe(false);
-    }
+    expect(c.y + c.height).toBeGreaterThan(page.viewportSize()!.height - 40);
+    await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; scrollTo(0, document.body.scrollHeight); });
+    const ultimo = (await page.locator(".contatos").boundingBox())!;
+    expect(ultimo.y + ultimo.height).toBeLessThanOrEqual(c.y);
   });
 
   test("o botão da comanda diz o que é", async ({ page }) => {
     await expect(page.locator("#abreComanda .rot")).toBeVisible();
-    await expect(page.locator("#abreComanda")).toHaveAccessibleName(/Comanda/);
+    await expect(page.locator("#abreComanda")).toHaveAccessibleName(/comanda/i);
   });
 
   test("Limpar aparece com a busca e esvazia o campo", async ({ page }) => {
@@ -220,6 +216,20 @@ test.describe("favoritas e comanda", () => {
     await expect(fecha).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.locator("#abreComanda")).toBeFocused();
+  });
+
+  test("comanda fechada não aparece ao redimensionar a janela", async ({ page }) => {
+    const comanda = page.locator("#comanda");
+    await expect(comanda).toBeHidden();
+    // passa do layout de computador pro de celular e volta: ela troca de lado, mas fechada continua invisível
+    for (const largura of [1000, 600, 1000]) {
+      await page.setViewportSize({ width: largura, height: 800 });
+      await expect(comanda).toBeHidden();
+    }
+    await page.locator("#abreComanda").click();
+    await expect(comanda).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(comanda).toBeHidden();
   });
 
   test("localStorage estragado não derruba a página", async ({ page }) => {

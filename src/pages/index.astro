@@ -77,7 +77,6 @@ const endereco = new URL("/", Astro.site);
           <input id="q" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Código, cantor, música ou letra" />
           <button class="x" id="limpa" hidden aria-label="Limpar busca"><span>Limpar</span></button>
         </div>
-        <button class="btn-comanda" id="abreComanda"><span class="rot">Comanda</span><span class="n" id="nComanda">0</span></button>
       </div></section>
       <div class="g faixa-dicas"><div class="in dicas">Tenta aí: <button data-q="4973">4973</button><button data-q="14 bis">14 Bis</button><button data-q="evidencias">Evidências</button><span>ou um pedaço da letra</span></div></div>
 
@@ -133,6 +132,8 @@ const endereco = new URL("/", Astro.site);
       </div>
     </div></footer>
 
+    <!-- comanda sempre na tela: barra no pé da tela no celular, etiqueta no canto no computador -->
+    <button class="btn-comanda" id="abreComanda"><span class="rot">Ver comanda</span><span class="n" id="nComanda">0</span></button>
     <div class="veu" id="veu"></div>
     <aside class="comanda" id="comanda" aria-label="Comanda" inert>
       <button class="fecha" id="fechaComanda" aria-label="Fechar comanda">×</button>
