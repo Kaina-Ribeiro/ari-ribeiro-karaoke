@@ -208,6 +208,28 @@ test.describe("favoritas e comanda", () => {
     await expect(page.locator("#nComanda")).toHaveText("1");
   });
 
+  test("comanda vazia não manda pro Zap; com 1 música, manda", async ({ page }) => {
+    const mandar = page.locator("#mandar");
+    await page.locator("#abreComanda").click();
+    await expect(mandar).toHaveAttribute("aria-disabled", "true");
+    await expect(mandar).not.toHaveAttribute("href", /.*/);
+    // aria-disabled faz o Playwright esperar pra sempre; quem usa consegue tocar, então força
+    // (depois que a comanda termina de descer na tela)
+    await expect(mandar).toBeInViewport({ ratio: 1 });
+    await mandar.click({ force: true });
+    await expect(page.locator("#aviso")).toHaveText("Põe pelo menos 1 música na comanda");
+    await page.keyboard.press("Escape");
+
+    await linhas(page).first().locator(".mais").click();
+    await page.locator("#abreComanda").click();
+    await expect(mandar).not.toHaveAttribute("aria-disabled", /.*/);
+    expect(await zap(page, "#mandar")).toContain("Quero cantar");
+
+    // tirou a última: trava de novo
+    await page.locator("#itens [data-tira]").first().click();
+    await expect(mandar).toHaveAttribute("aria-disabled", "true");
+  });
+
   test("abrir e fechar a comanda cuida do foco", async ({ page }) => {
     const fecha = page.locator("#fechaComanda");
     // fechada: fora da tela e fora do Tab

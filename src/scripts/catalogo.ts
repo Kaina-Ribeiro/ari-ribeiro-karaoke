@@ -171,7 +171,24 @@ function desenhaComanda() {
   $("#itens").innerHTML = comanda.length
     ? comanda.map((m, i) => `<li><span class="c">${m.cod}</span><span class="t">${escapa(m.tit)}<small>${escapa(m.art)}</small></span><button data-tira="${i}" aria-label="Tirar ${escapa(m.tit)}">×</button></li>`).join("")
     : `<li class="nada">Comanda vazia. Toca no + do lado de uma música pra anotar aqui.</li>`;
-  $<HTMLAnchorElement>("#mandar").href = comanda.length ? zap(comanda, $<HTMLInputElement>("#cantor").value.trim()) : "https://wa.me/" + ZAP;
+  // sem música não tem o que pedir: o botão fica apagado e só avisa
+  const mandar = $<HTMLAnchorElement>("#mandar");
+  if (comanda.length) {
+    mandar.href = zap(comanda, $<HTMLInputElement>("#cantor").value.trim());
+    mandar.removeAttribute("aria-disabled");
+    mandar.removeAttribute("role");
+    mandar.removeAttribute("tabindex");
+  } else {
+    mandar.removeAttribute("href");
+    mandar.setAttribute("aria-disabled", "true");
+    mandar.setAttribute("role", "link");
+    mandar.tabIndex = 0;
+  }
+}
+function mandarVazio(e: Event) {
+  if (comanda.length) return;
+  e.preventDefault();
+  aviso("Põe pelo menos 1 música na comanda");
 }
 function abreComanda(abrir: boolean) {
   const c = $("#comanda");
@@ -228,6 +245,8 @@ campo.addEventListener("input", () => {
 });
 $("#limpa").addEventListener("click", () => { campo.value = ""; st.q = ""; st.pagina = 0; desenha(); campo.focus(); });
 $("#cantor").addEventListener("input", desenhaComanda);
+$("#mandar").addEventListener("click", mandarVazio);
+$("#mandar").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") mandarVazio(e); });
 $("#abreComanda").addEventListener("click", () => abreComanda(true));
 $("#fechaComanda").addEventListener("click", () => abreComanda(false));
 $("#veu").addEventListener("click", () => abreComanda(false));

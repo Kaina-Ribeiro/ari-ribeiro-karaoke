@@ -179,6 +179,7 @@ mark{background:var(--luz);color:inherit;padding:0 1px}
 .bt{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 14px;font:800 .8rem var(--f-texto);text-transform:uppercase;letter-spacing:.06em;text-decoration:none;border:2px solid currentColor}
 .bt.cheio{background:var(--luz);color:var(--tinta);border-color:var(--luz)}
 .bt.zap{background:#25d366;color:#08240f;border-color:#25d366}
+.bt.zap[aria-disabled="true"]{background:transparent;color:#5c564c;border-color:#c9c2b3;border-style:dashed;cursor:not-allowed}
 
 .vazio{border:2px solid var(--tinta);padding:28px;margin-top:22px;display:grid;gap:12px;justify-items:start;background:var(--papel-2)}
 .vazio h3{font:900 clamp(2rem,6vw,3rem)/.9 var(--d-cartaz);text-transform:uppercase;margin:0}
