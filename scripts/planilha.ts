@@ -19,6 +19,7 @@ import { idDaPlanilha } from "../src/lib/painel/valida.ts";
 import { comoObjetos, compacta, contaPacotes, lerCsv, montaMusicas } from "../src/lib/planilha.ts";
 import type { Pacote } from "../src/lib/texto.ts";
 import { lerAbaMusicas } from "../src/lib/xlsx.ts";
+import { baixaCsv } from "./google.ts";
 import { clientePainel } from "./painel.ts";
 
 const OFFLINE = process.argv.includes("--offline") || process.env.SHEET_OFFLINE === "1";
@@ -54,21 +55,6 @@ function fonteDeDados() {
     classes: async (_c: ConfigBuild, pacotes: { nome: string; musicas: number }[]) => painel.pacotes(pacotes),
     csv: async (id: string) => baixaCsv(id, "Músicas"),
   };
-}
-
-/** CSV de uma aba do Google Sheets (planilha pública). Só leitura: o site nunca escreve na planilha. */
-async function baixaCsv(id: string, aba: string): Promise<string> {
-  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(aba)}`;
-  for (let tentativa = 1; ; tentativa++) {
-    try {
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return await r.text();
-    } catch (e) {
-      if (tentativa === 3) throw new Error(`Não consegui baixar a aba "${aba}" da planilha: ${(e as Error).message}`);
-      await new Promise((ok) => setTimeout(ok, 2000 * tentativa));
-    }
-  }
 }
 
 async function principal() {
