@@ -9,7 +9,7 @@ compatibility_date = "2026-10-01"
 [vars]
 GH_REF = "main"
 ACCESS_TEAM = "tiny-darkness-7735"
-ACCESS_AUD = ""
+ACCESS_AUD = "25b1e3f7b77c4f834a6a087256f3d4493a5e12f60d8502b84829ebad2e29a0b1"
 
 [[d1_databases]]
 binding = "DB"
@@ -24,7 +24,7 @@ bucket_name = "ari-arquivos"
 [env.preview.vars]
 GH_REF = "painel" # o painel de preview publica o branch painel (preview), nunca a produção
 ACCESS_TEAM = "tiny-darkness-7735"
-ACCESS_AUD = ""
+ACCESS_AUD = "25b1e3f7b77c4f834a6a087256f3d4493a5e12f60d8502b84829ebad2e29a0b1"
 
 [[env.preview.d1_databases]]
 binding = "DB"
