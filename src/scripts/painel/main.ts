@@ -5,20 +5,19 @@ import { textoStatus } from "./status.ts";
 import { montaBanner } from "./telas/banner.ts";
 import { montaCatalogo } from "./telas/catalogo.ts";
 import { montaContato } from "./telas/contato.ts";
+import { montaFesta } from "./telas/festa.ts";
 import { montaInicio } from "./telas/inicio.ts";
 import { montaNovidades } from "./telas/novidades.ts";
-import { $, aviso, cabecalho, comCarregando, escapa } from "./ui.ts";
+import { $, aviso, comCarregando, escapa } from "./ui.ts";
 
 type Montador = (el: HTMLElement, e: Estado) => void;
-const emBreve = (titulo: string): Montador => (el) => { el.innerHTML = cabecalho(titulo, "Em construção."); };
-
 /** id da aba → tela. A ordem e os nomes das abas estão no HTML (admin/index.astro). */
 const TELAS: Record<string, Montador> = {
   inicio: montaInicio,
   catalogo: montaCatalogo,
   novidades: montaNovidades,
   banner: montaBanner,
-  festa: emBreve("Pra sua festa"),
+  festa: montaFesta,
   contato: montaContato,
 };
 

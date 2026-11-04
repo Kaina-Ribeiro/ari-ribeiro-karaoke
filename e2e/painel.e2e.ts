@@ -211,3 +211,56 @@ test.describe("banner", () => {
     await semProblemaGrave(page);
   });
 });
+
+/* ---------- pra sua festa ---------- */
+test.describe("pra sua festa", () => {
+  test("criar, subir, desligar e apagar um cartão", async ({ page }) => {
+    const titulo = `Cartão e2e ${Date.now() % 100000}`;
+    await abre(page, "festa");
+    await expect(page.locator("h1")).toHaveText("Pra sua festa");
+    const cartoes = page.locator(".cartao-item");
+    const antes = await cartoes.count();
+
+    await page.getByRole("button", { name: "Novo cartão" }).click();
+    await page.getByLabel("Título").fill(titulo);
+    await page.getByLabel("Destaque").fill("Teste");
+    await page.getByLabel("Descrição").fill("Cartão criado pelo teste automático.");
+    await page.getByRole("button", { name: "Salvar cartão" }).click();
+    await expect(page.locator("#aviso")).toContainText("Salvo");
+    await expect(cartoes).toHaveCount(antes + 1);
+    await expect(cartoes.last().locator("b")).toHaveText(titulo);
+
+    await page.getByRole("button", { name: `Subir ${titulo}` }).click();
+    await expect(cartoes.nth(antes - 1).locator("b")).toHaveText(titulo);
+    await page.reload();
+    await expect(cartoes.nth(antes - 1).locator("b")).toHaveText(titulo);
+
+    await page.getByRole("button", { name: `Desligar ${titulo}` }).click();
+    await expect(cartoes.nth(antes - 1).locator(".desligado")).toHaveText("Desligado");
+
+    await page.getByRole("button", { name: `Apagar ${titulo}` }).click();
+    const dialogo = page.getByRole("dialog");
+    await expect(dialogo).toContainText(`Apagar o cartão ${titulo}? Não dá para desfazer.`);
+    await dialogo.getByRole("button", { name: "Cancelar" }).click();
+    await expect(cartoes).toHaveCount(antes + 1);
+    await page.getByRole("button", { name: `Apagar ${titulo}` }).click();
+    await dialogo.getByRole("button", { name: "Apagar" }).click();
+    await expect(cartoes).toHaveCount(antes);
+    await semProblemaGrave(page);
+  });
+
+  test("limites do cartão travam o Salvar", async ({ page }) => {
+    await abre(page, "festa");
+    await page.getByRole("button", { name: "Novo cartão" }).click();
+    await page.getByLabel("Título").fill("x".repeat(41));
+    await expect(page.getByRole("button", { name: "Salvar cartão" })).toBeDisabled();
+    await page.getByRole("button", { name: "Cancelar" }).click();
+  });
+});
+
+test("todas as telas sem problema grave de acessibilidade", async ({ page }) => {
+  for (const tela of ["inicio", "catalogo", "novidades", "banner", "festa", "contato"]) {
+    await abre(page, tela);
+    await semProblemaGrave(page);
+  }
+});

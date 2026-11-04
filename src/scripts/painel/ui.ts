@@ -43,6 +43,8 @@ export interface OpcoesCampo {
   tipo?: "text" | "tel" | "number";
   inputmode?: string;
   autocomplete?: string;
+  /** textarea em vez de input */
+  multilinha?: boolean;
 }
 
 /** Campo com rótulo, dica, prefixo opcional ("@") e lugar pro erro, já ligados pra leitor de tela. */
@@ -52,10 +54,12 @@ export function campo(o: OpcoesCampo): string {
     + `<label for="${o.id}">${escapa(o.rotulo)}</label>`
     + (o.dica ? `<p class="dica" id="dica-${o.id}">${escapa(o.dica)}</p>` : "")
     + `<div class="entrada">${o.prefixo ? `<span class="prefixo" aria-hidden="true">${escapa(o.prefixo)}</span>` : ""}`
-    + `<input id="${o.id}" name="${o.id}" type="${o.tipo ?? "text"}" value="${escapa(o.valor)}" aria-describedby="${desc}"`
+    + (o.multilinha
+      ? `<textarea id="${o.id}" name="${o.id}" rows="3" aria-describedby="${desc}"`
+      : `<input id="${o.id}" name="${o.id}" type="${o.tipo ?? "text"}" value="${escapa(o.valor)}" aria-describedby="${desc}"`)
     + (o.max ? ` maxlength="${o.max + 10}" data-max="${o.max}"` : "")
     + (o.inputmode ? ` inputmode="${o.inputmode}"` : "")
-    + ` autocomplete="${o.autocomplete ?? "off"}" />`
+    + ` autocomplete="${o.autocomplete ?? "off"}"` + (o.multilinha ? `>${escapa(o.valor)}</textarea>` : " />")
     + (o.max ? `<span class="conta" aria-hidden="true"></span>` : "")
     + `</div><p class="erro" id="erro-${o.id}" aria-live="polite"></p></div>`;
 }

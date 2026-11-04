@@ -192,3 +192,31 @@ input[type=file]::file-selector-button{font:800 .95rem var(--f-texto);border:2px
   main:has(.banner-grade){max-width:1180px}
   .previas{position:sticky;top:72px}
 }
+
+/* ---------- pra sua festa ---------- */
+.topo-acoes{margin:-4px 0 18px}
+.editor textarea{resize:vertical;min-height:96px}
+.cartoes{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:18px}
+.cartao-item{display:grid;grid-template-columns:minmax(0,1fr);border:2px solid var(--tinta);box-shadow:var(--sombra);background:var(--luz)}
+.cartao-item:nth-child(4n+2){background:var(--folha)}
+.cartao-item:nth-child(4n+3){background:var(--brasa)}
+.cartao-item:nth-child(4n+4){background:#8fd0a5}
+.cartao-item.off{background:var(--papel-2);color:var(--tinta-2)}
+.cartao-item .mini{width:100%;aspect-ratio:16/9;object-fit:cover;border-bottom:2px solid var(--tinta)}
+.cartao-texto{padding:14px 16px 10px}
+.cartao-texto .k{font:700 .72rem var(--f-texto);letter-spacing:.08em;text-transform:uppercase}
+.cartao-texto b{display:block;font:900 1.8rem/.9 var(--d-cartaz);text-transform:uppercase;margin:4px 0 6px;overflow-wrap:anywhere}
+.cartao-texto p{margin:0}
+.desligado{display:inline-block;margin-top:8px;font:800 .8rem var(--f-texto);border:2px solid currentColor;padding:2px 8px}
+.cartao-acoes{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px 14px;border-top:2px solid var(--tinta)}
+.bt.pequeno-claro{min-height:42px;padding:0 14px;font-size:.92rem;box-shadow:2px 2px 0 var(--tinta)}
+.bt.icone{min-height:42px;min-width:44px;padding:0;font-size:1.2rem;box-shadow:2px 2px 0 var(--tinta)}
+.foto-atual .mini16{width:120px;aspect-ratio:16/9;object-fit:cover;border:2px solid var(--tinta);flex:none}
+dialog{border:2px solid var(--tinta);box-shadow:var(--sombra);background:var(--folha);color:var(--tinta);padding:20px;max-width:min(420px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(22,19,15,.55)}
+dialog p{font-weight:700;margin:0 0 16px}
+@media (min-width:768px){
+  .cartao-item{grid-template-columns:200px minmax(0,1fr)}
+  .cartao-item .mini{grid-row:span 2;height:100%;aspect-ratio:auto;border-bottom:0;border-right:2px solid var(--tinta)}
+  .cartao-item:not(:has(.mini)) > *{grid-column:1 / -1}
+}
