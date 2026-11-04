@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { criaAmbiente } from "./ambiente.ts";
+import { criaAmbiente, reqBuild } from "./ambiente.ts";
 
 let amb: Awaited<ReturnType<typeof criaAmbiente>>;
 beforeAll(async () => { amb = await criaAmbiente(); });
@@ -19,7 +19,7 @@ describe("base da API", () => {
   });
 
   it("método errado numa rota que existe dá 405", async () => {
-    const r = await amb.chamar(new Request("http://localhost/api/build/config", { method: "POST" }));
+    const r = await amb.chamar(reqBuild("POST", "/api/build/config"));
     expect(r.status).toBe(405);
     expect((await r.json()).erro).toBeTruthy();
   });
