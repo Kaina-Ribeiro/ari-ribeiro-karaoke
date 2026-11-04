@@ -52,7 +52,10 @@ async function falha(env: Env, deps: Deps, id: number, erro: string) {
     .bind(erro.slice(0, 500), deps.agora().toISOString(), id).run();
 }
 
-/** Pede o build ao GitHub. Sem token (dev), só marca como publicada. */
+/**
+ * Pede o build ao GitHub (workflow_dispatch do site.yml, que só precisa de "Actions: write" no token).
+ * GH_REF escolhe o branch: o painel de preview publica o preview, nunca a produção. Sem token (dev), só marca como publicada.
+ */
 export async function disparaBuild(env: Env, deps: Deps, id: number): Promise<void> {
   if (!env.GH_DISPATCH_TOKEN) {
     await env.DB.prepare("UPDATE publicacoes SET status = 'ok', erro = 'simulado em dev', terminou_em = ? WHERE id = ?")
@@ -61,7 +64,7 @@ export async function disparaBuild(env: Env, deps: Deps, id: number): Promise<vo
   }
   const repo = env.GH_REPO || "Kaina-Ribeiro/ari-ribeiro-karaoke";
   try {
-    const r = await deps.fetch(`https://api.github.com/repos/${repo}/dispatches`, {
+    const r = await deps.fetch(`https://api.github.com/repos/${repo}/actions/workflows/site.yml/dispatches`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${env.GH_DISPATCH_TOKEN}`,
@@ -69,7 +72,7 @@ export async function disparaBuild(env: Env, deps: Deps, id: number): Promise<vo
         "Content-Type": "application/json",
         "User-Agent": "ari-painel",
       },
-      body: JSON.stringify({ event_type: "publicar", client_payload: { publicacao: id } }),
+      body: JSON.stringify({ ref: env.GH_REF || "main", inputs: { publicacao: String(id) } }),
     });
     if (!r.ok) await falha(env, deps, id, `Não consegui pedir a publicação ao GitHub (HTTP ${r.status}).`);
   } catch {

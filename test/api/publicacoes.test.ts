@@ -34,16 +34,24 @@ describe("pedir publicação", () => {
     expect(r.corpo.publicacao).toMatchObject({ status: "ok", erro: "simulado em dev", motivo: "tentar-de-novo" });
   });
 
-  it("com token: dispara o repository_dispatch e fica pendente", async () => {
+  it("com token: pede o workflow ao GitHub e fica pendente", async () => {
     amb = await criaAmbiente({ env: { GH_DISPATCH_TOKEN: "gh-teste" } });
     const gh = githubFalso(204);
     const r = await publicar(amb, { fetch: gh.fetch });
     expect(r.corpo.publicacao.status).toBe("pendente");
     expect(gh.pedidos).toHaveLength(1);
-    expect(gh.pedidos[0].url).toBe("https://api.github.com/repos/Kaina-Ribeiro/ari-ribeiro-karaoke/dispatches");
+    // workflow_dispatch: basta o token com "Actions: write" (repository_dispatch exigiria "Contents: write")
+    expect(gh.pedidos[0].url).toBe("https://api.github.com/repos/Kaina-Ribeiro/ari-ribeiro-karaoke/actions/workflows/site.yml/dispatches");
     const h = new Headers(gh.pedidos[0].init.headers);
     expect(h.get("Authorization")).toBe("Bearer gh-teste");
-    expect(JSON.parse(String(gh.pedidos[0].init.body))).toEqual({ event_type: "publicar", client_payload: { publicacao: r.corpo.publicacao.id } });
+    expect(JSON.parse(String(gh.pedidos[0].init.body))).toEqual({ ref: "main", inputs: { publicacao: String(r.corpo.publicacao.id) } });
+  });
+
+  it("o painel de preview publica o branch de preview, não a produção", async () => {
+    amb = await criaAmbiente({ env: { GH_DISPATCH_TOKEN: "gh-teste", GH_REF: "painel" } });
+    const gh = githubFalso(204);
+    await publicar(amb, { fetch: gh.fetch });
+    expect(JSON.parse(String(gh.pedidos[0].init.body)).ref).toBe("painel");
   });
 
   it("GitHub recusa: falhou com o motivo", async () => {

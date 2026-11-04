@@ -5,6 +5,7 @@ pages_build_output_dir = "dist"
 compatibility_date = "2026-10-01"
 
 [vars]
+GH_REF = "main"
 ADMIN_EMAILS = ""
 ACCESS_TEAM = ""
 ACCESS_AUD = ""
@@ -20,6 +21,7 @@ binding = "ARQUIVOS"
 bucket_name = "ari-arquivos"
 
 [env.preview.vars]
+GH_REF = "painel" # o painel de preview publica o branch painel (preview), nunca a produção
 ADMIN_EMAILS = ""
 ACCESS_TEAM = ""
 ACCESS_AUD = ""

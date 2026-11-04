@@ -6,9 +6,14 @@ on:
   pull_request:
   schedule:
     - cron: "17 9 * * *" # todo dia às 06:17 de Brasília: pega as músicas novas da planilha (catálogo por link)
-  repository_dispatch:
-    types: [publicar] # o painel do Ari pede uma publicação a cada "Salvar"
+  # o painel do Ari pede uma publicação a cada "Salvar" (API workflow_dispatch, com o id da publicação):
+  # o painel de produção pede no main, o de preview no branch painel
   workflow_dispatch:
+    inputs:
+      publicacao:
+        description: "Id da publicação no painel (vazio = publicação manual)"
+        required: false
+        default: ""
 
 # uma publicação por vez; se chegarem várias, o Actions descarta as da fila e fica só a mais nova
 concurrency:
@@ -18,10 +23,6 @@ concurrency:
 env:
   PROJETO: ari-ribeiro-karaoke
   SITE_URL: ${{ vars.SITE_URL || 'https://ari-ribeiro-karaoke.pages.dev' }}
-  # painel do Ari (vazios em pull request: o build usa a fixture e ninguém é avisado)
-  PAINEL_URL: ${{ github.event_name != 'pull_request' && secrets.PAINEL_URL || '' }}
-  BUILD_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BUILD_TOKEN || '' }}
-  PUBLICACAO: ${{ github.event.client_payload.publicacao }}
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 jobs:
@@ -36,6 +37,26 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # qual painel: produção no main, preview nos outros branches; nenhum em pull request (build com a fixture)
+      - name: Escolhe o painel
+        if: github.event_name != 'pull_request'
+        env:
+          URL_PRODUCAO: ${{ secrets.PAINEL_URL }}
+          TOKEN_PRODUCAO: ${{ secrets.BUILD_TOKEN }}
+          URL_PREVIEW: ${{ secrets.PAINEL_URL_PREVIEW }}
+          TOKEN_PREVIEW: ${{ secrets.BUILD_TOKEN_PREVIEW }}
+          PEDIDO: ${{ inputs.publicacao }}
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            echo "PAINEL_URL=$URL_PRODUCAO" >> "$GITHUB_ENV"
+            echo "BUILD_TOKEN=$TOKEN_PRODUCAO" >> "$GITHUB_ENV"
+          else
+            echo "PAINEL_URL=$URL_PREVIEW" >> "$GITHUB_ENV"
+            echo "BUILD_TOKEN=$TOKEN_PREVIEW" >> "$GITHUB_ENV"
+          fi
+          # vazio na checagem diária e no push: o scripts/status.ts cria a publicação e grava o id aqui
+          echo "PUBLICACAO=$PEDIDO" >> "$GITHUB_ENV"
+
       - name: Avisa o painel que começou
         if: github.event_name != 'pull_request'
         run: node scripts/status.ts rodando
@@ -44,7 +65,7 @@ jobs:
       - run: pnpm test
       # e2e roda na planilha de exemplo (pnpm painel); fica de fora do que o painel e a checagem diária pedem (não muda nada lá)
       - name: Testes e2e
-        if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.publicacao == '')
         run: |
           pnpm exec playwright install --with-deps chromium webkit
           pnpm e2e
@@ -64,14 +85,16 @@ jobs:
             echo "publica=sim" >> "$GITHUB_OUTPUT"
           fi
 
+      # main = produção; workflow_dispatch noutro branch (painel de preview) = deploy de preview daquele branch
       - name: Publica na Cloudflare Pages
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && steps.muda.outputs.publica == 'sim'
+        if: github.event_name != 'pull_request' && steps.muda.outputs.publica == 'sim' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BRANCH: ${{ github.ref_name }}
         run: |
           pnpm exec wrangler pages project create "$PROJETO" --production-branch=main 2>/dev/null || true
-          pnpm exec wrangler pages deploy dist --project-name="$PROJETO" --branch=main --commit-dirty=true
+          pnpm exec wrangler pages deploy dist --project-name="$PROJETO" --branch="$BRANCH" --commit-dirty=true
 
       - name: Avisa o painel que está no ar
         if: success() && github.event_name != 'pull_request'

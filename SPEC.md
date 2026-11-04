@@ -40,7 +40,7 @@ R2           .xlsx enviado, fotos (banner e cartões)
 ```
 
 **Salvar no painel:**
-`Painel → PUT /api/admin/... (grava D1/R2) → cria publicação "pendente" → repository_dispatch no GitHub → Actions: GET /api/build/config → lê .xlsx (R2) ou link → gera site → POST /api/build/status → publica → painel mostra "No ar ✅"`
+`Painel → PUT /api/admin/... (grava D1/R2) → cria publicação "pendente" → workflow_dispatch no GitHub → Actions: GET /api/build/config → lê .xlsx (R2) ou link → gera site → POST /api/build/status → publica → painel mostra "No ar ✅"`
 
 **Upload do `.xlsx`:**
 `Ari escolhe o arquivo → navegador lê com a mesma biblioteca do build → prévia (músicas, pacotes, pacotes novos, avisos) → Ari confirma → POST /api/admin/arquivos → R2 → publica`
@@ -132,7 +132,7 @@ Todas as respostas são JSON. Erros: `{erro: "mensagem em português"}` + status
 - Cartão: título até 40, destaque até 30, descrição até 160.
 - Upload: `.xlsx` até 10 MB; foto até 2 MB (já comprimida no navegador).
 
-**Disparo do build:** `POST https://api.github.com/repos/Kaina-Ribeiro/ari-ribeiro-karaoke/dispatches` com `{event_type: "publicar", client_payload: {publicacao}}`. Em dev (sem `GH_DISPATCH_TOKEN`), a publicação é marcada `ok` com `erro: "simulado em dev"`; para ver o site com os dados do painel local, `PAINEL_URL=http://localhost:8788 pnpm build`.
+**Disparo do build:** `POST https://api.github.com/repos/Kaina-Ribeiro/ari-ribeiro-karaoke/actions/workflows/site.yml/dispatches` com `{ref: GH_REF, inputs: {publicacao}}` (workflow_dispatch: o token só precisa de `Actions: write`; `repository_dispatch` exigiria `Contents: write`). `GH_REF` é `main` em produção e `painel` em preview, então o painel de preview publica o deploy de preview, nunca a produção. Em dev (sem `GH_DISPATCH_TOKEN`), a publicação é marcada `ok` com `erro: "simulado em dev"`; para ver o site com os dados do painel local, `PAINEL_URL=http://localhost:8788 pnpm build`.
 
 **Publicações substituídas:** o grupo de concorrência do Actions cancela runs da fila quando chega uma mais nova. Quando uma publicação termina `ok`, todas as anteriores ainda `pendente`/`rodando` também viram `ok` (substituídas).
 
@@ -170,7 +170,7 @@ Celular primeiro, com o visual do site (cores, fontes). Abas embaixo da tela no 
    - Limpeza de dados atual (`montaMusicas`) vale para as duas fontes.
    - `versao.txt` inclui a config.
    - Recusa publicar se músicas < 50% de `musicasNoAr` (sem `forcar`).
-6. **Workflow (`site.yml`):** `repository_dispatch: [publicar]`; cron passa a diário `17 9 * * *` (06:17 em Brasília); reporta `rodando/ok/falhou` em `/api/build/status`; secrets `PAINEL_URL`, `BUILD_TOKEN`. PR continua com check, testes, e2e e build offline.
+6. **Workflow (`site.yml`):** `workflow_dispatch` com input `publicacao` (main = produção, outro branch = preview); cron passa a diário `17 9 * * *` (06:17 em Brasília); reporta `rodando/ok/falhou` em `/api/build/status`; secrets `PAINEL_URL`, `BUILD_TOKEN` (produção) e `PAINEL_URL_PREVIEW`, `BUILD_TOKEN_PREVIEW` (preview). PR continua com check, testes, e2e e build offline.
 7. **Importação inicial (`scripts/importa.ts`, roda uma vez por ambiente):** grava em D1 o contato, banner e cartões atuais (aba Produtos, sem "Contato para locação"), todos os pacotes da planilha com `chegou_em = data da importação` e `modo = auto`, e `catalogo = {fonte: "link", link: <planilha atual>}`. Sobe `ari-cantando.webp` para o R2 com `recortada: true`. Resultado: site idêntico ao de hoje; as 1.871 "novas" de hoje somem sozinhas após o prazo, a menos que o Ari marque.
 
 ## 8. Segurança

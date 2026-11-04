@@ -9,7 +9,7 @@ O plano completo está em [`SPEC.md`](SPEC.md).
 ```
 Painel (/admin, protegido pelo Cloudflare Access)
    │  PUT /api/admin/...  → grava no D1 (config, cartões, pacotes) e no R2 (planilha, fotos)
-   │  cria uma "publicação" e pede o build ao GitHub (repository_dispatch)
+   │  cria uma "publicação" e pede o build ao GitHub (workflow_dispatch, no branch do ambiente)
    ▼
 GitHub Actions (.github/workflows/site.yml)
    │  scripts/planilha.ts: GET /api/build/config → lê o .xlsx do R2 ou a planilha do link
@@ -66,7 +66,7 @@ O workflow `.github/workflows/site.yml`:
 
 - **Em todo PR:** roda check, testes, e2e e o build offline. Não publica nem avisa o painel.
 - **Em todo push na `main`:** testa e publica com os dados do painel.
-- **Quando o Ari salva no painel** (`repository_dispatch` "publicar"): gera e publica, avisando o painel em cada etapa.
+- **Quando o Ari salva no painel** (`workflow_dispatch` com o id da publicação): gera e publica, avisando o painel em cada etapa. O painel de produção pede no `main` (deploy de produção); o de preview pede no branch `painel` (deploy de preview, com os secrets `*_PREVIEW`).
 - **Todo dia às 06:17 (Brasília):** lê a planilha de novo e publica somente se algo mudou (compara com o `versao.txt` que está no ar).
 
 O deploy usa upload direto (wrangler) em vez da integração Git da Cloudflare. A integração tem limite de builds por mês e não deixaria o painel disparar a publicação.
@@ -118,7 +118,7 @@ A API confere de novo o login: a assinatura, o AUD e se o e-mail está em `ADMIN
 pnpm exec wrangler pages secret put GH_DISPATCH_TOKEN --project-name ari-ribeiro-karaoke
 ```
 
-O comando grava o segredo de **produção**. Para o **preview**, crie o mesmo segredo pelo navegador: *Workers & Pages → ari-ribeiro-karaoke → Settings → Variables and Secrets*, escolhendo o ambiente *Preview*. Vale também para o `BUILD_TOKEN` (passo 4).
+O comando grava o segredo de **produção**. Para o **preview**, crie o mesmo segredo pelo navegador: *Workers & Pages → ari-ribeiro-karaoke → Settings → Variables and Secrets*, escolhendo o ambiente *Preview*. Vale também para o `BUILD_TOKEN` (passo 4); no preview, use o valor do `BUILD_TOKEN_PREVIEW`.
 
 **Para renovar** (o GitHub avisa por e-mail antes de vencer): gere um novo com as mesmas permissões e rode o comando de novo. Enquanto o token estiver vencido, o painel mostra "Falhou ❌ … (HTTP 401)" e o site continua como estava.
 
@@ -135,6 +135,9 @@ No GitHub, em **Settings → Secrets and variables → Actions**, crie:
 
 - `BUILD_TOKEN`: o mesmo valor.
 - `PAINEL_URL`: `https://ari-ribeiro-karaoke.pages.dev` (ou o domínio próprio).
+- `BUILD_TOKEN_PREVIEW` e `PAINEL_URL_PREVIEW` (`https://painel.ari-ribeiro-karaoke.pages.dev`): os mesmos dois para o preview. Use um token diferente do de produção.
+
+O preview só publica depois que o branch `painel` estiver no GitHub: é nele que o painel de preview pede o build.
 
 Os secrets `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID` continuam os de antes. O token vem de *My Profile → API Tokens*, com permissão *Account → Cloudflare Pages → Edit*. O Account ID aparece na lateral de *Workers & Pages*.
 

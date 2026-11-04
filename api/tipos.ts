@@ -13,6 +13,8 @@ export interface Env {
   BUILD_TOKEN: string;
   GH_DISPATCH_TOKEN?: string;
   GH_REPO?: string;
+  /** branch que o workflow publica: "main" (produção) ou "painel" (preview) */
+  GH_REF?: string;
 }
 
 /** O que vem de fora (relógio, rede, chaves), separado pra dar pra testar. */
