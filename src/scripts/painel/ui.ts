@@ -16,13 +16,32 @@ export function aviso(texto: string, tipo: "ok" | "erro" = "ok") {
   a.dataset.t = String(setTimeout(() => a.classList.remove("on"), tipo === "erro" ? 6000 : 3000));
 }
 
-/** Botão mostra que está trabalhando e não aceita segundo toque; erro da API vira aviso. */
-export async function comCarregando(botao: HTMLButtonElement, fn: () => Promise<void>): Promise<boolean> {
+/** O botão vira "✓ Salvo" (verde) por 2 s: confirmação no lugar onde o Ari tocou. */
+export function marcaSalvo(botao: HTMLButtonElement, texto = "Salvo") {
+  if (!botao.isConnected) return;
+  const original = botao.dataset.original ?? botao.innerHTML;
+  botao.dataset.original = original;
+  botao.classList.add("salvo");
+  botao.textContent = `✓ ${texto}`;
+  clearTimeout(Number(botao.dataset.tSalvo));
+  botao.dataset.tSalvo = String(setTimeout(() => {
+    botao.classList.remove("salvo");
+    botao.innerHTML = original;
+    delete botao.dataset.original;
+  }, 2000));
+}
+
+/**
+ * Botão mostra que está trabalhando e não aceita segundo toque; erro da API vira aviso.
+ * Com `salvo`, o botão confirma ("✓ Salvo") quando dá certo.
+ */
+export async function comCarregando(botao: HTMLButtonElement, fn: () => Promise<void>, salvo?: string): Promise<boolean> {
   if (botao.getAttribute("aria-busy") === "true") return false;
   botao.setAttribute("aria-busy", "true");
   botao.disabled = true;
   try {
     await fn();
+    if (salvo) marcaSalvo(botao, salvo);
     return true;
   } catch (e) {
     aviso(e instanceof ErroApi ? e.message : "Algo deu errado. Tente de novo.", "erro");
@@ -89,5 +108,21 @@ export function atualizaContadores(raiz: ParentNode): boolean {
   return ok;
 }
 
-export const cabecalho = (titulo: string, sub: string) =>
-  `<header class="cab-tela"><h1>${escapa(titulo)}</h1><p class="sub">${escapa(sub)}</p></header>`;
+export const cabecalho = (titulo: string, sub: string, extra = "") =>
+  `<header class="cab-tela"><div><h1>${escapa(titulo)}</h1><p class="sub">${escapa(sub)}</p></div>${extra}</header>`;
+
+/** Quadro "Assim fica no site": o resultado desenhado com as peças do site (`html` já escapado). */
+export const noSite = (html: string, escuro = false, id = "") =>
+  `<section class="no-site${escuro ? " escuro" : ""}"${id ? ` id="${id}"` : ""} aria-label="Assim fica no site">`
+  + `<p class="no-site-rot" aria-hidden="true"><span>Assim fica no site</span></p>${html}</section>`;
+
+/** Linha da comanda: "Músicas no ar ........ 13.090" (`valor` já escapado). */
+export const linhaComanda = (rotulo: string, valor: string) =>
+  `<li><span>${escapa(rotulo)}</span><span class="pontos" aria-hidden="true"></span><b>${valor}</b></li>`;
+
+/** Comanda (o papel do pedido no site), usada pra resumir números. */
+export const comanda = (titulo: string, lado: string, linhas: string, pe = "") =>
+  `<section class="comanda" aria-label="${escapa(titulo)}"><header><b>${escapa(titulo)}</b><span>${escapa(lado)}</span></header>`
+  + `<ul>${linhas}</ul>${pe ? `<div class="comanda-pe">${pe}</div>` : ""}</section>`;
+
+export const numero = (x: number) => x.toLocaleString("pt-BR");

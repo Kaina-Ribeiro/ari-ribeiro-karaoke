@@ -6,7 +6,7 @@
 import { mkdir } from "node:fs/promises";
 import { chromium, type Page } from "@playwright/test";
 
-const LOCAL = process.env.LOCAL ?? "http://localhost:8788";
+const LOCAL = process.env.LOCAL ?? `http://localhost:${process.env.PAINEL_PORTA ?? "8788"}`;
 const NO_AR = process.env.NO_AR ?? "https://ari-ribeiro-karaoke.pages.dev";
 const LARGURAS = [375, 768, 1024, 1440];
 const TELAS = ["inicio", "catalogo", "novidades", "banner", "festa", "contato"];

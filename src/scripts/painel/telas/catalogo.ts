@@ -2,23 +2,25 @@ import type { Previa } from "../../../lib/xlsx.ts";
 import { api } from "../api.ts";
 import { carrega, type Estado } from "../estado.ts";
 import { quando } from "../status.ts";
-import { $, aviso, cabecalho, campo, comCarregando, escapa } from "../ui.ts";
+import { $, aviso, cabecalho, campo, comanda, comCarregando, escapa, linhaComanda, numero as n } from "../ui.ts";
 
-const n = (x: number) => x.toLocaleString("pt-BR");
-
+/** O catálogo que está no ar, em forma de comanda. */
 function fonteAtual(e: Estado): string {
   const c = e.catalogo;
+  const noAr = e.musicasNoAr !== null ? linhaComanda("Músicas no ar", n(e.musicasNoAr)) : "";
   if (c.fonte === "arquivo" && c.arquivo) {
-    return `Hoje o site usa o arquivo <b>${escapa(c.arquivo.nome)}</b>, enviado ${escapa(quando(c.arquivo.enviadoEm, new Date()))}, com ${n(c.arquivo.musicas)} músicas.`;
+    return comanda("Catálogo no ar", "arquivo .xlsx", linhaComanda("Arquivo", escapa(c.arquivo.nome))
+      + linhaComanda("Enviado", escapa(quando(c.arquivo.enviadoEm, new Date()))) + noAr + linhaComanda("Pacotes", n(c.arquivo.pacotes)),
+    "O site só muda quando você enviar outro arquivo.");
   }
-  return `Hoje o site lê a planilha do Google: <a href="${escapa(c.link ?? "")}" target="_blank" rel="noopener">abrir planilha</a>. Ela é conferida todo dia de manhã.`;
+  return comanda("Catálogo no ar", "planilha do Google", linhaComanda("Fonte", `<a href="${escapa(c.link ?? "")}" target="_blank" rel="noopener">abrir planilha</a>`) + noAr,
+    `A planilha é conferida todo dia às 06:17. Mudou agora? Toque em "Atualizar catálogo".`);
 }
 
 function htmlPrevia(p: Previa, noAr: number | null): string {
-  return `<ul class="numeros">`
-    + `<li><b>${n(p.musicas)}</b> músicas</li>`
-    + `<li><b>${n(p.pacotes)}</b> pacotes</li>`
-    + `<li><b>${n(p.ignoradas)}</b> linhas ignoradas <span>(sem código ou título, repetidas ou marcadas como duplicado)</span></li></ul>`
+  return comanda("Prévia do arquivo", "ainda não publicado", linhaComanda("Músicas", n(p.musicas)) + linhaComanda("Pacotes", n(p.pacotes))
+      + linhaComanda("Pacotes novos", n(p.novos.length)) + linhaComanda("Linhas ignoradas", n(p.ignoradas)),
+    "Linhas ignoradas: sem código ou título, repetidas ou marcadas como duplicado.")
     + (p.novos.length
       ? `<p>Pacotes novos, que entram como Novidade: <b>${p.novos.map(escapa).join(", ")}</b>.</p>`
       : `<p>Nenhum pacote novo.</p>`)
@@ -31,24 +33,23 @@ function htmlPrevia(p: Previa, noAr: number | null): string {
 export function montaCatalogo(el: HTMLElement, e: Estado) {
   const ehLink = e.catalogo.fonte === "link";
   el.innerHTML = cabecalho("Catálogo", "De onde vêm as músicas do site.")
-    + `<section class="folha"><p>${fonteAtual(e)}</p>`
+    + `<div class="duas esq-estreita"><div class="coluna">${fonteAtual(e)}`
     + (ehLink ? `<div class="acoes"><button class="bt claro" type="button" id="atualizar">Atualizar catálogo</button></div>` : "")
-    + `</section>`
-    + `<fieldset class="escolha"><legend>Trocar a fonte</legend>`
+    + `</div><div class="coluna"><fieldset class="escolha"><legend>Trocar a fonte</legend>`
     + `<label><input type="radio" name="fonte" value="arquivo" ${ehLink ? "" : "checked"} /> <span>Arquivo .xlsx</span></label>`
     + `<label><input type="radio" name="fonte" value="link" ${ehLink ? "checked" : ""} /> <span>Link do Google</span></label></fieldset>`
     // arquivo
     + `<section class="folha" data-fonte="arquivo"><h2>Enviar planilha</h2>`
     + `<div class="campo"><label for="arquivo">Escolha o arquivo</label><p class="dica" id="dica-arquivo">A planilha precisa ter a aba "Músicas" com as colunas codigo, cantor, titulo e pacote.</p>`
     + `<input type="file" id="arquivo" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" aria-describedby="dica-arquivo" /></div>`
-    + `<div class="previa" aria-live="polite"></div>`
+    + `<div class="previa" aria-live="polite"><p class="vazio">Escolha um arquivo pra ver quantas músicas ele tem antes de publicar.</p></div>`
     + `<div class="acoes"><button class="bt" type="button" id="confirmar" disabled>Confirmar e publicar</button></div></section>`
     // link
     + `<section class="folha" data-fonte="link"><h2>Planilha do Google</h2>`
     + campo({ id: "link", rotulo: "Link da planilha", valor: e.catalogo.link ?? "", inputmode: "url",
       dica: "No Google Sheets: Compartilhar → qualquer pessoa com o link pode ver. Copie o endereço e cole aqui." })
     + `<p class="teste-link" aria-live="polite"></p>`
-    + `<div class="acoes"><button class="bt claro" type="button" id="testar">Testar</button><button class="bt" type="button" id="salvarLink" disabled>Salvar link</button></div></section>`;
+    + `<div class="acoes"><button class="bt claro" type="button" id="testar">Testar</button><button class="bt" type="button" id="salvarLink" disabled>Salvar link</button></div></section></div></div>`;
 
   const fonte = () => $<HTMLInputElement>("input[name=fonte]:checked", el).value;
   const mostraFonte = () => el.querySelectorAll<HTMLElement>("[data-fonte]").forEach((s) => (s.hidden = s.dataset.fonte !== fonte()));
@@ -79,7 +80,7 @@ export function montaCatalogo(el: HTMLElement, e: Estado) {
     lida = null;
     podeConfirmar();
     const arquivo = entrada.files?.[0];
-    if (!arquivo) { previa.innerHTML = ""; return; }
+    if (!arquivo) { previa.innerHTML = `<p class="vazio">Escolha um arquivo pra ver quantas músicas ele tem antes de publicar.</p>`; return; }
     previa.innerHTML = `<p class="carregando">Lendo a planilha…</p>`;
     try {
       // o SheetJS só carrega quando o Ari escolhe um arquivo

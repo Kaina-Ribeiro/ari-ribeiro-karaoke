@@ -4,7 +4,7 @@ import { validaBanner, validaCartao, validaContato, validaNovidades } from "../.
 import {
   apagaCartao, atualizaCartao, criaCartao, existeArquivo, gravaConfig, leConfig, listaCartoes, listaPacotes, mudaModoPacote, reordenaCartoes, validaCatalogo, type ChaveConfig,
 } from "../config.ts";
-import { criaPublicacao, musicasNoAr, ultimaPublicacao } from "../publicacoes.ts";
+import { criaPublicacao, musicasNoAr, ultimasPublicacoes } from "../publicacoes.ts";
 import { ErroHttp, json, leJson } from "../resposta.ts";
 import type { Contexto, criaRoteador } from "../roteador.ts";
 
@@ -25,16 +25,17 @@ async function salvaEPublica<K extends ChaveConfig>(c: Contexto, chave: K, valor
 }
 
 export function registraAdmin(rota: Rota) {
-  rota("GET", "/api/admin/estado", async ({ env, deps }) => {
-    const [contato, banner, catalogo, novidades, cartoes, pacotes, publicacao, noAr] = await Promise.all([
+  rota("GET", "/api/admin/estado", async ({ env, deps, admin }) => {
+    const [contato, banner, catalogo, novidades, cartoes, pacotes, historico, noAr] = await Promise.all([
       leConfig(env, "contato"), leConfig(env, "banner"), leConfig(env, "catalogo"), leConfig(env, "novidades"),
-      listaCartoes(env), listaPacotes(env), ultimaPublicacao(env), musicasNoAr(env),
+      listaCartoes(env), listaPacotes(env), ultimasPublicacoes(env, 3), musicasNoAr(env),
     ]);
     const hoje = hojeSP(deps.agora());
     return json({
       contato, banner, catalogo, novidades, cartoes,
       pacotes: pacotes.map((p) => ({ ...p, classe: classifica(p, novidades.prazoDias, hoje) })),
-      publicacao, musicasNoAr: noAr, hoje,
+      publicacao: historico[0] ?? null, historico, musicasNoAr: noAr, hoje,
+      email: admin?.email ?? null,
     });
   });
 

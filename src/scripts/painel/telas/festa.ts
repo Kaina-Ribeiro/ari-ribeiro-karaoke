@@ -3,47 +3,65 @@ import { LIMITES, validaCartao } from "../../../lib/painel/valida.ts";
 import { api } from "../api.ts";
 import { carrega, type Estado } from "../estado.ts";
 import { enviaFoto } from "../foto.ts";
-import { $, atualizaContadores, aviso, cabecalho, campo, comCarregando, escapa } from "../ui.ts";
+import { $, atualizaContadores, aviso, cabecalho, campo, comCarregando, escapa, marcaSalvo, noSite } from "../ui.ts";
 
 const srcFoto = (chave: string) => `/api/admin/arquivos/${chave}`;
 
+/**
+ * Cada cartão é desenhado como no site (cartaz colorido e torto, sobre fundo preto), com os botões embaixo.
+ * As cores seguem a posição entre os LIGADOS, como no site (global.css, .cz:nth-child(1..4)).
+ */
 function htmlLista(cartoes: Cartao[]): string {
-  if (!cartoes.length) return `<p class="vazio">Nenhum cartão. Toque em "Novo cartão" pra criar o primeiro.</p>`;
+  if (!cartoes.length) {
+    return `<div class="vazio-bloco"><p><b>Nenhum cartão ainda.</b> Cada cartão vira um cartaz na parte "Pra sua festa" do site, com um botão que abre o seu Zap.</p>`
+      + `<button class="bt" type="button" data-acao="primeiro">Criar o primeiro cartão</button></div>`;
+  }
+  let ligado = 0;
   return `<ol class="cartoes">` + cartoes.map((c, i) => {
     const t = escapa(c.titulo);
+    const cor = c.ativo ? ` c${++ligado}` : "";
     return `<li class="cartao-item${c.ativo ? "" : " off"}" data-id="${c.id}">`
-      + (c.fotoChave ? `<img class="mini" src="${escapa(srcFoto(c.fotoChave))}" alt="" loading="lazy" />` : "")
-      + `<div class="cartao-texto"><span class="k">${escapa(c.destaque)}</span><b>${t}</b><p>${escapa(c.descricao)}</p>`
-      + (c.ativo ? "" : `<span class="desligado">Desligado</span>`) + `</div>`
+      + `<div class="cz${cor}">`
+      + (c.fotoChave ? `<img class="foto" src="${escapa(srcFoto(c.fotoChave))}" alt="" />` : "")
+      + `<span class="k">${escapa(c.destaque)}</span><b>${t}</b><p>${escapa(c.descricao)}</p>`
+      + (c.ativo ? `<span class="ir" aria-hidden="true">Chamar no Zap →</span>` : `<span class="ir"><span class="desligado">Desligado</span>: não aparece no site</span>`)
+      + `</div>`
       + `<div class="cartao-acoes">`
-      + `<button class="bt claro pequeno-claro" type="button" data-acao="editar" aria-label="Editar ${t}">Editar</button>`
-      + `<button class="bt claro pequeno-claro" type="button" data-acao="ligar" aria-label="${c.ativo ? "Desligar" : "Ligar"} ${t}">${c.ativo ? "Desligar" : "Ligar"}</button>`
-      + `<button class="bt claro icone" type="button" data-acao="subir" aria-label="Subir ${t}" ${i === 0 ? "disabled" : ""}>↑</button>`
-      + `<button class="bt claro icone" type="button" data-acao="descer" aria-label="Descer ${t}" ${i === cartoes.length - 1 ? "disabled" : ""}>↓</button>`
-      + `<button class="bt perigo pequeno-claro" type="button" data-acao="apagar" aria-label="Apagar ${t}">Apagar</button>`
+      + `<button class="mini" type="button" data-acao="editar" aria-label="Editar ${t}">Editar</button>`
+      + `<button class="mini" type="button" data-acao="ligar" aria-label="${c.ativo ? "Desligar" : "Ligar"} ${t}">${c.ativo ? "Desligar" : "Ligar"}</button>`
+      + `<button class="mini icone" type="button" data-acao="subir" aria-label="Subir ${t}" ${i === 0 ? "disabled" : ""}>↑</button>`
+      + `<button class="mini icone" type="button" data-acao="descer" aria-label="Descer ${t}" ${i === cartoes.length - 1 ? "disabled" : ""}>↓</button>`
+      + `<button class="mini perigo" type="button" data-acao="apagar" aria-label="Apagar ${t}">Apagar</button>`
       + `</div></li>`;
   }).join("") + `</ol>`;
 }
 
+const FEITO: Record<string, string> = { subir: "Ordem salva", descer: "Ordem salva", apagar: "Apagado" };
+
 export function montaFesta(el: HTMLElement, e: Estado) {
   let cartoes = e.cartoes;
-  el.innerHTML = cabecalho("Pra sua festa", "Os cartões de aluguel e serviços. Cada um abre o Zap de contato.")
-    + `<div class="acoes topo-acoes"><button class="bt" type="button" id="novo">Novo cartão</button></div>`
-    + `<div id="editor"></div><div id="lista">${htmlLista(cartoes)}</div>`
+  let editando: number | null = null;
+  el.innerHTML = cabecalho("Pra sua festa", "Os cartões de aluguel e serviços. Cada um abre o seu Zap.",
+    `<button class="bt" type="button" id="novo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Novo cartão</button>`)
+    + `<div class="festa-grade"><div id="editor"></div>${noSite(`<div id="lista">${htmlLista(cartoes)}</div>`, true)}</div>`
     + `<dialog id="confirma" aria-labelledby="confirmaTexto"><p id="confirmaTexto"></p>`
     + `<div class="acoes"><button class="bt claro" type="button" value="nao">Cancelar</button><button class="bt perigo" type="button" value="sim">Apagar</button></div></dialog>`;
 
   const lista = $("#lista", el);
   const editor = $("#editor", el);
+  const marcaEditando = () => lista.querySelectorAll<HTMLElement>(".cartao-item").forEach((li) =>
+    li.classList.toggle("editando", Number(li.dataset.id) === editando));
   const redesenha = async () => {
     const novo = await carrega();
-    if (novo) { cartoes = novo.cartoes; lista.innerHTML = htmlLista(cartoes); }
+    if (novo) { cartoes = novo.cartoes; lista.innerHTML = htmlLista(cartoes); marcaEditando(); }
   };
-  const salvo = async () => { aviso("Salvo. Publicando o site…"); await redesenha(); };
+  const fechaEditor = () => { editor.innerHTML = ""; editando = null; marcaEditando(); };
 
   /* ---------- editor (novo ou editar) ---------- */
   function abreEditor(c?: Cartao) {
     let fotoChave = c?.fotoChave ?? null;
+    editando = c?.id ?? null;
+    marcaEditando();
     editor.innerHTML = `<form class="folha editor" novalidate><h2>${c ? "Editar cartão" : "Novo cartão"}</h2>`
       + campo({ id: "titulo", rotulo: "Título", valor: c?.titulo ?? "", max: LIMITES.titulo })
       + campo({ id: "destaque", rotulo: "Destaque", valor: c?.destaque ?? "", max: LIMITES.destaque, dica: "Texto pequeno em cima do título. Opcional." })
@@ -60,7 +78,7 @@ export function montaFesta(el: HTMLElement, e: Estado) {
     form.addEventListener("input", confere);
     confere();
     $<HTMLInputElement>("#titulo", form).focus();
-    $("#cancela", form).addEventListener("click", () => { editor.innerHTML = ""; });
+    $("#cancela", form).addEventListener("click", fechaEditor);
     form.querySelector("#tiraFoto")?.addEventListener("click", () => {
       fotoChave = null;
       form.querySelector(".foto-atual img")?.remove();
@@ -93,8 +111,9 @@ export function montaFesta(el: HTMLElement, e: Estado) {
       if (!r.ok) { aviso(r.erro, "erro"); return; }
       await comCarregando(salvar, async () => {
         await api(c ? "PUT" : "POST", c ? `/api/admin/cartoes/${c.id}` : "/api/admin/cartoes", r.valor);
-        editor.innerHTML = "";
-        await salvo();
+        fechaEditor();
+        aviso("Salvo. Publicando o site…");
+        await redesenha();
       });
     });
     editor.scrollIntoView({ block: "start" });
@@ -121,14 +140,16 @@ export function montaFesta(el: HTMLElement, e: Estado) {
   lista.addEventListener("click", async (ev) => {
     const b = (ev.target as HTMLElement).closest<HTMLButtonElement>("button[data-acao]");
     if (!b) return;
+    if (b.dataset.acao === "primeiro") { abreEditor(); return; }
     const id = Number(b.closest<HTMLElement>(".cartao-item")!.dataset.id);
     const i = cartoes.findIndex((c) => c.id === id);
     const c = cartoes[i];
     if (!c) return;
-    const acao = b.dataset.acao;
+    const acao = b.dataset.acao!;
     if (acao === "editar") { abreEditor(c); return; }
     if (acao === "apagar" && !(await confirma(`Apagar o cartão ${c.titulo}? Não dá para desfazer.`))) return;
-    await comCarregando(b, async () => {
+    const feito = acao === "ligar" ? (c.ativo ? "Desligado" : "Ligado") : FEITO[acao];
+    const ok = await comCarregando(b, async () => {
       if (acao === "ligar") {
         const { id: _i, ordem: _o, ...dados } = c;
         await api("PUT", `/api/admin/cartoes/${c.id}`, { ...dados, ativo: !c.ativo });
@@ -139,10 +160,14 @@ export function montaFesta(el: HTMLElement, e: Estado) {
         await api("PUT", "/api/admin/cartoes/ordem", { ids });
       } else if (acao === "apagar") {
         await api("DELETE", `/api/admin/cartoes/${c.id}`);
+        if (editando === c.id) fechaEditor();
       }
-      await salvo();
+      aviso(`${feito}. Publicando o site…`);
+      await redesenha();
     });
-    // depois de redesenhar, o foco volta pro mesmo botão do mesmo cartão (quem usa teclado não se perde)
-    lista.querySelector<HTMLButtonElement>(`.cartao-item[data-id="${id}"] button[data-acao="${acao}"]:not(:disabled)`)?.focus();
+    // depois de redesenhar, o foco volta pro mesmo botão do mesmo cartão (quem usa teclado não se perde) e ele confirma
+    const mesmo = lista.querySelector<HTMLButtonElement>(`.cartao-item[data-id="${id}"] button[data-acao="${acao}"]:not(:disabled)`);
+    mesmo?.focus();
+    if (ok && mesmo) marcaSalvo(mesmo, feito);
   });
 }

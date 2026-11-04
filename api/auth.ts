@@ -13,8 +13,11 @@ const naoLogado = () => erro("Faça login de novo.", 401);
 export async function exigeAdmin(req: Request, env: Env, deps: Deps): Promise<{ email: string } | Response> {
   // login de teste: só na máquina de quem desenvolve, nunca num host da Cloudflare
   if (env.DEV_ADMIN_EMAIL && LOCAL.has(new URL(req.url).hostname)) return { email: env.DEV_ADMIN_EMAIL };
+  // o motivo vai pro log da Cloudflare (sem e-mail nem token), pra achar configuração errada num ambiente
+  const recusa = (motivo: string) => { console.warn(`admin 401: ${motivo}`); return naoLogado(); };
   const jwt = req.headers.get("Cf-Access-Jwt-Assertion");
-  if (!jwt || !env.ACCESS_TEAM || !env.ACCESS_AUD) return naoLogado();
+  if (!jwt) return recusa("sem JWT do Access");
+  if (!env.ACCESS_TEAM || !env.ACCESS_AUD) return recusa(`Access não configurado (team=${!!env.ACCESS_TEAM}, aud=${!!env.ACCESS_AUD})`);
   try {
     const { payload } = await jwtVerify(jwt, deps.chaves(env), {
       issuer: `https://${env.ACCESS_TEAM}.cloudflareaccess.com`,
@@ -22,9 +25,10 @@ export async function exigeAdmin(req: Request, env: Env, deps: Deps): Promise<{ 
     });
     const email = typeof payload.email === "string" ? payload.email.toLowerCase() : "";
     const lista = (env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-    return email && lista.includes(email) ? { email } : naoLogado();
-  } catch {
-    return naoLogado();
+    if (email && lista.includes(email)) return { email };
+    return recusa(`e-mail fora da lista (lista com ${lista.length} e-mail(s), JWT ${email ? "com" : "sem"} e-mail)`);
+  } catch (e) {
+    return recusa(`JWT inválido: ${(e as { code?: string }).code ?? (e as Error).message}`);
   }
 }
 

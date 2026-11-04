@@ -22,7 +22,7 @@ const ABAS: [string, string, string][] = [
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Instrument+Serif:ital@0;1&family=Schibsted+Grotesk:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" />
   </head>
   <body>
     <div class="app">
@@ -36,6 +36,11 @@ const ABAS: [string, string, string][] = [
             <a href={`#${id}`}><svg viewBox="0 0 24 24" aria-hidden="true" set:html={icone} /><span>{nome}</span></a>
           ))}
         </nav>
+        <div class="quem">
+          <p class="quem-txt"><span class="quem-rot">Entrou como</span> <b id="email">…</b></p>
+          <!-- logout do Cloudflare Access: encerra a sessão e volta pro pedido de e-mail -->
+          <a class="sair" href="/cdn-cgi/access/logout"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h5v16h-5"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/></svg>Sair</a>
+        </div>
       </aside>
       <div class="conteudo">
         <div class="status" id="status" data-tipo="carregando" role="status" aria-live="polite">
