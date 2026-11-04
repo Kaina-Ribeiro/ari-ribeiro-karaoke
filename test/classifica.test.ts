@@ -28,6 +28,9 @@ describe("chavePacote", () => {
     expect(chavePacote("13K")).toBe("13K");
     expect(chavePacote("inter   14g")).toBe("INTER 14G");
   });
+  it("acento escrito de outro jeito (planilha exportada no Mac) é o mesmo pacote", () => {
+    expect(chavePacote("Ão Vivo")).toBe(chavePacote("Ão Vivo"));
+  });
 });
 
 describe("datas", () => {

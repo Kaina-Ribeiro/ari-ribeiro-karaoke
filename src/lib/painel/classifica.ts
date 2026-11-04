@@ -1,8 +1,8 @@
 import type { Pacote } from "../texto.ts";
 import type { Modo } from "./tipos.ts";
 
-/** "13k " e "13K" são o mesmo pacote. */
-export const chavePacote = (nome: string): string => nome.trim().replace(/\s+/g, " ").toUpperCase();
+/** "13k " e "13K" são o mesmo pacote; "Ã" composto ou decomposto (Mac) também. */
+export const chavePacote = (nome: string): string => nome.normalize("NFC").trim().replace(/\s+/g, " ").toUpperCase();
 
 /** Data de hoje em Brasília, AAAA-MM-DD. */
 export function hojeSP(agora: Date): string {
