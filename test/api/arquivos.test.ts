@@ -13,7 +13,7 @@ const XLSX_MINIMO = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 1, 2, 3, 4, 5, 6]);
 const WEBP_MINIMO = new Uint8Array([...new TextEncoder().encode("RIFF"), 0, 0, 0, 0, ...new TextEncoder().encode("WEBPVP8 ")]);
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
 
-async function envia(tipo: string, bytes: Uint8Array, nome = "Catálogo do Ari.xlsx") {
+async function envia(tipo: string, bytes: Uint8Array<ArrayBuffer>, nome = "Catálogo do Ari.xlsx") {
   const form = new FormData();
   form.set("tipo", tipo);
   form.set("arquivo", new File([bytes], nome));
