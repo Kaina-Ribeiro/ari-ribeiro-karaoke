@@ -21,7 +21,7 @@ import { dadosImportacao, sqlImportacao } from "./importa-sql.ts";
 import { wrangler } from "./wrangler.ts";
 
 const ALVOS = {
-  local: { flags: ["--local", "--persist-to", ".wrangler/painel"], bucket: "ari-arquivos" },
+  local: { flags: ["--local", "--persist-to", process.env.PAINEL_PASTA ?? ".wrangler/painel"], bucket: "ari-arquivos" },
   preview: { flags: ["--env", "preview", "--remote"], bucket: "ari-arquivos-preview" },
   producao: { flags: ["--remote"], bucket: "ari-arquivos" },
 } as const;

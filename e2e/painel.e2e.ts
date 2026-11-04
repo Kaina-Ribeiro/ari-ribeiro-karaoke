@@ -205,7 +205,7 @@ test.describe("banner", () => {
     const e = await (await page.request.get("/api/admin/estado")).json();
     expect(e.banner.foto.recortada).toBe(false);
     await page.request.put("/api/admin/banner", {
-      headers: { Origin: "http://localhost:8788" },
+      headers: { Origin: new URL(page.url()).origin },
       data: { ...e.banner, foto: { chave: "fotos/ari-cantando.webp", recortada: true } },
     });
     await semProblemaGrave(page);
