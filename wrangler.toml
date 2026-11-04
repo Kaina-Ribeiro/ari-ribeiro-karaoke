@@ -14,7 +14,7 @@ ACCESS_AUD = "25b1e3f7b77c4f834a6a087256f3d4493a5e12f60d8502b84829ebad2e29a0b1"
 [[d1_databases]]
 binding = "DB"
 database_name = "ari-painel"
-database_id = "00000000-0000-0000-0000-000000000000" # preencher na Tarefa 20
+database_id = "5ed1a4bc-2f78-4e9a-8343-3f1f9220fc4a"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
