@@ -17,6 +17,8 @@ export default defineConfig({
     { name: "iphone", testMatch: SITE, use: { ...devices["iPhone 13"] } },
     // o painel grava no banco: um projeto só e em série, pra um teste não mexer no dado do outro
     { name: "painel", testMatch: /painel\.e2e\.ts/, fullyParallel: false, use: { ...devices["Pixel 7"] } },
+    // fotos no iPhone (WebKit, onde o canvas não gera WebP): só prévia, não grava no banco
+    { name: "painel-iphone", testMatch: /painel-foto\.e2e\.ts/, use: { ...devices["iPhone 13"] } },
   ],
   webServer: {
     command: "pnpm painel",

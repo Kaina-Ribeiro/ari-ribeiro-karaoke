@@ -10,18 +10,24 @@ type Rota = ReturnType<typeof criaRoteador>["rota"];
 const MB = 1024 * 1024;
 const ascii = (b: Uint8Array, de: number, ate: number) => String.fromCharCode(...b.slice(de, ate));
 
-/** Confere tamanho e os primeiros bytes; o nome e o tipo que o navegador diz não valem nada. */
+/**
+ * Formato pelos primeiros bytes; o nome e o tipo que o navegador diz não valem nada.
+ * Fotos: WebP (Chrome/Android) ou, onde o navegador não gera WebP (Safari, todo iPhone), JPG ou PNG.
+ */
+function formato(tipo: "planilha" | "foto", b: Uint8Array): { ext: string; contentType: string } | null {
+  if (tipo === "planilha") {
+    return b[0] === 0x50 && b[1] === 0x4b && b[2] === 0x03 && b[3] === 0x04
+      ? { ext: "xlsx", contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" } : null;
+  }
+  if (ascii(b, 0, 4) === "RIFF" && ascii(b, 8, 12) === "WEBP") return { ext: "webp", contentType: "image/webp" };
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { ext: "jpg", contentType: "image/jpeg" };
+  if (b[0] === 0x89 && ascii(b, 1, 4) === "PNG" && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a) return { ext: "png", contentType: "image/png" };
+  return null;
+}
+
 const TIPOS = {
-  planilha: {
-    max: 10 * MB, nomeMax: "10 MB", contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    assinatura: (b: Uint8Array) => b[0] === 0x50 && b[1] === 0x4b && b[2] === 0x03 && b[3] === 0x04,
-    erro: "Esse arquivo não é um .xlsx.",
-  },
-  foto: {
-    max: 2 * MB, nomeMax: "2 MB", contentType: "image/webp",
-    assinatura: (b: Uint8Array) => ascii(b, 0, 4) === "RIFF" && ascii(b, 8, 12) === "WEBP",
-    erro: "Essa foto não está em WebP. Escolha a foto de novo.",
-  },
+  planilha: { max: 10 * MB, nomeMax: "10 MB", erro: "Esse arquivo não é um .xlsx." },
+  foto: { max: 2 * MB, nomeMax: "2 MB", erro: "Essa foto não é JPG, PNG nem WebP. Escolha outra." },
 } as const;
 
 export const CHAVE_VALIDA = /^(planilhas|fotos)\/[\w.-]+$/;
@@ -61,9 +67,10 @@ export function registraArquivos(rota: Rota) {
     const t = TIPOS[tipo];
     if (arquivo.size > t.max) throw new ErroHttp(`Arquivo grande demais (máximo ${t.nomeMax}).`, 413);
     const bytes = new Uint8Array(await arquivo.arrayBuffer());
-    if (!t.assinatura(bytes)) throw new ErroHttp(t.erro, 415);
-    const chave = tipo === "planilha" ? `planilhas/${hojeSP(deps.agora())}-${deps.aleatorio()}.xlsx` : `fotos/${deps.aleatorio()}.webp`;
-    await env.ARQUIVOS.put(chave, bytes, { httpMetadata: { contentType: t.contentType } });
+    const f = formato(tipo, bytes);
+    if (!f) throw new ErroHttp(t.erro, 415);
+    const chave = tipo === "planilha" ? `planilhas/${hojeSP(deps.agora())}-${deps.aleatorio()}.xlsx` : `fotos/${deps.aleatorio()}.${f.ext}`;
+    await env.ARQUIVOS.put(chave, bytes, { httpMetadata: { contentType: f.contentType } });
     return json({ chave });
   });
 

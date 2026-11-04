@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { clientePainel } from "../scripts/painel.ts";
-import { confereTamanho, montaManifesto, type BaseManifesto } from "../src/lib/build.ts";
+import { confereTamanho, extensaoFoto, montaManifesto, type BaseManifesto } from "../src/lib/build.ts";
 import { CONFIG_PADRAO } from "../src/lib/painel/padrao.ts";
 import type { ConfigBuild } from "../src/lib/painel/tipos.ts";
 
@@ -86,5 +86,14 @@ describe("clientePainel", () => {
     expect(await c.pacotes([{ nome: "13K", musicas: 3 }])).toEqual({ "13K": "nova" });
     expect(await c.status({ status: "rodando" })).toEqual({ publicacao: 7 });
     expect(corpos).toEqual([{ pacotes: [{ nome: "13K", musicas: 3 }] }, { status: "rodando" }]);
+  });
+});
+
+describe("extensaoFoto", () => {
+  it("a cópia no site mantém o tipo da foto enviada", () => {
+    expect(extensaoFoto("fotos/a.webp")).toBe("webp");
+    expect(extensaoFoto("fotos/a.jpg")).toBe("jpg");
+    expect(extensaoFoto("fotos/a.png")).toBe("png");
+    expect(extensaoFoto("fotos/estranho")).toBe("webp");
   });
 });

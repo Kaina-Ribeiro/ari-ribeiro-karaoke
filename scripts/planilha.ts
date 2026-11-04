@@ -12,7 +12,7 @@
  */
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { confereTamanho, montaManifesto, type BaseManifesto } from "../src/lib/build.ts";
+import { confereTamanho, extensaoFoto, montaManifesto, type BaseManifesto } from "../src/lib/build.ts";
 import { chavePacote, classifica, hojeSP } from "../src/lib/painel/classifica.ts";
 import type { ConfigBuild } from "../src/lib/painel/tipos.ts";
 import { idDaPlanilha } from "../src/lib/painel/valida.ts";
@@ -85,7 +85,7 @@ async function principal() {
   const fotos = new Map<string, string>();
   for (const chave of new Set([config.banner.foto.chave, ...config.cartoes.map((c) => c.fotoChave).filter((c): c is string => !!c)])) {
     const bytes = await dados.arquivo(chave);
-    const nome = `${hash(bytes)}.webp`;
+    const nome = `${hash(bytes)}.${extensaoFoto(chave)}`;
     await writeFile(arquivo("public/img/painel/" + nome), bytes);
     fotos.set(chave, "/img/painel/" + nome);
   }

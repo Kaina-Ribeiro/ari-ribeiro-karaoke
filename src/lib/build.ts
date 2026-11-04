@@ -53,3 +53,9 @@ export function montaManifesto(base: BaseManifesto, config: ConfigBuild, fotos: 
     servicos: config.cartoes.map((c) => ({ titulo: c.titulo, destaque: c.destaque, descricao: c.descricao, foto: c.fotoChave ? foto(c.fotoChave) : null })),
   };
 }
+
+/** Extensão da cópia da foto no site, a mesma do arquivo enviado (WebP, ou JPG/PNG vindos do Safari). */
+export function extensaoFoto(chave: string): "webp" | "jpg" | "png" {
+  const ext = /\.(webp|jpg|png)$/.exec(chave)?.[1];
+  return (ext ?? "webp") as "webp" | "jpg" | "png";
+}

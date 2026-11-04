@@ -82,7 +82,7 @@ CREATE TABLE publicacoes (
 ```
 
 ### R2
-- Chaves geradas pelo servidor: `planilhas/<data>-<aleatório>.xlsx`, `fotos/<aleatório>.webp`. Nunca o nome do arquivo do usuário.
+- Chaves geradas pelo servidor: `planilhas/<data>-<aleatório>.xlsx`, `fotos/<aleatório>.webp` (ou `.jpg`/`.png`, ver Fotos no §6). Nunca o nome do arquivo do usuário.
 - Arquivos antigos ficam (custo irrisório). Limpeza fica fora do escopo.
 
 ### Classificação de pacote (função pura, testada)
@@ -151,7 +151,7 @@ Celular primeiro, com o visual do site (cores, fontes). Abas embaixo da tela no 
 | **Pra sua festa** | Lista: criar, editar, ligar/desligar, apagar (com confirmação), ↑↓ para reordenar, foto opcional |
 | **Contato** | Zap de contato, Zap do KJ (opcional), Instagram, Facebook (opcional) |
 
-**Fotos:** comprimidas no navegador (canvas → `.webp`, lado maior 1200 px, qualidade 0.82). O navegador detecta transparência: com fundo transparente → `recortada: true` (aparece como hoje); sem → enquadrada no pôster.
+**Fotos:** comprimidas no navegador (canvas → `.webp`, lado maior 1200 px, qualidade 0.82; onde o navegador não gera WebP, como o Safari e todo iPhone, vai `.jpg` para foto comum e `.png` para fundo transparente; acima de 2 MB, diminui e tenta de novo). O navegador detecta transparência: com fundo transparente → `recortada: true` (aparece como hoje); sem → enquadrada no pôster.
 
 **Trava contra arquivo errado:** se a prévia tiver menos de 50% de `musicasNoAr`, o painel pede confirmação extra; o build recusa publicar abaixo de 50% salvo `catalogo.arquivo.forcar = true`, gravado nessa confirmação e apagado na publicação seguinte.
 
@@ -166,7 +166,7 @@ Celular primeiro, com o visual do site (cores, fontes). Abas embaixo da tela no 
 5. **Build (`scripts/planilha.ts`):**
    - Online: `GET /api/build/config` → fonte `arquivo` (baixa do R2, lê aba "Músicas" com SheetJS) ou `link` (CSV do Google, como hoje) → `POST /api/build/pacotes` → classifica → gera JSONs.
    - Offline (`--offline`): `data/fixture/config.json` + CSVs de hoje. Sem rede.
-   - Fotos do R2 são baixadas para `public/img/painel/<hash>.webp` (o site não depende do R2).
+   - Fotos do R2 são baixadas para `public/img/painel/<hash>.<extensão>` (o site não depende do R2).
    - Limpeza de dados atual (`montaMusicas`) vale para as duas fontes.
    - `versao.txt` inclui a config.
    - Recusa publicar se músicas < 50% de `musicasNoAr` (sem `forcar`).
@@ -180,7 +180,7 @@ Celular primeiro, com o visual do site (cores, fontes). Abas embaixo da tela no 
 - Login de teste local: `DEV_ADMIN_EMAIL` em `.dev.vars`, aceito **só** se o host da requisição for `localhost`/`127.0.0.1`. Nunca configurado na Cloudflare.
 - `BUILD_TOKEN`: 32+ bytes aleatórios, comparação em tempo constante.
 - `GH_DISPATCH_TOKEN`: fine-grained, só este repositório, permissão `Actions: write` + `Contents: read`, validade 1 ano. Como renovar fica no README.
-- Uploads: tamanho, assinatura (`PK` para xlsx, `RIFF…WEBP` para foto), chave gerada no servidor.
+- Uploads: tamanho, assinatura (`PK` para xlsx, `RIFF…WEBP`, `FF D8 FF` ou `89 PNG` para foto), chave gerada no servidor.
 - Textos do Ari sempre escapados (Astro já escapa; `catalogo.ts` usa `escapa`). Links montados a partir de campos validados.
 
 ## 9. Erros
