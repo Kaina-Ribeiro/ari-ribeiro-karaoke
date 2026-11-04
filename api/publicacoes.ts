@@ -92,19 +92,15 @@ export function validaCorpoStatus(x: unknown): CorpoStatus {
   };
 }
 
-/** Uma publicação que deu certo cobre as anteriores ainda abertas (o Actions cancela as da fila). */
+/**
+ * Uma publicação que deu certo cobre as anteriores ainda abertas (o Actions cancela as da fila).
+ * O "publicar mesmo com menos músicas" não é apagado aqui: ele é do arquivo confirmado (sai quando o Ari
+ * envia outro arquivo sem confirmar). Depois do primeiro ok, as músicas no ar já são as do arquivo novo e a
+ * trava não dispara mais; apagar aqui deixaria uma publicação antiga gastar a confirmação de uma nova.
+ */
 async function terminaOk(env: Env, agora: string, id: number) {
   await env.DB.prepare("UPDATE publicacoes SET status = 'ok', terminou_em = ? WHERE id < ? AND status IN ('pendente', 'rodando')")
     .bind(agora, id).run();
-  // o "publicar mesmo com menos músicas" vale uma vez só
-  const cat = await env.DB.prepare("SELECT valor FROM config WHERE chave = 'catalogo'").first<{ valor: string }>();
-  if (cat) {
-    const v = JSON.parse(cat.valor);
-    if (v.arquivo?.forcar !== undefined) {
-      delete v.arquivo.forcar;
-      await env.DB.prepare("UPDATE config SET valor = ?, atualizado_em = ? WHERE chave = 'catalogo'").bind(JSON.stringify(v), agora).run();
-    }
-  }
 }
 
 export async function registraStatus(env: Env, deps: Deps, c: CorpoStatus): Promise<{ publicacao: number; ignorada?: true }> {

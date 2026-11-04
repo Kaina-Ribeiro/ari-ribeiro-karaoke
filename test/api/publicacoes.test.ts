@@ -102,14 +102,16 @@ describe("status vindo do build", () => {
     expect(p?.terminouEm).toBeTruthy();
   });
 
-  it("publicação ok apaga o 'forçar' do catálogo", async () => {
+  it("uma publicação antiga terminando ok não gasta o 'forçar' do arquivo confirmado", async () => {
+    // A (banner) roda sem o forçar; o Ari confirma um catálogo menor (B, com forçar) logo depois.
+    // Se A apagasse o forçar, B e todo "Tentar de novo" falhariam na trava de 50%.
     amb = await criaAmbiente();
+    const { corpo: a } = await status(amb, { status: "rodando" });
     const cat = { fonte: "arquivo", link: null, arquivo: { chave: "planilhas/a.xlsx", nome: "a.xlsx", enviadoEm: "x", musicas: 10, pacotes: 1, forcar: true } };
     await amb.env.DB.prepare("INSERT INTO config VALUES ('catalogo', ?, 'x')").bind(JSON.stringify(cat)).run();
-    const { corpo } = await status(amb, { status: "rodando" });
-    await status(amb, { publicacao: corpo.publicacao, status: "ok", musicas: 10 });
+    await status(amb, { publicacao: a.publicacao, status: "ok", musicas: 1000 });
     const row = await amb.env.DB.prepare("SELECT valor FROM config WHERE chave = 'catalogo'").first<{ valor: string }>();
-    expect(JSON.parse(row!.valor).arquivo.forcar).toBeUndefined();
+    expect(JSON.parse(row!.valor).arquivo.forcar).toBe(true);
   });
 
   it("status desconhecido ou publicação inexistente", async () => {
