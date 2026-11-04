@@ -25,6 +25,13 @@ describe("estado", () => {
     const r = await amb.chamar(await reqAdmin("GET", "/api/admin/estado", undefined, "Ari@Painel.test"));
     expect((await r.json()).email).toBe("ari@painel.test");
   });
+  it("histórico: as 3 últimas publicações, da mais nova pra mais velha", async () => {
+    expect((await estado()).historico).toEqual([]);
+    for (const motivo of ["tentar-de-novo", "atualizar-catalogo", "tentar-de-novo", "atualizar-catalogo"]) await chama("POST", "/api/admin/publicar", { motivo });
+    const e = await estado();
+    expect(e.historico.map((p: { id: number }) => p.id)).toEqual([4, 3, 2]);
+    expect(e.publicacao).toEqual(e.historico[0]);
+  });
 });
 
 describe("contato", () => {

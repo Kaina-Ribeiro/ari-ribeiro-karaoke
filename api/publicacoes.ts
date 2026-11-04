@@ -30,8 +30,13 @@ export async function lePublicacao(env: Env, id: number): Promise<Publicacao | n
 }
 
 export async function ultimaPublicacao(env: Env): Promise<Publicacao | null> {
-  const r = await env.DB.prepare("SELECT * FROM publicacoes ORDER BY id DESC LIMIT 1").first<Linha>();
-  return r ? deLinha(r) : null;
+  return (await ultimasPublicacoes(env, 1))[0] ?? null;
+}
+
+/** As `n` publicações mais novas, da mais nova pra mais velha (histórico do Início). */
+export async function ultimasPublicacoes(env: Env, n: number): Promise<Publicacao[]> {
+  const { results } = await env.DB.prepare("SELECT * FROM publicacoes ORDER BY id DESC LIMIT ?").bind(n).all<Linha>();
+  return results.map(deLinha);
 }
 
 /** Músicas da última publicação que deu certo: base da trava contra arquivo errado. */

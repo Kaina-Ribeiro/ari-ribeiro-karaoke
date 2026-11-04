@@ -12,6 +12,8 @@ export interface Estado {
   cartoes: Cartao[];
   pacotes: (PacoteDb & { classe: Pacote })[];
   publicacao: Publicacao | null;
+  /** as 3 últimas, da mais nova pra mais velha */
+  historico: Publicacao[];
   musicasNoAr: number | null;
   hoje: string;
   /** e-mail de quem entrou no painel */
