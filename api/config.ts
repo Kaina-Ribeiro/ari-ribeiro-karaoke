@@ -64,3 +64,36 @@ export async function validaCatalogo(env: Env, x: unknown, atual: FonteCatalogo,
   }
   return { ok: false, erro: "Escolha a fonte do catálogo: arquivo ou link." };
 }
+
+type DadosCartao = Omit<Cartao, "id" | "ordem">;
+
+export async function criaCartao(env: Env, d: DadosCartao, agora: Date): Promise<Cartao> {
+  const r = await env.DB.prepare(
+    "INSERT INTO cartoes (ordem, ativo, titulo, destaque, descricao, foto_chave, atualizado_em) "
+    + "VALUES ((SELECT COALESCE(MAX(ordem), 0) + 1 FROM cartoes), ?, ?, ?, ?, ?, ?) RETURNING *",
+  ).bind(d.ativo ? 1 : 0, d.titulo, d.destaque, d.descricao, d.fotoChave, agora.toISOString()).first<LinhaCartao>();
+  return deCartao(r!);
+}
+
+/** false se o cartão não existe. */
+export async function atualizaCartao(env: Env, id: number, d: DadosCartao, agora: Date): Promise<boolean> {
+  const r = await env.DB.prepare("UPDATE cartoes SET ativo = ?, titulo = ?, destaque = ?, descricao = ?, foto_chave = ?, atualizado_em = ? WHERE id = ?")
+    .bind(d.ativo ? 1 : 0, d.titulo, d.destaque, d.descricao, d.fotoChave, agora.toISOString(), id).run();
+  return r.meta.changes > 0;
+}
+
+export async function apagaCartao(env: Env, id: number): Promise<boolean> {
+  return (await env.DB.prepare("DELETE FROM cartoes WHERE id = ?").bind(id).run()).meta.changes > 0;
+}
+
+/** Só aceita a lista completa, sem repetir: se mudou em outra aba, o Ari recarrega. */
+export async function reordenaCartoes(env: Env, ids: unknown, agora: Date): Promise<boolean> {
+  const atuais = (await listaCartoes(env)).map((c) => c.id);
+  if (!Array.isArray(ids) || ids.length !== atuais.length || new Set(ids).size !== ids.length || !ids.every((i) => atuais.includes(i))) return false;
+  if (ids.length) await env.DB.batch(ids.map((id, i) => env.DB.prepare("UPDATE cartoes SET ordem = ?, atualizado_em = ? WHERE id = ?").bind(i + 1, agora.toISOString(), id)));
+  return true;
+}
+
+export async function mudaModoPacote(env: Env, chave: string, modo: Modo): Promise<boolean> {
+  return (await env.DB.prepare("UPDATE pacotes SET modo = ? WHERE chave = ?").bind(modo, chave).run()).meta.changes > 0;
+}
