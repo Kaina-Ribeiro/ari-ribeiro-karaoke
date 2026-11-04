@@ -1,4 +1,7 @@
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
+import * as XLSX from "xlsx";
 import { expect, test, type Page } from "@playwright/test";
 
 // Painel local (pnpm painel): login de teste em localhost, publicação simulada (sem GitHub).
@@ -54,6 +57,77 @@ test.describe("contato", () => {
     await expect(page.locator("#erro-zapKj")).toHaveText("Use um celular com DDD: (12) 99999-9999");
     await expect(page.getByLabel("Zap do KJ")).toHaveAttribute("aria-invalid", "true");
     expect(salvou).toBe(false);
+    await semProblemaGrave(page);
+  });
+});
+
+/* ---------- catálogo ---------- */
+const tokenBuild = () => /^BUILD_TOKEN=(.+)$/m.exec(readFileSync(".dev.vars", "utf8"))![1].trim();
+/** Simula a última publicação do build dizendo quantas músicas estão no ar (base da trava de 50%). */
+const defineNoAr = (page: Page, musicas: number) =>
+  page.request.post("/api/build/status", { headers: { Authorization: `Bearer ${tokenBuild()}` }, data: { status: "ok", musicas } });
+
+test.describe("catálogo", () => {
+  test("enviar .xlsx mostra a prévia e publica", async ({ page }) => {
+    await defineNoAr(page, 95);
+    await abre(page, "catalogo");
+    await expect(page.locator("h1")).toHaveText("Catálogo");
+    await page.getByLabel("Arquivo .xlsx").check();
+    await page.getByLabel("Escolha o arquivo").setInputFiles("data/fixture/musicas.xlsx");
+    await expect(page.locator(".previa")).toContainText("95 músicas");
+    await page.getByRole("button", { name: "Confirmar e publicar" }).click();
+    await expect(page.locator("#aviso")).toContainText("Salvo");
+    await expect(page.locator("#status")).toContainText("No ar ✅");
+    const e = await (await page.request.get("/api/admin/estado")).json();
+    expect(e.catalogo.fonte).toBe("arquivo");
+    expect(e.catalogo.arquivo).toMatchObject({ nome: "musicas.xlsx", musicas: 95 });
+  });
+
+  test(".xlsx sem a aba Músicas: erro e Confirmar travado", async ({ page }, info) => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["codigo", "titulo"]]), "Planilha1");
+    const arq = info.outputPath("sem-aba.xlsx");
+    mkdirSync(dirname(arq), { recursive: true });
+    writeFileSync(arq, XLSX.write(wb, { type: "buffer", bookType: "xlsx" }));
+    await abre(page, "catalogo");
+    await page.getByLabel("Arquivo .xlsx").check();
+    await page.getByLabel("Escolha o arquivo").setInputFiles(arq);
+    await expect(page.locator(".previa")).toContainText('O arquivo não tem a aba "Músicas".');
+    await expect(page.getByRole("button", { name: "Confirmar e publicar" })).toBeDisabled();
+  });
+
+  test("arquivo com menos da metade das músicas no ar pede confirmação extra", async ({ page }) => {
+    await defineNoAr(page, 100000);
+    await abre(page, "catalogo");
+    await page.getByLabel("Arquivo .xlsx").check();
+    await page.getByLabel("Escolha o arquivo").setInputFiles("data/fixture/musicas.xlsx");
+    const confirmar = page.getByRole("button", { name: "Confirmar e publicar" });
+    await expect(page.locator(".previa")).toContainText("menos da metade");
+    await expect(confirmar).toBeDisabled();
+    await page.getByLabel("Sim, o catálogo novo tem menos músicas mesmo").check();
+    await expect(confirmar).toBeEnabled();
+    await defineNoAr(page, 95);
+  });
+
+  test("link: Salvar só depois de testar esse mesmo link", async ({ page }) => {
+    await page.route("**/api/admin/link/teste?*", (r) => r.fulfill({ json: { ok: true, id: "1abcdefghijklmnop_XYZ" } }));
+    await abre(page, "catalogo");
+    await page.getByLabel("Link do Google").check();
+    const campoLink = page.getByLabel("Link da planilha");
+    const salvar = page.getByRole("button", { name: "Salvar link" });
+    await campoLink.fill("https://docs.google.com/spreadsheets/d/1abcdefghijklmnop_XYZ/edit");
+    await expect(salvar).toBeDisabled();
+    await page.getByRole("button", { name: "Testar" }).click();
+    await expect(page.locator(".teste-link")).toContainText("Planilha pública");
+    await expect(salvar).toBeEnabled();
+    await campoLink.fill("https://docs.google.com/spreadsheets/d/outra_planilha_123/edit");
+    await expect(salvar).toBeDisabled();
+    // volta pra planilha do Ari (só leitura) pros outros testes
+    await campoLink.fill("https://docs.google.com/spreadsheets/d/1kTKJlUTVK0CX6pM_mRugkmqIu9Hz9Wpx");
+    await page.getByRole("button", { name: "Testar" }).click();
+    await salvar.click();
+    await expect(page.locator("#aviso")).toContainText("Salvo");
+    await expect(page.getByRole("button", { name: "Atualizar catálogo" })).toBeVisible();
     await semProblemaGrave(page);
   });
 });

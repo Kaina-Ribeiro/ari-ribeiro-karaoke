@@ -129,3 +129,29 @@ main{max-width:720px;margin:0 auto;padding:22px 16px 0}
   .status{padding:12px 32px}
   .aviso{bottom:28px}
 }
+
+/* ---------- catálogo ---------- */
+.escolha{border:0;padding:0;margin:0 0 18px;display:flex;flex-wrap:wrap;gap:10px}
+.escolha legend{font-weight:800;margin-bottom:8px;padding:0}
+.escolha label{flex:1 1 140px;display:flex;align-items:center;gap:8px;min-height:52px;padding:0 12px;white-space:nowrap;border:2px solid var(--tinta);background:var(--papel-2);font-weight:800;cursor:pointer;transition:background-color .15s,box-shadow .15s}
+.escolha label:has(:checked){background:var(--luz);box-shadow:var(--sombra)}
+.escolha label:hover{background:#efe3c6}
+.escolha label:has(:checked):hover{background:#ffdc4d}
+.escolha input{width:20px;height:20px;accent-color:var(--tinta);margin:0}
+.folha[hidden]{display:none}
+input[type=file]{display:block;width:100%;font:500 1rem var(--f-texto);padding:12px;border:2px dashed var(--tinta);background:#fff;cursor:pointer}
+input[type=file]::file-selector-button{font:800 .95rem var(--f-texto);border:2px solid var(--tinta);background:var(--luz);padding:8px 14px;margin-right:12px;cursor:pointer}
+.previa:empty{display:none}
+.previa{margin:4px 0 16px}
+.previa .numeros{list-style:none;padding:0;margin:0 0 10px;display:grid;gap:6px}
+.previa .numeros b{font:900 1.6rem/1 var(--d-cartaz);margin-right:4px}
+.previa .numeros span{color:var(--tinta-2);font-size:.88rem}
+.alerta{border:2px solid var(--brasa-texto);background:#fff1eb;padding:12px 14px;margin-top:10px}
+.alerta p{margin:0 0 10px;font-weight:700;color:var(--brasa-texto)}
+.marcar{display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer;min-height:44px}
+.marcar input{width:22px;height:22px;accent-color:var(--brasa-texto);margin:0}
+.erro-bloco{margin:0;color:var(--brasa-texto);font-weight:800;border-left:4px solid var(--brasa-texto);padding:6px 10px;background:#fff1eb}
+.teste-link{margin:-6px 0 12px;font-weight:700}
+.teste-link:empty{display:none}
+.teste-link[data-tipo="ok"]{color:var(--gravata)}
+.teste-link[data-tipo="erro"]{color:var(--brasa-texto)}
