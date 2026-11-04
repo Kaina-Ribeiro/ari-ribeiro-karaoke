@@ -2,6 +2,7 @@ import { createRemoteJWKSet, type JWTVerifyGetKey } from "jose";
 import { confereOrigem, exigeAdmin, exigeBuild } from "./auth.ts";
 import { erro, ErroHttp } from "./resposta.ts";
 import { registraAdmin } from "./rotas/admin.ts";
+import { registraArquivos } from "./rotas/arquivos.ts";
 import { registraBuild } from "./rotas/build.ts";
 import { criaRoteador } from "./roteador.ts";
 import type { Deps, Env } from "./tipos.ts";
@@ -28,6 +29,7 @@ export const depsPadrao: Deps = {
 
 const { rota, acha } = criaRoteador();
 registraAdmin(rota);
+registraArquivos(rota);
 registraBuild(rota);
 
 export async function handle(req: Request, env: Env, deps: Partial<Deps> = {}): Promise<Response> {

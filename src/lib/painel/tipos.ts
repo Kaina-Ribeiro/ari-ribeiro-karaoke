@@ -50,3 +50,16 @@ export interface Cartao {
 }
 
 export type Resultado<T> = { ok: true; valor: T } | { ok: false; erro: string };
+
+/** O que o build recebe da API (GET /api/build/config) ou de data/fixture/config.json (offline). */
+export interface ConfigBuild {
+  contato: Contato;
+  banner: Banner;
+  catalogo: FonteCatalogo;
+  novidades: Novidades;
+  /** só os ativos, em ordem */
+  cartoes: Cartao[];
+  pacotes: PacoteDb[];
+  musicasNoAr: number | null;
+  hoje: string;
+}
