@@ -1,0 +1,35 @@
+# Cloudflare Pages: site estático em dist/ + API em functions/ (código em api/).
+# Os IDs do D1 e os dados do Access são preenchidos na configuração única (README).
+name = "ari-ribeiro-karaoke"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-01"
+
+[vars]
+ADMIN_EMAILS = ""
+ACCESS_TEAM = ""
+ACCESS_AUD = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ari-painel"
+database_id = "00000000-0000-0000-0000-000000000000" # preencher na Tarefa 20
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "ARQUIVOS"
+bucket_name = "ari-arquivos"
+
+[env.preview.vars]
+ADMIN_EMAILS = ""
+ACCESS_TEAM = ""
+ACCESS_AUD = ""
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "ari-painel-preview"
+database_id = "00000000-0000-0000-0000-000000000000" # preencher na Tarefa 20
+migrations_dir = "migrations"
+
+[[env.preview.r2_buckets]]
+binding = "ARQUIVOS"
+bucket_name = "ari-arquivos-preview"

@@ -7,3 +7,9 @@ public/data/
 public/versao.txt
 test-results/
 playwright-report/
+.dev.vars
+.wrangler/
+public/img/painel/
+prints/
+.erro-build.txt
+.superpowers/
