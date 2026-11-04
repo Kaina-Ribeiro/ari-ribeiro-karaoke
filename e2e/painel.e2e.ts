@@ -174,3 +174,40 @@ test.describe("novidades", () => {
     await semProblemaGrave(page);
   });
 });
+
+/* ---------- banner ---------- */
+test.describe("banner", () => {
+  const previaCelular = (page: Page) => page.frameLocator('iframe[title="Prévia no celular"]');
+
+  test("a prévia acompanha a digitação e o limite trava o Salvar", async ({ page }) => {
+    await abre(page, "banner");
+    await expect(page.locator("h1")).toHaveText("Banner");
+    await expect(previaCelular(page).locator("#letreiro")).toContainText("Solta");
+    await page.getByLabel("Linha 1").fill("Canta");
+    await expect(previaCelular(page).locator("#letreiro")).toContainText("Canta");
+    await expect(page.frameLocator('iframe[title="Prévia no computador"]').locator("#letreiro")).toContainText("Canta");
+    await page.getByLabel("Linha 1").fill("Quinze letras!!");
+    await expect(page.locator(".entrada.passou")).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Salvar banner" })).toBeDisabled();
+    await page.getByLabel("Linha 1").fill("Solta");
+    await expect(page.getByRole("button", { name: "Salvar banner" })).toBeEnabled();
+  });
+
+  test("foto comum preenche o pôster; salvar publica", async ({ page }) => {
+    await abre(page, "banner");
+    await page.getByLabel("Trocar foto").setInputFiles("data/fixture/r2/fotos/telao.webp");
+    await expect(page.locator(".foto-info")).toContainText("preenche o pôster");
+    await expect(previaCelular(page).locator(".poster img.cheia")).toHaveCount(1);
+    await page.getByRole("button", { name: "Salvar banner" }).click();
+    await expect(page.locator("#aviso")).toContainText("Salvo");
+    await expect(page.locator("#status")).toContainText("No ar ✅");
+    // volta a foto do Ari (recortada) pros outros testes
+    const e = await (await page.request.get("/api/admin/estado")).json();
+    expect(e.banner.foto.recortada).toBe(false);
+    await page.request.put("/api/admin/banner", {
+      headers: { Origin: "http://localhost:8788" },
+      data: { ...e.banner, foto: { chave: "fotos/ari-cantando.webp", recortada: true } },
+    });
+    await semProblemaGrave(page);
+  });
+});

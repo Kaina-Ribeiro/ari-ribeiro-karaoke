@@ -15,3 +15,8 @@
 /admin*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
+# a prévia do banner abre num quadro dentro do painel (só do próprio site)
+/admin/previa*
+  ! X-Frame-Options
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self'

@@ -2,6 +2,7 @@
 import { api } from "./api.ts";
 import { assina, atual, carrega, type Estado } from "./estado.ts";
 import { textoStatus } from "./status.ts";
+import { montaBanner } from "./telas/banner.ts";
 import { montaCatalogo } from "./telas/catalogo.ts";
 import { montaContato } from "./telas/contato.ts";
 import { montaInicio } from "./telas/inicio.ts";
@@ -16,7 +17,7 @@ const TELAS: Record<string, Montador> = {
   inicio: montaInicio,
   catalogo: montaCatalogo,
   novidades: montaNovidades,
-  banner: emBreve("Banner"),
+  banner: montaBanner,
   festa: emBreve("Pra sua festa"),
   contato: montaContato,
 };
