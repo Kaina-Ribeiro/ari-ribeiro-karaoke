@@ -5,9 +5,12 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: "17 * * * *" # toda hora: pega as músicas novas da planilha
+    - cron: "17 9 * * *" # todo dia às 06:17 de Brasília: pega as músicas novas da planilha (catálogo por link)
+  repository_dispatch:
+    types: [publicar] # o painel do Ari pede uma publicação a cada "Salvar"
   workflow_dispatch:
 
+# uma publicação por vez; se chegarem várias, o Actions descarta as da fila e fica só a mais nova
 concurrency:
   group: site-${{ github.ref }}
   cancel-in-progress: false
@@ -15,6 +18,11 @@ concurrency:
 env:
   PROJETO: ari-ribeiro-karaoke
   SITE_URL: ${{ vars.SITE_URL || 'https://ari-ribeiro-karaoke.pages.dev' }}
+  # painel do Ari (vazios em pull request: o build usa a fixture e ninguém é avisado)
+  PAINEL_URL: ${{ github.event_name != 'pull_request' && secrets.PAINEL_URL || '' }}
+  BUILD_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BUILD_TOKEN || '' }}
+  PUBLICACAO: ${{ github.event.client_payload.publicacao }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 jobs:
   site:
@@ -27,22 +35,30 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      - name: Avisa o painel que começou
+        if: github.event_name != 'pull_request'
+        run: node scripts/status.ts rodando
+
       - run: pnpm check
       - run: pnpm test
-      # e2e roda na planilha de exemplo, então fica de fora da checagem de hora em hora (não muda nada lá)
+      # e2e roda na planilha de exemplo (pnpm painel); fica de fora do que o painel e a checagem diária pedem (não muda nada lá)
       - name: Testes e2e
-        if: github.event_name != 'schedule'
+        if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
         run: |
           pnpm exec playwright install --with-deps chromium webkit
           pnpm e2e
-      - run: pnpm build
 
-      - name: A planilha mudou?
+      - name: Gera o site
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then pnpm build:offline; else pnpm build; fi
+
+      - name: Algo mudou?
         id: muda
         run: |
           no_ar=$(curl -fsS "$SITE_URL/versao.txt" || true)
           if [ "${{ github.event_name }}" = "schedule" ] && [ "$no_ar" = "$(cat dist/versao.txt)" ]; then
-            echo "Planilha igual ao que está no ar, nada pra publicar."
+            echo "Igual ao que está no ar, nada pra publicar."
             echo "publica=nao" >> "$GITHUB_OUTPUT"
           else
             echo "publica=sim" >> "$GITHUB_OUTPUT"
@@ -54,5 +70,13 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          pnpm dlx wrangler@4 pages project create "$PROJETO" --production-branch=main 2>/dev/null || true
-          pnpm dlx wrangler@4 pages deploy dist --project-name="$PROJETO" --branch=main --commit-dirty=true
+          pnpm exec wrangler pages project create "$PROJETO" --production-branch=main 2>/dev/null || true
+          pnpm exec wrangler pages deploy dist --project-name="$PROJETO" --branch=main --commit-dirty=true
+
+      - name: Avisa o painel que está no ar
+        if: success() && github.event_name != 'pull_request'
+        run: node scripts/status.ts ok
+
+      - name: Avisa o painel que falhou
+        if: failure() && github.event_name != 'pull_request'
+        run: node scripts/status.ts falhou
