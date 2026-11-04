@@ -28,7 +28,7 @@ export function montaBanner(el: HTMLElement, e: Estado) {
     + `<div class="foto-atual"><img alt="Foto atual do banner" src="${escapa(foto.src)}" /><p class="foto-info" aria-live="polite">${infoFoto(foto.recortada)}</p></div>`
     + `<input type="file" id="foto" accept="image/*" aria-describedby="dica-foto" /></div>`
     + `<div class="acoes"><button class="bt" type="submit">Salvar banner</button></div></form>`
-    + `<section class="previas" aria-label="Prévia">`
+    + `<section class="previas" aria-label="Prévia"><p class="no-site-rot" aria-hidden="true"><span>Assim fica no site</span></p>`
     + PREVIAS.map(([id, titulo, w]) => `<figure class="previa-quadro" data-largura="${w}"><figcaption>${titulo.replace("Prévia no ", "")}</figcaption>`
       + `<div class="moldura"><iframe src="/admin/previa" title="${titulo}" id="previa-${id}" width="${w}" height="600" tabindex="-1" loading="eager"></iframe></div></figure>`).join("")
     + `</section></div>`;

@@ -19,10 +19,26 @@ const semProblemaGrave = async (page: Page) => {
 test.describe("estrutura", () => {
   test("abre no Início com o status e todas as abas", async ({ page }) => {
     await abre(page);
-    await expect(page.locator("h1")).toHaveText("Início");
+    await expect(page.locator("h1")).toHaveText(/O site está no ar|Publicando o site/);
     await expect(page.locator("nav.abas a")).toHaveText(["Início", "Catálogo", "Novidades", "Banner", "Festa", "Contato"]);
     await expect(page.locator('a[href="/"]').first()).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Atalhos" }).getByRole("link")).toHaveCount(5);
     await semProblemaGrave(page);
+  });
+
+  test("mostra quem entrou e o Sair leva pro logout do Access", async ({ page }) => {
+    await abre(page);
+    // login de teste do .dev.vars (DEV_ADMIN_EMAIL)
+    const email = /^DEV_ADMIN_EMAIL=(.+)$/m.exec(readFileSync(".dev.vars", "utf8"))![1].trim().toLowerCase();
+    await expect(page.locator("#email")).toHaveText(email);
+    const sair = page.getByRole("link", { name: "Sair" });
+    await expect(sair).toBeVisible();
+    await expect(sair).toHaveAttribute("href", "/cdn-cgi/access/logout");
+    // no celular o Sair fica na barra de cima, à vista sem rolar
+    const caixa = (await sair.boundingBox())!;
+    expect(caixa.y).toBeLessThan(80);
+    await abre(page, "contato");
+    await expect(sair).toBeVisible();
   });
 
   test("sem servidor, avisa em vez de quebrar", async ({ page }) => {
@@ -74,7 +90,7 @@ test.describe("catálogo", () => {
     await expect(page.locator("h1")).toHaveText("Catálogo");
     await page.getByLabel("Arquivo .xlsx").check();
     await page.getByLabel("Escolha o arquivo").setInputFiles("data/fixture/musicas.xlsx");
-    await expect(page.locator(".previa")).toContainText("95 músicas");
+    await expect(page.locator(".previa li").first()).toHaveText(/Músicas\s*95/);
     await page.getByRole("button", { name: "Confirmar e publicar" }).click();
     await expect(page.locator("#aviso")).toContainText("Salvo");
     await expect(page.locator("#status")).toContainText("No ar ✅");

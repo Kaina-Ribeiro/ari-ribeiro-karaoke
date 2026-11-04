@@ -33,12 +33,22 @@ function mostraTela(forcar = false) {
   document.querySelectorAll<HTMLAnchorElement>("nav.abas a").forEach((a) => {
     if (a.hash === "#" + id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
-  if (!estado || (montada === id && !forcar)) return;
+  if (!estado) return;
+  // o Início mostra o status em grande: redesenha a cada consulta (não tem campo pra perder)
+  if (montada === id && !forcar) { if (id === "inicio") montaInicio($("#tela"), estado); return; }
   montada = id;
   const el = $("#tela");
   TELAS[id](el, estado);
   el.focus({ preventScroll: true });
   scrollTo(0, 0);
+}
+
+function desenhaQuem() {
+  const email = atual().estado?.email;
+  if (!email) return;
+  const b = $("#email");
+  b.textContent = email;
+  b.title = email;
 }
 
 function desenhaStatus() {
@@ -62,6 +72,6 @@ function desenhaStatus() {
     }));
 }
 
-assina(() => { desenhaStatus(); mostraTela(); });
+assina(() => { desenhaQuem(); desenhaStatus(); mostraTela(); });
 addEventListener("hashchange", () => mostraTela(true));
 carrega();
