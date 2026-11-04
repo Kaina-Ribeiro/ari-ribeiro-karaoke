@@ -6,6 +6,8 @@ export interface Contexto {
   deps: Deps;
   url: URL;
   params: Record<string, string>;
+  /** quem entrou (só nas rotas /api/admin/) */
+  admin?: { email: string };
 }
 export type Handler = (c: Contexto) => Response | Promise<Response>;
 

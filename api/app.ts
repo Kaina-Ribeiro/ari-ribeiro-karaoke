@@ -35,10 +35,12 @@ registraBuild(rota);
 export async function handle(req: Request, env: Env, deps: Partial<Deps> = {}): Promise<Response> {
   const d: Deps = { ...depsPadrao, ...deps };
   const url = new URL(req.url);
+  let admin: { email: string } | undefined;
   // a porta é checada antes da rota: quem não tem acesso não descobre nem o que existe
   if (url.pathname.startsWith("/api/admin/")) {
-    const admin = await exigeAdmin(req, env, d);
-    if (admin instanceof Response) return admin;
+    const quem = await exigeAdmin(req, env, d);
+    if (quem instanceof Response) return quem;
+    admin = quem;
     const origem = confereOrigem(req);
     if (origem !== true) return origem;
   } else if (url.pathname.startsWith("/api/build/")) {
@@ -49,7 +51,7 @@ export async function handle(req: Request, env: Env, deps: Partial<Deps> = {}): 
   if (achou === "metodo") return erro("Método não permitido", 405);
   if (!achou) return erro("Rota não encontrada", 404);
   try {
-    return await achou.fn({ req, env, deps: d, url, params: achou.params });
+    return await achou.fn({ req, env, deps: d, url, params: achou.params, admin });
   } catch (e) {
     if (e instanceof ErroHttp) return erro(e.message, e.status);
     console.error(e);

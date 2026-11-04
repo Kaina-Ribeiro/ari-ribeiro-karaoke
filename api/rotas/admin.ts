@@ -25,7 +25,7 @@ async function salvaEPublica<K extends ChaveConfig>(c: Contexto, chave: K, valor
 }
 
 export function registraAdmin(rota: Rota) {
-  rota("GET", "/api/admin/estado", async ({ env, deps }) => {
+  rota("GET", "/api/admin/estado", async ({ env, deps, admin }) => {
     const [contato, banner, catalogo, novidades, cartoes, pacotes, publicacao, noAr] = await Promise.all([
       leConfig(env, "contato"), leConfig(env, "banner"), leConfig(env, "catalogo"), leConfig(env, "novidades"),
       listaCartoes(env), listaPacotes(env), ultimaPublicacao(env), musicasNoAr(env),
@@ -35,6 +35,7 @@ export function registraAdmin(rota: Rota) {
       contato, banner, catalogo, novidades, cartoes,
       pacotes: pacotes.map((p) => ({ ...p, classe: classifica(p, novidades.prazoDias, hoje) })),
       publicacao, musicasNoAr: noAr, hoje,
+      email: admin?.email ?? null,
     });
   });
 

@@ -14,6 +14,8 @@ export interface Estado {
   publicacao: Publicacao | null;
   musicasNoAr: number | null;
   hoje: string;
+  /** e-mail de quem entrou no painel */
+  email: string | null;
 }
 
 export type Situacao = { estado: Estado | null; erro: string | null };

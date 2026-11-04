@@ -20,6 +20,11 @@ describe("estado", () => {
     const e = await estado();
     expect(e).toMatchObject({ ...CONFIG_PADRAO, cartoes: [], pacotes: [], publicacao: null, musicasNoAr: null, hoje: "2026-11-04" });
   });
+  it("diz quem entrou (e-mail do login, em minúsculas)", async () => {
+    expect((await estado()).email).toBe("gabriel@painel.test");
+    const r = await amb.chamar(await reqAdmin("GET", "/api/admin/estado", undefined, "Ari@Painel.test"));
+    expect((await r.json()).email).toBe("ari@painel.test");
+  });
 });
 
 describe("contato", () => {
