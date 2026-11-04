@@ -5,3 +5,5 @@ src/data/gerado/
 public/data/
 .env
 public/versao.txt
+test-results/
+playwright-report/

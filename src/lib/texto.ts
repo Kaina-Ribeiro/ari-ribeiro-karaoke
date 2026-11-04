@@ -24,6 +24,31 @@ export function tituloBonito(s: string): string {
     .replace(/’(\w)/g, (_, c: string) => "’" + c.toLowerCase());
 }
 
+/** Chave pra juntar o mesmo cantor escrito de jeitos diferentes: "Guns N Roses" = "Guns n´ Roses", "F.R. David" = "FR David". */
+export const chaveArtista = (s: string) => normaliza(s).replace(/[^a-z0-9]/g, "");
+
+const VOGAL = /[aeiouáéíóúâêôãõày]/i;
+// sem "o" e "a": em nome de cantor costumam ser parte do nome ("Kevin O Chris")
+const MINUSCULAS_NOME = new Set(["de", "da", "do", "das", "dos", "e", "os", "as", "the", "of", "and", "in", "on", "to"]);
+
+/**
+ * Arruma o apóstrofo e tira da CAIXA ALTA os nomes de várias palavras ("ALICE IN CHAINS" -> "Alice in Chains").
+ * Nome de uma palavra só (BTS, CHER, ABBA) e siglas sem vogal ou com número (MC, DJ, CPM, G15) ficam como estão.
+ */
+export function nomeArtista(s: string): string {
+  const n = s.trim().replace(/[´`]/g, "’");
+  const palavras = n.split(/\s+/);
+  if (n !== n.toUpperCase() || palavras.filter((w) => /\p{L}{2}/u.test(w)).length < 2) return n;
+  return palavras
+    .map((w, i) => {
+      const lw = w.toLowerCase();
+      if (i > 0 && MINUSCULAS_NOME.has(lw)) return lw;
+      if (/\d/.test(w) || !VOGAL.test(w)) return w;
+      return lw.charAt(0).toUpperCase() + lw.slice(1);
+    })
+    .join(" ");
+}
+
 export type Pacote = "base" | "nova" | "exc";
 
 /** "Ari Ribeiro karaoke" é o catálogo base, "ARI EXCLUSIVO" é exclusiva, o resto (13K, INTER 14G…) são pacotes novos. */

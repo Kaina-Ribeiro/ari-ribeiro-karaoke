@@ -1,0 +1,279 @@
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Page } from "@playwright/test";
+
+const linhas = (page: Page) => page.locator("#lista .faixa-m");
+const zap = async (page: Page, sel: string) => decodeURIComponent((await page.locator(sel).first().getAttribute("href")) ?? "");
+
+/** Abre a página e espera o catálogo inteiro chegar (as abas só aparecem depois disso). */
+async function abre(page: Page) {
+  await page.goto("/");
+  await expect(page.locator("#abas button")).toHaveCount(4);
+}
+const busca = (page: Page, q: string) => page.locator("#q").fill(q);
+
+test.describe("sem JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("a página já vem com músicas, serviços e prévia pro Zap", async ({ page }) => {
+    await page.goto("/");
+    await expect(linhas(page)).toHaveCount(50);
+    await expect(page.locator(".cz")).not.toHaveCount(0);
+    const og = await page.locator('meta[property="og:image"]').getAttribute("content");
+    expect(og).toMatch(/^https:\/\/.+\/img\/logo\.png$/);
+  });
+});
+
+test.describe("busca e comanda sempre à mão", () => {
+  test.beforeEach(async ({ page }) => abre(page));
+  const rolaPraLista = (page: Page) =>
+    page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; scrollTo(0, document.querySelector<HTMLElement>(".catalogo")!.offsetTop + 800); });
+
+  test("a busca aparece na primeira tela", async ({ page }) => {
+    await expect(page.locator("#q")).toBeInViewport();
+  });
+
+  test("busca e comanda grudam no topo ao rolar a lista", async ({ page }) => {
+    await rolaPraLista(page);
+    await expect(page.locator("#q")).toBeInViewport();
+    await expect(page.locator("#abreComanda")).toBeInViewport();
+    const barra = (await page.locator(".busca").boundingBox())!;
+    expect(barra.y).toBeLessThanOrEqual(1);
+    // o A–Z gruda logo abaixo, sem fresta (no celular ele é uma linha)
+    const az = (await page.locator("#az").boundingBox())!;
+    if (az.height < 100) expect(Math.abs(az.y - barra.height)).toBeLessThanOrEqual(2);
+  });
+
+  test("a comanda não cobre os botões das músicas", async ({ page }) => {
+    await rolaPraLista(page);
+    const c = (await page.locator("#abreComanda").boundingBox())!;
+    const barra = (await page.locator(".busca").boundingBox())!;
+    for (const b of await page.locator("#lista .faixa-m .bts button").all()) {
+      const m = await b.boundingBox();
+      // as linhas que já passaram por baixo da barra grudada não contam
+      if (!m || m.y < barra.y + barra.height) continue;
+      expect(m.x < c.x + c.width && c.x < m.x + m.width && m.y < c.y + c.height && c.y < m.y + m.height).toBe(false);
+    }
+  });
+
+  test("o botão da comanda diz o que é", async ({ page }) => {
+    await expect(page.locator("#abreComanda .rot")).toBeVisible();
+    await expect(page.locator("#abreComanda")).toHaveAccessibleName(/Comanda/);
+  });
+
+  test("Limpar aparece com a busca e esvazia o campo", async ({ page }) => {
+    await expect(page.locator("#limpa")).toBeHidden();
+    await busca(page, "abba");
+    await expect(page.locator("#limpa")).toBeVisible();
+    await page.locator("#limpa").click();
+    await expect(page.locator("#q")).toHaveValue("");
+    await expect(page.locator("#limpa")).toBeHidden();
+  });
+});
+
+test.describe("busca", () => {
+  test.beforeEach(async ({ page }) => abre(page));
+
+  test("carrega o catálogo inteiro e pagina", async ({ page }) => {
+    const total: number = JSON.parse((await page.locator("#manifesto").textContent())!).total;
+    expect(total).toBeGreaterThan(50);
+    await expect(page.locator("#contaCat")).toHaveText(`${total} músicas`);
+    const primeira = await linhas(page).first().getAttribute("data-cod");
+    await page.getByRole("button", { name: "Próxima →" }).click();
+    await expect(linhas(page)).toHaveCount(total - 50);
+    await expect(linhas(page).first()).not.toHaveAttribute("data-cod", primeira!);
+  });
+
+  test("código exato abre a telinha com o pedido pronto", async ({ page }) => {
+    await busca(page, "4973");
+    await expect(page.locator(".telinha .big")).toHaveText("4973");
+    await expect(page.locator(".telinha .nome")).toContainText("Take on Me");
+    expect(await zap(page, ".telinha a.zap")).toContain("4973 · Take on Me");
+    // só existe essa com esse código: nada de tabela vazia embaixo da telinha
+    await expect(page.locator("#lista .tabela")).toHaveCount(0);
+  });
+
+  test("acha sem acento e com erro de digitação", async ({ page }) => {
+    await busca(page, "tak on me");
+    await expect(linhas(page).first().locator(".tit")).toContainText("Take on Me");
+    await busca(page, "cancao");
+    await expect(linhas(page).first().locator(".tit")).toContainText("Canção pra Não Voltar");
+  });
+
+  test("acha pelo começo da letra e grifa o trecho", async ({ page }) => {
+    await busca(page, "nao volte pra casa");
+    await expect(linhas(page).first().locator(".tit")).toContainText("Canção pra Não Voltar");
+    await expect(linhas(page).first().locator(".let mark")).toHaveText("Não volte pra casa");
+  });
+
+  test("o mesmo cantor escrito de jeitos diferentes aparece como um só", async ({ page }) => {
+    await busca(page, "guns");
+    await expect(linhas(page)).toHaveCount(8);
+    expect(new Set(await linhas(page).locator(".art").allTextContents())).toEqual(new Set(["Guns n’ Roses"]));
+  });
+
+  test("marcador da planilha não aparece como letra", async ({ page }) => {
+    await busca(page, "lay all your love");
+    await expect(linhas(page).first().locator(".let")).toHaveClass(/vazia/);
+    await busca(page, "me and mr jones");
+    await expect(linhas(page).first().locator(".let")).toHaveClass(/vazia/);
+  });
+
+  test("sem resultado oferece pedir a música pro Ari", async ({ page }) => {
+    await busca(page, "zzzzqqq");
+    await expect(page.locator(".vazio h3")).toHaveText("Essa ainda não tem");
+    expect(await zap(page, ".vazio a.zap")).toContain("não achei no catálogo: zzzzqqq");
+  });
+
+  test("busca vazia num filtro oferece procurar em todas", async ({ page }) => {
+    await page.locator('#abas [data-f="exc"]').click();
+    await busca(page, "take on me");
+    await expect(page.locator(".vazio")).toContainText("Só no Ari");
+    await page.locator('.vazio [data-f="todas"]').click();
+    await expect(linhas(page).first().locator(".tit")).toContainText("Take on Me");
+  });
+
+  test("filtros sem contagem e mostrando só o que prometem", async ({ page }) => {
+    await expect(page.locator("#abas button")).toHaveText(["Todas", "★ Favoritas", "Novidades", "Só no Ari"]);
+    for (const [f, tag] of [["exc", ".tag.exc"], ["nova", ".tag.nova"]]) {
+      await page.locator(`#abas [data-f="${f}"]`).click();
+      await expect(page.locator(`#abas [data-f="${f}"]`)).toHaveAttribute("aria-pressed", "true");
+      // a contagem do filtro fica no título
+      const n = Number((await page.locator("#contaCat").textContent())!.replace(/\D/g, ""));
+      expect(n).toBeGreaterThan(0);
+      await expect(linhas(page)).toHaveCount(Math.min(n, 50));
+      await expect(linhas(page).locator(tag)).toHaveCount(Math.min(n, 50));
+    }
+  });
+
+  test("tocar no cantor busca as músicas dele", async ({ page }) => {
+    const art = linhas(page).first().locator(".art");
+    const nome = (await art.textContent())!;
+    await art.click();
+    await expect(page.locator("#q")).toHaveValue(nome);
+    expect(new Set(await linhas(page).locator(".art").allTextContents())).toEqual(new Set([nome]));
+  });
+
+  test("A–Z pula pro cantor, mesmo em outra página", async ({ page }) => {
+    await page.locator('#az a[data-letra="N"]').click();
+    await expect(page.locator("#letra-N")).toBeInViewport();
+    await expect(page.getByText("NSYNC").first()).toBeVisible();
+  });
+
+  test("A–Z só oferece letras que existem no filtro", async ({ page }) => {
+    await page.locator('#abas [data-f="exc"]').click();
+    await expect(page.locator('#az a[data-letra="N"]')).toHaveCount(0);
+    await expect(page.locator('#az a[data-letra="#"]')).toHaveCount(1);
+  });
+
+  test("atalho / leva pra busca", async ({ page, isMobile }) => {
+    test.skip(isMobile, "atalho de teclado");
+    await page.locator("body").press("/");
+    await expect(page.locator("#q")).toBeFocused();
+  });
+});
+
+test.describe("favoritas e comanda", () => {
+  test.beforeEach(async ({ page }) => abre(page));
+
+  test("favorita fica salva no aparelho", async ({ page }) => {
+    const linha = linhas(page).first();
+    const cod = await linha.getAttribute("data-cod");
+    await linha.locator(".fav").click();
+    await expect(linhas(page).first().locator(".fav")).toHaveAttribute("aria-pressed", "true");
+    await page.reload();
+    await page.locator('#abas [data-f="fav"]').click();
+    await expect(linhas(page)).toHaveCount(1);
+    await expect(linhas(page).first()).toHaveAttribute("data-cod", cod!);
+    await linhas(page).first().locator(".fav").click();
+    await expect(page.locator(".vazio h3")).toHaveText("Nenhuma favorita ainda");
+  });
+
+  test("comanda anota, manda pro Zap com o nome e sobrevive ao recarregar", async ({ page }) => {
+    const cods = [await linhas(page).nth(0).getAttribute("data-cod"), await linhas(page).nth(1).getAttribute("data-cod")];
+    await linhas(page).nth(0).locator(".mais").click();
+    await linhas(page).nth(1).locator(".mais").click();
+    await expect(page.locator("#nComanda")).toHaveText("2");
+    await expect(linhas(page).nth(0)).toHaveClass(/na-comanda/);
+
+    await page.locator("#abreComanda").click();
+    await expect(page.locator("#comanda")).toHaveClass(/on/);
+    await expect(page.locator("#itens li")).toHaveCount(2);
+    await page.locator("#cantor").fill("Gabi");
+    const msg = await zap(page, "#mandar");
+    expect(msg).toContain("Gabi quer cantar");
+    for (const c of cods) expect(msg).toContain(`• ${c} · `);
+
+    await page.locator("#itens [data-tira]").first().click();
+    await expect(page.locator("#itens li")).toHaveCount(1);
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#comanda")).not.toHaveClass(/on/);
+
+    await page.reload();
+    await expect(page.locator("#nComanda")).toHaveText("1");
+  });
+
+  test("abrir e fechar a comanda cuida do foco", async ({ page }) => {
+    const fecha = page.locator("#fechaComanda");
+    // fechada: fora da tela e fora do Tab
+    expect(await fecha.evaluate((b: HTMLElement) => { b.focus(); return document.activeElement === b; })).toBe(false);
+    await page.locator("#abreComanda").click();
+    await expect(fecha).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#abreComanda")).toBeFocused();
+  });
+
+  test("localStorage estragado não derruba a página", async ({ page }) => {
+    await page.evaluate(() => { localStorage.setItem("ari.comanda", '{"x":1}'); localStorage.setItem("ari.favoritas", "42"); });
+    await page.reload();
+    await expect(page.locator("#abas button")).toHaveCount(4);
+    await expect(page.locator("#nComanda")).toHaveText("0");
+  });
+
+  test("tocar na linha copia o código", async ({ page, context, browserName }) => {
+    test.skip(browserName !== "chromium", "permissão de área de transferência só no Chromium");
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const linha = linhas(page).first();
+    await linha.locator(".tit").click();
+    await expect(linha).toHaveClass(/copiou/);
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await linha.getAttribute("data-cod"));
+  });
+});
+
+test.describe("qualidade", () => {
+  test("sem erro no console", async ({ page }) => {
+    const erros: string[] = [];
+    page.on("pageerror", (e) => erros.push(e.message));
+    page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") erros.push(m.text()); });
+    await abre(page);
+    await busca(page, "amor");
+    await expect(page.locator("#tituloCat")).toContainText("Achamos");
+    expect(erros).toEqual([]);
+  });
+
+  test("nada estoura a largura da tela", async ({ page, isMobile }) => {
+    await abre(page);
+    const larguras = isMobile ? [page.viewportSize()!.width] : [320, 375, 768, 1024, 1440];
+    for (const w of larguras) {
+      await page.setViewportSize({ width: w, height: 800 });
+      const sobra = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(sobra, `largura ${w}px`).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test("acessibilidade: sem problema grave (axe, WCAG AA)", async ({ page }) => {
+    await abre(page);
+    const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+    const graves = r.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(graves.map((v) => `${v.id}: ${v.nodes.length}x ${v.nodes[0]?.target}`)).toEqual([]);
+  });
+
+  test("acessibilidade: comanda aberta", async ({ page }) => {
+    await abre(page);
+    await linhas(page).first().locator(".mais").click();
+    await page.locator("#abreComanda").click();
+    await expect(page.locator("#comanda")).toHaveClass(/on/);
+    const r = await new AxeBuilder({ page }).include("#comanda").withTags(["wcag2a", "wcag2aa"]).analyze();
+    const graves = r.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(graves.map((v) => `${v.id}: ${v.nodes.length}x ${v.nodes[0]?.target}`)).toEqual([]);
+  });
+});

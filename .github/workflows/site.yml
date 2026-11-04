@@ -29,6 +29,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm test
+      # e2e roda na planilha de exemplo, então fica de fora da checagem de hora em hora (não muda nada lá)
+      - name: Testes e2e
+        if: github.event_name != 'schedule'
+        run: |
+          pnpm exec playwright install --with-deps chromium webkit
+          pnpm e2e
       - run: pnpm build
 
       - name: A planilha mudou?

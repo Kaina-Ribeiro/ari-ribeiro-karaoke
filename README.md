@@ -36,7 +36,10 @@ pnpm dev:offline        # mesma coisa, com a planilha de exemplo
 pnpm planilha           # só baixa a planilha de novo (o dev não recarrega sozinho)
 pnpm test
 pnpm check              # TypeScript
+pnpm e2e                # testes no navegador (Chrome, Android e iPhone) com a planilha de exemplo
 ```
+
+O `pnpm e2e` gera o site com `data/fixture/` e sobe um preview na porta 4322. Feche outro `pnpm preview` antes (o Astro só deixa um por projeto) e rode `pnpm build` depois se quiser voltar aos dados de verdade. Na primeira vez, `pnpm exec playwright install chromium webkit` baixa os navegadores.
 
 A planilha precisa estar como **"qualquer pessoa com o link pode ver"**. Para usar outra, defina `SHEET_ID`.
 
@@ -47,7 +50,9 @@ A planilha precisa estar como **"qualquer pessoa com o link pode ver"**. Para us
 - Linhas com `duplicado` verdadeiro, sem código ou sem título ficam de fora.
 - Se um código aparece duas vezes, vale a primeira linha.
 - `pacote` vazio ou "Ari Ribeiro karaoke" é o catálogo base. Qualquer pacote com "EXCLUSIVO" vira **só no Ari**, e o resto vira **nova**.
-- O mesmo cantor escrito de jeitos diferentes ("5 Seconds Of Summer" e "5 Seconds of Summer") é unificado na grafia mais usada.
+- O mesmo cantor escrito de jeitos diferentes ("5 Seconds Of Summer" e "5 Seconds of Summer", "Guns N Roses" e "Guns n´ Roses") é unificado na grafia mais usada.
+- Cantor de várias palavras todo em MAIÚSCULAS vira "Alice in Chains". Nome de uma palavra (BTS, ABBA) e siglas (MC, DJ, CPM 22) ficam como estão.
+- `trecho` igual a "0" ou igual ao pacote ("COM VOCAIS") é tratado como sem letra.
 
 **Produtos:** `ativo` (S/N), `titulo`, `destaque`, `descricao`. São os cartões de "Pra sua festa".
 
@@ -55,7 +60,7 @@ A planilha precisa estar como **"qualquer pessoa com o link pode ver"**. Para us
 
 O workflow `.github/workflows/site.yml`:
 
-- **Em todo PR:** roda check, testes e build com a planilha de verdade.
+- **Em todo PR:** roda check, testes, e2e e build com a planilha de verdade.
 - **Em todo push na `main`:** publica na Cloudflare Pages.
 - **De hora em hora:** baixa a planilha e publica somente se os dados mudaram. Para isso, compara com o `versao.txt` que está no ar.
 
@@ -82,4 +87,5 @@ src/styles/global.css   todo o visual
 public/_headers         cache da Cloudflare
 data/fixture/           pedaço da planilha para rodar offline e nos testes
 test/                   testes (vitest)
+e2e/                    testes no navegador (Playwright + axe)
 ```

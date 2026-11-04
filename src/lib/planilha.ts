@@ -1,4 +1,4 @@
-import { normaliza, tituloBonito, tipoPacote, type Pacote } from "./texto.ts";
+import { chaveArtista, nomeArtista, normaliza, tituloBonito, tipoPacote, type Pacote } from "./texto.ts";
 
 /** CSV no formato que o Google Sheets exporta (aspas duplas, quebras de linha dentro de campos). */
 export function lerCsv(txt: string): string[][] {
@@ -49,6 +49,13 @@ export interface Catalogo {
 
 const verdadeiro = (s: string | undefined) => /^(true|verdadeiro|sim|s|1)$/i.test((s ?? "").trim());
 
+/** "0" ou um trecho igual ao pacote ("COM VOCAIS") é marcador da planilha, não letra. */
+function limpaTrecho(trecho = "", pacote = ""): string {
+  const t = trecho.replace(/\s+/g, " ").trim().replace(/[´`]/g, "’");
+  if (!/\p{L}/u.test(t) || t.toUpperCase() === pacote.trim().toUpperCase()) return "";
+  return t;
+}
+
 export function montaMusicas(linhas: Record<string, string>[]): Musica[] {
   const vistos = new Set<string>();
   const grafias = new Map<string, Map<string, number>>();
@@ -57,21 +64,21 @@ export function montaMusicas(linhas: Record<string, string>[]): Musica[] {
     if (!cod || !l.titulo || verdadeiro(l.duplicado)) return false;
     if (vistos.has(cod)) return false;
     vistos.add(cod);
-    const k = normaliza(l.cantor ?? "");
+    const k = chaveArtista(l.cantor ?? "");
     const m = grafias.get(k) ?? new Map<string, number>();
     m.set(l.cantor, (m.get(l.cantor) ?? 0) + 1);
     grafias.set(k, m);
     return true;
   });
-  // "5 Seconds Of Summer" e "5 Seconds of Summer" viram um artista só, com a grafia mais usada
+  // "5 Seconds Of Summer", "5 Seconds of Summer" e "Guns n´ Roses", "Guns N Roses" viram um artista só, com a grafia mais usada
   const nomeDe = new Map<string, string>();
-  for (const [k, m] of grafias) nomeDe.set(k, [...m].sort((a, b) => b[1] - a[1])[0][0]);
+  for (const [k, m] of grafias) nomeDe.set(k, nomeArtista([...m].sort((a, b) => b[1] - a[1])[0][0]));
   return brutas.map((l) => ({
     codigo: l.codigo,
-    artista: nomeDe.get(normaliza(l.cantor ?? "")) ?? l.cantor,
+    artista: nomeDe.get(chaveArtista(l.cantor ?? "")) ?? l.cantor,
     titulo: tituloBonito(l.titulo),
     pacote: tipoPacote(l.pacote ?? ""),
-    trecho: (l.trecho ?? "").replace(/\s+/g, " ").trim(),
+    trecho: limpaTrecho(l.trecho, l.pacote),
   }));
 }
 
