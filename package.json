@@ -21,7 +21,8 @@
     "painel": "node scripts/painel-local.ts",
     "importa": "node scripts/importa.ts",
     "prints": "node scripts/prints.ts",
-    "segredos:preview": "node scripts/segredos-preview.ts"
+    "segredos:preview": "node scripts/segredos-preview.ts",
+    "segredos:producao": "node scripts/segredos-producao.ts"
   },
   "dependencies": {
     "astro": "7.3.8",
