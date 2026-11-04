@@ -1,6 +1,8 @@
 import { createRemoteJWKSet, type JWTVerifyGetKey } from "jose";
 import { confereOrigem, exigeAdmin, exigeBuild } from "./auth.ts";
-import { erro, json } from "./resposta.ts";
+import { erro, ErroHttp } from "./resposta.ts";
+import { registraAdmin } from "./rotas/admin.ts";
+import { registraBuild } from "./rotas/build.ts";
 import { criaRoteador } from "./roteador.ts";
 import type { Deps, Env } from "./tipos.ts";
 
@@ -25,9 +27,8 @@ export const depsPadrao: Deps = {
 };
 
 const { rota, acha } = criaRoteador();
-// as tarefas seguintes trocam estes por rotas de verdade
-rota("GET", "/api/admin/estado", () => json({}));
-rota("GET", "/api/build/config", () => json({}));
+registraAdmin(rota);
+registraBuild(rota);
 
 export async function handle(req: Request, env: Env, deps: Partial<Deps> = {}): Promise<Response> {
   const d: Deps = { ...depsPadrao, ...deps };
@@ -48,6 +49,7 @@ export async function handle(req: Request, env: Env, deps: Partial<Deps> = {}): 
   try {
     return await achou.fn({ req, env, deps: d, url, params: achou.params });
   } catch (e) {
+    if (e instanceof ErroHttp) return erro(e.message, e.status);
     console.error(e);
     return erro("Erro no servidor. Tente de novo.", 500);
   }
