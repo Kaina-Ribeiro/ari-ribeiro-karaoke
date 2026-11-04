@@ -1,0 +1,89 @@
+/** Peças de interface dividas pelas telas do painel. */
+import { escapa } from "../../lib/texto.ts";
+import { ErroApi } from "./api.ts";
+
+export { escapa };
+
+export const $ = <T extends HTMLElement = HTMLElement>(sel: string, raiz: ParentNode = document) => raiz.querySelector<T>(sel)!;
+
+/** Recado rápido no pé da tela ("Salvo", erros). */
+export function aviso(texto: string, tipo: "ok" | "erro" = "ok") {
+  const a = $("#aviso");
+  a.textContent = texto;
+  a.dataset.tipo = tipo;
+  a.classList.add("on");
+  clearTimeout(Number(a.dataset.t));
+  a.dataset.t = String(setTimeout(() => a.classList.remove("on"), tipo === "erro" ? 6000 : 3000));
+}
+
+/** Botão mostra que está trabalhando e não aceita segundo toque; erro da API vira aviso. */
+export async function comCarregando(botao: HTMLButtonElement, fn: () => Promise<void>): Promise<boolean> {
+  if (botao.getAttribute("aria-busy") === "true") return false;
+  botao.setAttribute("aria-busy", "true");
+  botao.disabled = true;
+  try {
+    await fn();
+    return true;
+  } catch (e) {
+    aviso(e instanceof ErroApi ? e.message : "Algo deu errado. Tente de novo.", "erro");
+    return false;
+  } finally {
+    botao.removeAttribute("aria-busy");
+    botao.disabled = false;
+  }
+}
+
+export interface OpcoesCampo {
+  id: string;
+  rotulo: string;
+  valor: string;
+  dica?: string;
+  max?: number;
+  prefixo?: string;
+  tipo?: "text" | "tel" | "number";
+  inputmode?: string;
+  autocomplete?: string;
+}
+
+/** Campo com rótulo, dica, prefixo opcional ("@") e lugar pro erro, já ligados pra leitor de tela. */
+export function campo(o: OpcoesCampo): string {
+  const desc = [o.dica ? `dica-${o.id}` : "", `erro-${o.id}`].filter(Boolean).join(" ");
+  return `<div class="campo">`
+    + `<label for="${o.id}">${escapa(o.rotulo)}</label>`
+    + (o.dica ? `<p class="dica" id="dica-${o.id}">${escapa(o.dica)}</p>` : "")
+    + `<div class="entrada">${o.prefixo ? `<span class="prefixo" aria-hidden="true">${escapa(o.prefixo)}</span>` : ""}`
+    + `<input id="${o.id}" name="${o.id}" type="${o.tipo ?? "text"}" value="${escapa(o.valor)}" aria-describedby="${desc}"`
+    + (o.max ? ` maxlength="${o.max + 10}" data-max="${o.max}"` : "")
+    + (o.inputmode ? ` inputmode="${o.inputmode}"` : "")
+    + ` autocomplete="${o.autocomplete ?? "off"}" />`
+    + (o.max ? `<span class="conta" aria-hidden="true"></span>` : "")
+    + `</div><p class="erro" id="erro-${o.id}" aria-live="polite"></p></div>`;
+}
+
+export function erroNoCampo(raiz: ParentNode, id: string, mensagem: string | null) {
+  const input = $<HTMLInputElement>("#" + id, raiz);
+  $("#erro-" + id, raiz).textContent = mensagem ?? "";
+  if (mensagem) input.setAttribute("aria-invalid", "true");
+  else input.removeAttribute("aria-invalid");
+}
+
+export function limpaErros(raiz: ParentNode) {
+  raiz.querySelectorAll<HTMLInputElement>("[aria-invalid]").forEach((i) => i.removeAttribute("aria-invalid"));
+  raiz.querySelectorAll(".erro").forEach((p) => (p.textContent = ""));
+}
+
+/** Contador "12/14" nos campos com limite; passa do limite → vermelho. Devolve se está tudo dentro. */
+export function atualizaContadores(raiz: ParentNode): boolean {
+  let ok = true;
+  raiz.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("[data-max]").forEach((i) => {
+    const max = Number(i.dataset.max), n = [...i.value.normalize("NFC")].length;
+    const conta = i.parentElement!.querySelector(".conta");
+    if (conta) conta.textContent = `${n}/${max}`;
+    i.parentElement!.classList.toggle("passou", n > max);
+    if (n > max) ok = false;
+  });
+  return ok;
+}
+
+export const cabecalho = (titulo: string, sub: string) =>
+  `<header class="cab-tela"><h1>${escapa(titulo)}</h1><p class="sub">${escapa(sub)}</p></header>`;
