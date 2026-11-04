@@ -16,7 +16,8 @@
     "test": "vitest run",
     "check": "tsc --noEmit",
     "dev:offline": "pnpm planilha:offline && astro dev",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "build:painel-local": "node --env-file=.dev.vars scripts/planilha.ts && astro build"
   },
   "dependencies": {
     "astro": "7.3.8",
