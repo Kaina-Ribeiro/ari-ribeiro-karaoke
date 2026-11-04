@@ -131,3 +131,46 @@ test.describe("catálogo", () => {
     await semProblemaGrave(page);
   });
 });
+
+/* ---------- novidades ---------- */
+test.describe("novidades", () => {
+  const linha = (page: Page, nome: string) => page.locator(".pacote").filter({ has: page.getByText(nome, { exact: true }) });
+
+  test("trocar a classificação de um pacote vale depois de recarregar", async ({ page }) => {
+    await abre(page, "novidades");
+    await expect(page.locator("h1")).toHaveText("Novidades");
+    await expect(linha(page, "13K").locator(".tag")).toHaveText("nova");
+    await page.getByLabel("Classificação de 13K").selectOption("exc");
+    await expect(linha(page, "13K").locator(".tag")).toHaveText("só no Ari");
+    await page.reload();
+    await expect(page.getByLabel("Classificação de 13K")).toHaveValue("exc");
+    await page.getByLabel("Classificação de 13K").selectOption("auto");
+    await expect(linha(page, "13K").locator(".tag")).toHaveText("nova");
+  });
+
+  test("busca por nome e filtro de novidades", async ({ page }) => {
+    await abre(page, "novidades");
+    await page.getByLabel("Buscar pacote").fill("excl");
+    await expect(page.locator(".pacote:visible")).toHaveCount(1);
+    await expect(page.locator(".pacote:visible .nome")).toHaveText("ARI EXCLUSIVO");
+    await page.getByLabel("Buscar pacote").fill("");
+    await page.getByLabel("Só os que estão como Novidade").check();
+    await expect(page.locator(".pacote:visible").first()).toBeVisible();
+    expect(new Set(await page.locator(".pacote:visible .tag").allTextContents())).toEqual(new Set(["nova"]));
+  });
+
+  test("prazo do automático", async ({ page }) => {
+    await abre(page, "novidades");
+    const prazo = page.getByLabel("Dias como novidade");
+    await prazo.fill("0");
+    await page.getByRole("button", { name: "Salvar prazo" }).click();
+    await expect(page.locator("#erro-prazo")).toHaveText("O prazo precisa ser de 1 a 365 dias");
+    await prazo.fill("30");
+    await page.getByRole("button", { name: "Salvar prazo" }).click();
+    await expect(page.locator("#aviso")).toContainText("Salvo");
+    await prazo.fill("60");
+    await page.getByRole("button", { name: "Salvar prazo" }).click();
+    await expect(page.locator("#aviso")).toContainText("Salvo");
+    await semProblemaGrave(page);
+  });
+});

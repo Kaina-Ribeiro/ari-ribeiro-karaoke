@@ -155,3 +155,23 @@ input[type=file]::file-selector-button{font:800 .95rem var(--f-texto);border:2px
 .teste-link:empty{display:none}
 .teste-link[data-tipo="ok"]{color:var(--gravata)}
 .teste-link[data-tipo="erro"]{color:var(--brasa-texto)}
+
+/* ---------- novidades ---------- */
+.filtros{display:flex;flex-wrap:wrap;align-items:end;gap:4px 18px;margin-bottom:6px}
+.filtros .campo{flex:1 1 220px;margin-bottom:10px}
+.filtros .marcar{margin-bottom:12px}
+.pacotes{list-style:none;padding:0;margin:0;border-top:2px solid var(--tinta)}
+.pacote{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #cfc4ac;transition:opacity .15s}
+.pacote[hidden]{display:none}
+.pacote[aria-busy="true"]{opacity:.55}
+.pacote .info{flex:1 1 auto;min-width:0}
+.pacote .nome{font:900 1.3rem/1.05 var(--d-cartaz);text-transform:uppercase;margin-right:8px;overflow-wrap:anywhere}
+.pacote .meta{display:block;font-size:.88rem;color:var(--tinta-2);margin-top:2px}
+.seletor{flex:0 0 auto;width:146px}
+@media (min-width:600px){.seletor{width:180px}}
+.seletor select{appearance:none;cursor:pointer;padding-right:34px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2316130f' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center/12px}
+.tag{display:inline-block;vertical-align:middle;font:700 .72rem/1 var(--f-texto);padding:4px 7px;border:1.5px solid var(--tinta);transform:translateY(-2px)}
+.tag.nova{background:var(--luz)}
+.tag.exc{background:var(--brasa)}
+.tag.base{background:transparent;color:var(--tinta-2);border-color:#b8ad95}
+.vazio{color:var(--tinta-2);font-style:italic}

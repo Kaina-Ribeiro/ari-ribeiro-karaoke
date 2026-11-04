@@ -5,6 +5,7 @@ import { textoStatus } from "./status.ts";
 import { montaCatalogo } from "./telas/catalogo.ts";
 import { montaContato } from "./telas/contato.ts";
 import { montaInicio } from "./telas/inicio.ts";
+import { montaNovidades } from "./telas/novidades.ts";
 import { $, aviso, cabecalho, comCarregando, escapa } from "./ui.ts";
 
 type Montador = (el: HTMLElement, e: Estado) => void;
@@ -14,7 +15,7 @@ const emBreve = (titulo: string): Montador => (el) => { el.innerHTML = cabecalho
 const TELAS: Record<string, Montador> = {
   inicio: montaInicio,
   catalogo: montaCatalogo,
-  novidades: emBreve("Novidades"),
+  novidades: montaNovidades,
   banner: emBreve("Banner"),
   festa: emBreve("Pra sua festa"),
   contato: montaContato,
