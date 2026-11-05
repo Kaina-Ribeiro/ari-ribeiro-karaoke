@@ -43,6 +43,20 @@ test.describe("estrutura", () => {
     await expect(sair).toBeVisible();
   });
 
+  test("Voltar ao site fica na barra de cima, ao lado do Sair, e volta pro site na mesma aba", async ({ page }) => {
+    await abre(page);
+    const site = page.getByRole("link", { name: "Voltar ao site" });
+    await expect(site).toBeVisible();
+    await expect(site).toHaveAttribute("href", "/");
+    await expect(site).not.toHaveAttribute("target", /.+/);
+    const [a, b] = [(await site.boundingBox())!, (await page.getByRole("link", { name: "Sair" }).boundingBox())!];
+    expect(a.y).toBeLessThan(80);
+    expect(a.x + a.width).toBeLessThanOrEqual(b.x);
+    await site.click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.locator("header.cab")).toBeVisible();
+  });
+
   test("sem servidor, avisa em vez de quebrar", async ({ page }) => {
     await page.route("**/api/**", (r) => r.abort());
     await page.goto("/admin/#inicio");

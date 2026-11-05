@@ -39,6 +39,8 @@ const ABAS: [string, string, string][] = [
         </nav>
         <div class="quem">
           <p class="quem-txt"><span class="quem-rot">Entrou como</span> <b id="email">…</b></p>
+          <!-- volta pro site na mesma aba (o logo continua abrindo o site em outra aba) -->
+          <a class="sair site" href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6 4 12l6 6"/><path d="M4 12h16"/></svg><span class="longo">Voltar ao site</span><span class="curto" aria-hidden="true">Site</span></a>
           <!-- logout do Cloudflare Access: encerra a sessão e volta pro pedido de e-mail -->
           <a class="sair" href="/cdn-cgi/access/logout"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h5v16h-5"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/></svg>Sair</a>
         </div>
