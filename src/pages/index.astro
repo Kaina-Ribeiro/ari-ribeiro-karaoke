@@ -79,6 +79,8 @@ const dicas = [
           <input id="q" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Código, cantor, música ou letra" />
           <button class="x" id="limpa" hidden aria-label="Limpar busca"><span>Limpar</span></button>
         </div>
+        <!-- comanda sempre à mão: no celular, botão aqui na busca, que gruda no topo (não tapa nenhuma linha); no computador, etiqueta no canto -->
+        <button class="btn-comanda" id="abreComanda"><span class="rot"><span class="ver">Ver </span>comanda</span><span class="n" id="nComanda">0</span></button>
       </div></section>
       <div class="g faixa-dicas"><div class="in dicas"><span class="rot-dicas">Tenta aí:</span><span class="sugestoes" id="sugestoes">{dicas.map((d) => <button type="button" data-q={d.texto} data-tipo={d.tipo} aria-label={d.tipo === "nova" ? `Buscar ${d.texto} (novidade)` : `Buscar ${d.texto}`}><span class="v">{d.texto}</span></button>)}</span><span class="ou">ou um pedaço da letra</span></div></div>
 
@@ -136,8 +138,6 @@ const dicas = [
       </div>
     </div></footer>
 
-    <!-- comanda sempre na tela: barra no pé da tela no celular, etiqueta no canto no computador -->
-    <button class="btn-comanda" id="abreComanda"><span class="rot">Ver comanda</span><span class="n" id="nComanda">0</span></button>
     <div class="veu" id="veu"></div>
     <aside class="comanda" id="comanda" aria-label="Comanda" inert>
       <button class="fecha" id="fechaComanda" aria-label="Fechar comanda">×</button>
