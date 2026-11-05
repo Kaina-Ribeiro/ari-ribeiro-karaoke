@@ -26,7 +26,7 @@ export function textoStatus(p: Publicacao | null, agora: Date): { tipo: TipoStat
 
 /** Nome do que gerou a publicação, pra tela de Início. */
 export const MOTIVOS: Record<string, string> = {
-  contato: "Contato", banner: "Banner", catalogo: "Catálogo", novidades: "Novidades", pacotes: "Novidades",
+  contato: "Contato", banner: "Banner", catalogo: "Catálogo", novidades: "Novidades", pacotes: "Novidades", dicas: "Tenta aí",
   cartoes: "Pra sua festa", diaria: "Checagem diária", "tentar-de-novo": "Tentar de novo",
   "atualizar-catalogo": "Atualizar catálogo", manual: "Publicação manual",
 };

@@ -1,8 +1,9 @@
 import { busca, NOTA_CODIGO_EXATO, preparaItem, soDigitos, trechosQueBatem, type Item, type Resultado } from "../lib/busca.ts";
 import { escapa, letraDe, normaliza, type Pacote } from "../lib/texto.ts";
 import type { Catalogo } from "../lib/planilha.ts";
+import { iniciaDicas } from "./dicas.ts";
 
-interface Manifesto { total: number; temLetras: boolean; catalogo: string; letras: string; zapKj: string; zapPedido: string }
+interface Manifesto { total: number; temLetras: boolean; catalogo: string; letras: string; zapKj: string; zapPedido: string; dicaSegundos: number }
 
 const POR_PAGINA = 50;
 const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector<T>(s)!;
@@ -43,6 +44,7 @@ async function carregaCatalogo() {
   // a primeira página veio com letra no HTML; espera as letras pra coluna não piscar "—"
   await letrasJa;
   desenha();
+  iniciaDicas(itens, manifesto.dicaSegundos);
 }
 function precisaLetras(q: string) {
   return manifesto.temLetras && !letrasBusca && normaliza(q).length >= 3 && !soDigitos(normaliza(q));

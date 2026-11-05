@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  campoDoErro, formataZap, idDaPlanilha, mascaraZap, normalizaUsuario, normalizaZap, validaBanner, validaCartao, validaContato, validaNovidades,
+  campoDoErro, formataZap, idDaPlanilha, mascaraZap, normalizaUsuario, normalizaZap, validaBanner, validaCartao, validaContato, validaDicas, validaNovidades,
 } from "../src/lib/painel/valida.ts";
 import { textoPreco } from "../src/lib/painel/preco.ts";
 import { CONFIG_PADRAO } from "../src/lib/painel/padrao.ts";
@@ -168,6 +168,20 @@ describe("cartão", () => {
     expect(validaCartao({ ...c, descricao: "x".repeat(161) }).ok).toBe(false);
     expect(validaCartao({ ...c, descricao: "" }).ok).toBe(false);
     expect(validaCartao({ ...c, titulo: " " }).ok).toBe(false);
+  });
+});
+
+describe("Tenta aí", () => {
+  it("troca de 2 a 15 segundos, de meio em meio", () => {
+    expect(ok(validaDicas({ segundos: 4 }))).toEqual({ segundos: 4 });
+    expect(ok(validaDicas({ segundos: 2.5 }))).toEqual({ segundos: 2.5 });
+    expect(erroDe(validaDicas({ segundos: 1 }))).toBe("O tempo precisa ser de 2 a 15 segundos");
+    expect(validaDicas({ segundos: 16 }).ok).toBe(false);
+    expect(validaDicas({ segundos: 3.3 }).ok).toBe(false);
+    expect(validaDicas({ segundos: "4" }).ok).toBe(false);
+  });
+  it("o padrão é ~4 s", () => {
+    expect(CONFIG_PADRAO.dicas).toEqual({ segundos: 4 });
   });
 });
 

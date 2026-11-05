@@ -13,7 +13,7 @@ const abre = async (page: Page, tela = "inicio") => {
 };
 const semProblemaGrave = async (page: Page) => {
   const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(r.violations.filter((v) => v.impact === "critical" || v.impact === "serious").map((v) => v.id)).toEqual([]);
+  expect(r.violations.filter((v) => v.impact === "critical" || v.impact === "serious").map((v) => v.id + " " + v.nodes.map((n) => n.target + " " + n.failureSummary).join(" / "))).toEqual([]);
 };
 
 test.describe("estrutura", () => {
@@ -220,6 +220,30 @@ test.describe("catálogo", () => {
     await salvar.click();
     await expect(page.locator("#aviso")).toContainText("Salvo");
     await expect(page.getByRole("button", { name: "Atualizar catálogo" })).toBeVisible();
+    await semProblemaGrave(page);
+  });
+});
+
+test.describe("Tenta aí", () => {
+  test("tempo da troca: aceita vírgula, recusa fora de 2 a 15 e volta igual depois de recarregar", async ({ page }) => {
+    await abre(page, "catalogo");
+    const tempo = page.getByLabel("Trocar a cada (segundos)");
+    const salvar = page.getByRole("button", { name: "Salvar tempo" });
+    await expect(tempo).toHaveValue("4");
+    await tempo.fill("1");
+    await salvar.click();
+    await expect(page.locator("#erro-segundos")).toHaveText("O tempo precisa ser de 2 a 15 segundos");
+    await tempo.fill("6,5");
+    await salvar.click();
+    await expect(page.locator("#aviso")).toContainText("Salvo");
+    await page.reload();
+    await expect(page.getByLabel("Trocar a cada (segundos)")).toHaveValue("6,5");
+    // volta pro padrão pros outros testes
+    await page.getByLabel("Trocar a cada (segundos)").fill("4");
+    await page.getByRole("button", { name: "Salvar tempo" }).click();
+    await expect(page.locator("#aviso")).toContainText("Salvo");
+    // o axe mede a cor no meio da transição do "✓ Salvo": espera ela terminar
+    await expect(page.locator("#formDicas .bt.salvo")).toHaveCSS("color", "rgb(255, 255, 255)");
     await semProblemaGrave(page);
   });
 });

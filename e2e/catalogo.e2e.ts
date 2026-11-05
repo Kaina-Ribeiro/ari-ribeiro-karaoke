@@ -125,12 +125,33 @@ test.describe("busca e comanda sempre à mão", () => {
     if (az.height < 100) expect(Math.abs(az.y - barra.height)).toBeLessThanOrEqual(2);
   });
 
-  test("a comanda fixa fica embaixo e não esconde o fim da página", async ({ page }) => {
+  test("no computador, a comanda fica no canto de baixo e não esconde o fim da página", async ({ page, isMobile }) => {
+    test.skip(isMobile, "no celular ela fica na barra da busca");
     const c = (await page.locator("#abreComanda").boundingBox())!;
     expect(c.y + c.height).toBeGreaterThan(page.viewportSize()!.height - 40);
     await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; scrollTo(0, document.body.scrollHeight); });
     const ultimo = (await page.locator(".contatos").boundingBox())!;
     expect(ultimo.y + ultimo.height).toBeLessThanOrEqual(c.y);
+  });
+
+  test("no celular, a comanda fica na barra da busca e não tapa nenhum botão da lista", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "no computador ela é a etiqueta do canto");
+    const dentro = async () => {
+      const b = (await page.locator("#abreComanda").boundingBox())!, barra = (await page.locator(".busca").boundingBox())!;
+      expect(b.y).toBeGreaterThanOrEqual(barra.y);
+      expect(b.y + b.height).toBeLessThanOrEqual(barra.y + barra.height + 4); // + a sombra
+    };
+    await dentro();
+    await rolaPraLista(page);
+    await dentro();
+    // cada ☆ e + que aparece na tela recebe o toque (nada fixo por cima, nem no pé da tela)
+    const tapados = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>("#lista .fav, #lista .mais")].filter((b) => {
+      const r = b.getBoundingClientRect();
+      if (r.bottom <= document.querySelector(".busca")!.getBoundingClientRect().bottom + 50 || r.top >= innerHeight) return false; // fora da tela ou atrás da busca/A–Z
+      const alvo = document.elementFromPoint(r.left + r.width / 2, Math.min(r.top + r.height / 2, innerHeight - 1));
+      return !b.contains(alvo);
+    }).map((b) => b.getAttribute("aria-label")));
+    expect(tapados).toEqual([]);
   });
 
   test("o botão da comanda diz o que é", async ({ page }) => {
@@ -298,8 +319,11 @@ test.describe("favoritas e comanda", () => {
     await page.locator("#abreComanda").click();
     await expect(mandar).toHaveAttribute("aria-disabled", "true");
     await expect(mandar).not.toHaveAttribute("href", /.*/);
-    // aria-disabled faz o Playwright esperar pra sempre; quem usa consegue tocar, então força
-    // (depois que a comanda termina de descer na tela)
+    // aria-disabled faz o Playwright esperar pra sempre; quem usa consegue tocar, então força.
+    // O clique forçado não espera o botão parar: só clica depois que a comanda terminou de deslizar
+    // (estar inteira na tela não basta, ela ainda anda; sob carga o clique errava o botão)
+    const comanda = page.locator("#comanda");
+    await expect.poll(() => comanda.evaluate((c) => c.getAnimations().length)).toBe(0);
     await expect(mandar).toBeInViewport({ ratio: 1 });
     await mandar.click({ force: true });
     await expect(page.locator("#aviso")).toHaveText("Põe pelo menos 1 música na comanda");
@@ -355,6 +379,76 @@ test.describe("favoritas e comanda", () => {
     await linha.locator(".tit").click();
     await expect(linha).toHaveClass(/copiou/);
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await linha.getAttribute("data-cod"));
+  });
+});
+
+test.describe("Tenta aí", () => {
+  const sugestoes = (page: Page) => page.locator("#sugestoes button");
+  const textos = (page: Page) => sugestoes(page).evaluateAll((bs) => bs.map((b) => (b as HTMLElement).dataset.q));
+
+  test("troca sozinha por um código, um cantor, uma música e uma novidade do catálogo", async ({ page }) => {
+    await abre(page);
+    const antes = await textos(page);
+    // tempo do painel: padrão de 4 s
+    await expect.poll(() => textos(page), { timeout: 9000 }).not.toEqual(antes);
+    await expect(sugestoes(page)).toHaveCount(4);
+    expect(await sugestoes(page).evaluateAll((bs) => bs.map((b) => (b as HTMLElement).dataset.tipo))).toEqual(["codigo", "cantor", "musica", "nova"]);
+    // tocar numa sugestão busca o que ela mostra
+    await page.waitForTimeout(800); // deixa a animação terminar
+    const cantor = sugestoes(page).nth(1);
+    const q = await cantor.getAttribute("data-q");
+    await cantor.click();
+    await expect(page.locator("#q")).toHaveValue(q!);
+    await expect(page.locator("#tituloCat")).toContainText("Achamos");
+  });
+
+  test("com reduzir movimento, fica parado", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await abre(page);
+    const antes = await textos(page);
+    await page.waitForTimeout(5500);
+    expect(await textos(page)).toEqual(antes);
+  });
+});
+
+test.describe("pra sua festa", () => {
+  test("do 5º cartão em diante as cores se repetem", async ({ page }) => {
+    await page.goto("/");
+    // a fixture tem 4 cartões: duplica pra ter 8, como se o Ari tivesse cadastrado mais
+    const fundos = await page.evaluate(() => {
+      const caixa = document.querySelector(".cartazes")!;
+      [...caixa.children].forEach((c) => caixa.append(c.cloneNode(true)));
+      return [...caixa.children].map((c) => getComputedStyle(c).backgroundColor);
+    });
+    expect(fundos).toHaveLength(8);
+    expect(fundos.slice(4)).toEqual(fundos.slice(0, 4));
+    expect(fundos).not.toContain("rgba(0, 0, 0, 0)");
+  });
+});
+
+test.describe("letreiro", () => {
+  test("a bolinha fica em cima de uma palavra mesmo quando a fonte chega tarde", async ({ page }) => {
+    // a fonte do letreiro (Big Shoulders) chega depois da bolinha começar: as palavras mudam de lugar
+    await page.route(/fonts\.gstatic\.com/, async (r) => { await new Promise((ok) => setTimeout(ok, 2500)); await r.continue().catch(() => {}); });
+    await page.goto("/", { waitUntil: "commit" });
+    await page.waitForSelector("#bola", { state: "attached" });
+    const fora = await page.evaluate(async () => {
+      const h1 = document.querySelector<HTMLElement>("#letreiro")!, bola = document.querySelector<HTMLElement>("#bola")!;
+      const ws = [...h1.querySelectorAll<HTMLElement>(".w")];
+      const ruins: string[] = [];
+      const t0 = performance.now();
+      while (performance.now() - t0 < 6000) {
+        // onde a bolinha quer estar (o fim da animação) tem que ser o meio de alguma palavra, na posição de agora
+        if (+getComputedStyle(bola).opacity > 0.5 && bola.style.left) {
+          const alvo = parseFloat(bola.style.left), base = h1.getBoundingClientRect();
+          const dx = Math.min(...ws.map((w) => { const r = w.getBoundingClientRect(); return Math.abs(r.left - base.left + r.width / 2 - alvo); }));
+          if (dx > 6) ruins.push(`${Math.round(performance.now() - t0)}ms: ${Math.round(dx)}px fora`);
+        }
+        await new Promise((ok) => setTimeout(ok, 100));
+      }
+      return ruins;
+    });
+    expect(fora).toEqual([]);
   });
 });
 
