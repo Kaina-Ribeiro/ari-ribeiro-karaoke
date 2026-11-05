@@ -130,21 +130,13 @@ test.describe("busca e comanda sempre à mão", () => {
     if (az.height < 100) expect(Math.abs(az.y - barra.height)).toBeLessThanOrEqual(2);
   });
 
-  test("no computador, a comanda fica no canto de baixo e não esconde o fim da página", async ({ page, isMobile }) => {
-    test.skip(isMobile, "no celular ela fica na barra da busca");
-    const c = (await page.locator("#abreComanda").boundingBox())!;
-    expect(c.y + c.height).toBeGreaterThan(page.viewportSize()!.height - 40);
-    await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; scrollTo(0, document.body.scrollHeight); });
-    const ultimo = (await page.locator(".contatos").boundingBox())!;
-    expect(ultimo.y + ultimo.height).toBeLessThanOrEqual(c.y);
-  });
-
-  test("no celular, a comanda fica na barra da busca e não tapa nenhum botão da lista", async ({ page, isMobile }) => {
-    test.skip(!isMobile, "no computador ela é a etiqueta do canto");
+  test("a comanda fica na barra da busca, do lado do campo, e não tapa nenhum botão da lista", async ({ page }) => {
     const dentro = async () => {
       const b = (await page.locator("#abreComanda").boundingBox())!, barra = (await page.locator(".busca").boundingBox())!;
+      const campo = (await page.locator(".campo").boundingBox())!;
       expect(b.y).toBeGreaterThanOrEqual(barra.y);
-      expect(b.y + b.height).toBeLessThanOrEqual(barra.y + barra.height + 4); // + a sombra
+      expect(b.y + b.height).toBeLessThanOrEqual(barra.y + barra.height + 6); // + a sombra
+      expect(b.x).toBeGreaterThan(campo.x + campo.width); // à direita do campo
     };
     await dentro();
     await rolaPraLista(page);
