@@ -2,7 +2,8 @@ import type { Previa } from "../../../lib/xlsx.ts";
 import { api } from "../api.ts";
 import { carrega, type Estado } from "../estado.ts";
 import { quando } from "../status.ts";
-import { $, aviso, cabecalho, campo, comanda, comCarregando, escapa, linhaComanda, numero as n } from "../ui.ts";
+import { validaDicas } from "../../../lib/painel/valida.ts";
+import { $, aviso, cabecalho, campo, comanda, comCarregando, erroNoCampo, escapa, limpaErros, linhaComanda, numero as n } from "../ui.ts";
 
 /** O catálogo que está no ar, em forma de comanda. */
 function fonteAtual(e: Estado): string {
@@ -35,6 +36,12 @@ export function montaCatalogo(el: HTMLElement, e: Estado) {
   el.innerHTML = cabecalho("Catálogo", "De onde vêm as músicas do site.")
     + `<div class="duas esq-estreita"><div class="coluna">${fonteAtual(e)}`
     + (ehLink ? `<div class="acoes"><button class="bt claro" type="button" id="atualizar">Atualizar catálogo</button></div>` : "")
+    // "Tenta aí" do site: sugestões sorteadas do catálogo embaixo da busca
+    + `<form class="folha" id="formDicas" novalidate><h2>Tenta aí</h2>`
+    + `<p>Embaixo da busca do site aparecem sugestões sorteadas do catálogo: um código, um cantor, uma música e uma novidade. Elas trocam sozinhas.</p>`
+    + campo({ id: "segundos", rotulo: "Trocar a cada (segundos)", valor: String(e.dicas.segundos).replace(".", ","), inputmode: "decimal",
+      dica: "De 2 a 15. O normal é 4." })
+    + `<div class="acoes"><button class="bt" type="submit">Salvar tempo</button></div></form>`
     + `</div><div class="coluna"><fieldset class="escolha"><legend>Trocar a fonte</legend>`
     + `<label><input type="radio" name="fonte" value="arquivo" ${ehLink ? "" : "checked"} /> <span>Arquivo .xlsx</span></label>`
     + `<label><input type="radio" name="fonte" value="link" ${ehLink ? "checked" : ""} /> <span>Link do Google</span></label></fieldset>`
@@ -64,6 +71,21 @@ export function montaCatalogo(el: HTMLElement, e: Estado) {
       aviso("Pedido feito. Publicando com a planilha de agora…");
       await carrega();
     }));
+
+  /* ---------- Tenta aí: tempo da troca ---------- */
+  const formDicas = $<HTMLFormElement>("#formDicas", el);
+  formDicas.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    limpaErros(formDicas);
+    const bruto = $<HTMLInputElement>("#segundos", formDicas).value.trim().replace(",", ".");
+    const r = validaDicas({ segundos: bruto === "" ? NaN : Number(bruto) });
+    if (!r.ok) { erroNoCampo(formDicas, "segundos", r.erro); return; }
+    await comCarregando($<HTMLButtonElement>("button[type=submit]", formDicas), async () => {
+      await api("PUT", "/api/admin/dicas", r.valor);
+      aviso("Salvo. Publicando o site…");
+      await carrega();
+    }, "Salvo");
+  });
 
   /* ---------- arquivo: prévia no navegador, confirma, envia ---------- */
   const entrada = $<HTMLInputElement>("#arquivo", el);

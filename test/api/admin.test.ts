@@ -118,6 +118,21 @@ describe("catálogo", () => {
   });
 });
 
+describe("Tenta aí", () => {
+  it("sem nada salvo vale 4 s; salvar grava e publica", async () => {
+    expect((await estado()).dicas).toEqual({ segundos: 4 });
+    expect((await chama("PUT", "/api/admin/dicas", { segundos: 6.5 })).status).toBe(200);
+    expect((await estado()).dicas).toEqual({ segundos: 6.5 });
+    expect(await publicacoes()).toEqual(["dicas"]);
+  });
+  it("tempo inválido: 400 e nada muda", async () => {
+    const r = await chama("PUT", "/api/admin/dicas", { segundos: 0 });
+    expect(r).toEqual({ status: 400, corpo: { erro: "O tempo precisa ser de 2 a 15 segundos" } });
+    expect((await estado()).dicas).toEqual({ segundos: 4 });
+    expect(await publicacoes()).toEqual([]);
+  });
+});
+
 describe("novidades", () => {
   it("prazo inválido: 400", async () => {
     expect((await chama("PUT", "/api/admin/novidades", { prazoDias: 0 })).status).toBe(400);

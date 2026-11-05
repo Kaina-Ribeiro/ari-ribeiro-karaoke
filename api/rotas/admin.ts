@@ -1,6 +1,6 @@
 import { classifica, hojeSP } from "../../src/lib/painel/classifica.ts";
 import type { Resultado } from "../../src/lib/painel/tipos.ts";
-import { campoDoErro, validaBanner, validaCartao, validaContato, validaNovidades } from "../../src/lib/painel/valida.ts";
+import { campoDoErro, validaBanner, validaCartao, validaContato, validaDicas, validaNovidades } from "../../src/lib/painel/valida.ts";
 import {
   apagaCartao, atualizaCartao, criaCartao, existeArquivo, gravaConfig, leConfig, listaCartoes, listaPacotes, mudaModoPacote, reordenaCartoes, validaCatalogo, type ChaveConfig,
 } from "../config.ts";
@@ -26,13 +26,13 @@ async function salvaEPublica<K extends ChaveConfig>(c: Contexto, chave: K, valor
 
 export function registraAdmin(rota: Rota) {
   rota("GET", "/api/admin/estado", async ({ env, deps, admin }) => {
-    const [contato, banner, catalogo, novidades, cartoes, pacotes, historico, noAr] = await Promise.all([
-      leConfig(env, "contato"), leConfig(env, "banner"), leConfig(env, "catalogo"), leConfig(env, "novidades"),
+    const [contato, banner, catalogo, novidades, dicas, cartoes, pacotes, historico, noAr] = await Promise.all([
+      leConfig(env, "contato"), leConfig(env, "banner"), leConfig(env, "catalogo"), leConfig(env, "novidades"), leConfig(env, "dicas"),
       listaCartoes(env), listaPacotes(env), ultimasPublicacoes(env, 3), musicasNoAr(env),
     ]);
     const hoje = hojeSP(deps.agora());
     return json({
-      contato, banner, catalogo, novidades, cartoes,
+      contato, banner, catalogo, novidades, dicas, cartoes,
       pacotes: pacotes.map((p) => ({ ...p, classe: classifica(p, novidades.prazoDias, hoje) })),
       publicacao: historico[0] ?? null, historico, musicasNoAr: noAr, hoje,
       email: admin?.email ?? null,
@@ -58,6 +58,8 @@ export function registraAdmin(rota: Rota) {
   });
 
   rota("PUT", "/api/admin/novidades", async (c) => salvaEPublica(c, "novidades", valorOu400(validaNovidades(await leJson(c.req)))));
+
+  rota("PUT", "/api/admin/dicas", async (c) => salvaEPublica(c, "dicas", valorOu400(validaDicas(await leJson(c.req)))));
 
   /* ---------- cartões de "Pra sua festa" ---------- */
   const publica = async (c: Contexto, extra: Record<string, unknown> = {}) =>

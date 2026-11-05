@@ -4,13 +4,14 @@ import manifesto from "../data/gerado/manifesto.json";
 import { letraDe } from "../lib/texto.ts";
 import { htmlLetreiro, htmlPoster, negrito } from "../lib/painel/cartaz.ts";
 import { classesPreco, textoPreco } from "../lib/painel/preco.ts";
+import { LIMITE_DICA } from "../lib/dicas.ts";
 
 const titulo = "Ari Ribeiro Karaokê · Catálogo de músicas";
 const descricao = "Catálogo oficial do Ari Ribeiro Karaokê. Busca por código, cantor, música ou pelo começo da letra e manda o pedido pro KJ no Zap.";
 const atualizado = new Date(manifesto.geradoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 const { contato, banner } = manifesto;
 // os Zaps vão pro script do navegador: o do KJ recebe a comanda, o do pedido recebe "Pedir música nova" (sem escolha = o geral)
-const cliente = { total: manifesto.total, temLetras: manifesto.temLetras, catalogo: manifesto.catalogo, letras: manifesto.letras, zapKj: contato.zapKj, zapPedido: contato.zapPedido };
+const cliente = { total: manifesto.total, temLetras: manifesto.temLetras, catalogo: manifesto.catalogo, letras: manifesto.letras, zapKj: contato.zapKj, zapPedido: contato.zapPedido, dicaSegundos: manifesto.dicas.segundos };
 const corta = (t: string) => (t.length > 110 ? t.slice(0, 110).replace(/\s\S*$/, "") + "…" : t);
 
 // letras das primeiras linhas, pra marcar onde começa cada letra do índice
@@ -22,6 +23,12 @@ const primeiras = manifesto.primeiras.map((m) => {
   return { ...m, divisor };
 });
 const endereco = new URL("/", Astro.site);
+// "Tenta aí" da primeira tela (sem JavaScript fica assim); depois o catalogo.ts sorteia outras do catálogo inteiro
+const nova = manifesto.primeiras.find((m) => m.pacote === "nova" && [...m.titulo].length <= LIMITE_DICA);
+const dicas = [
+  { tipo: "codigo", texto: "4973" }, { tipo: "cantor", texto: "14 Bis" }, { tipo: "musica", texto: "Evidências" },
+  ...(nova ? [{ tipo: "nova", texto: nova.titulo }] : []),
+];
 ---
 <!doctype html>
 <html lang="pt-BR">
@@ -73,7 +80,7 @@ const endereco = new URL("/", Astro.site);
           <button class="x" id="limpa" hidden aria-label="Limpar busca"><span>Limpar</span></button>
         </div>
       </div></section>
-      <div class="g faixa-dicas"><div class="in dicas">Tenta aí: <button data-q="4973">4973</button><button data-q="14 bis">14 Bis</button><button data-q="evidencias">Evidências</button><span>ou um pedaço da letra</span></div></div>
+      <div class="g faixa-dicas"><div class="in dicas"><span class="rot-dicas">Tenta aí:</span><span class="sugestoes" id="sugestoes">{dicas.map((d) => <button type="button" data-q={d.texto} data-tipo={d.tipo} aria-label={d.tipo === "nova" ? `Buscar ${d.texto} (novidade)` : `Buscar ${d.texto}`}><span class="v">{d.texto}</span></button>)}</span><span class="ou">ou um pedaço da letra</span></div></div>
 
       <section class="catalogo g"><div class="in">
         <nav class="az" id="az" aria-label="Cantores de A a Z"></nav>

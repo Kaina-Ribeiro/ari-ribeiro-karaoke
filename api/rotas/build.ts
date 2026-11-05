@@ -11,11 +11,11 @@ type Rota = ReturnType<typeof criaRoteador>["rota"];
 
 export function registraBuild(rota: Rota) {
   rota("GET", "/api/build/config", async ({ env, deps }) => {
-    const [contato, banner, catalogo, novidades, cartoes, pacotes, noAr] = await Promise.all([
-      leConfig(env, "contato"), leConfig(env, "banner"), leConfig(env, "catalogo"), leConfig(env, "novidades"),
+    const [contato, banner, catalogo, novidades, dicas, cartoes, pacotes, noAr] = await Promise.all([
+      leConfig(env, "contato"), leConfig(env, "banner"), leConfig(env, "catalogo"), leConfig(env, "novidades"), leConfig(env, "dicas"),
       listaCartoes(env, { soAtivos: true }), listaPacotes(env), musicasNoAr(env),
     ]);
-    const config: ConfigBuild = { contato, banner, catalogo, novidades, cartoes, pacotes, musicasNoAr: noAr, hoje: hojeSP(deps.agora()) };
+    const config: ConfigBuild = { contato, banner, catalogo, novidades, dicas, cartoes, pacotes, musicasNoAr: noAr, hoje: hojeSP(deps.agora()) };
     return json(config);
   });
 
