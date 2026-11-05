@@ -23,4 +23,7 @@ export const PESOS_PRECO: { valor: PesoPreco; rotulo: string }[] = [
 /** Estilo que o preço novo já vem: etiqueta preta, média, em negrito (lê bem em qualquer cor de cartão). */
 export const ESTILO_PRECO_PADRAO: Omit<PrecoCartao, "texto"> = { cor: "tinta", tamanho: "m", peso: "forte" };
 
-export const classesPreco = (p: Omit<PrecoCartao, "texto">): string => `preco cor-${p.cor} tam-${p.tamanho} peso-${p.peso}`;
+/** O "R$" nunca fica numa linha e o número na outra (espaço que não quebra). */
+export const textoPreco = (t: string): string => t.replace(/R\$\s+(?=\d)/g, "R$ ");
+
+export const classesPreco =(p: Omit<PrecoCartao, "texto">): string => `preco cor-${p.cor} tam-${p.tamanho} peso-${p.peso}`;

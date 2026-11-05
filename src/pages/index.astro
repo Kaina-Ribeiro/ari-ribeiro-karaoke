@@ -3,7 +3,7 @@ import "../styles/global.css";
 import manifesto from "../data/gerado/manifesto.json";
 import { letraDe } from "../lib/texto.ts";
 import { htmlLetreiro, htmlPoster, negrito } from "../lib/painel/cartaz.ts";
-import { classesPreco } from "../lib/painel/preco.ts";
+import { classesPreco, textoPreco } from "../lib/painel/preco.ts";
 
 const titulo = "Ari Ribeiro Karaokê · Catálogo de músicas";
 const descricao = "Catálogo oficial do Ari Ribeiro Karaokê. Busca por código, cantor, música ou pelo começo da letra e manda o pedido pro KJ no Zap.";
@@ -111,7 +111,7 @@ const endereco = new URL("/", Astro.site);
         <div class="cartazes">
           {manifesto.servicos.map((s) => (
             <a class="cz" target="_blank" rel="noopener" href={`https://wa.me/${s.zap}?text=${encodeURIComponent("Oi Ari! Quero saber sobre: " + s.titulo)}`}>
-              {s.foto && <img class="foto" src={s.foto} alt="" loading="lazy" decoding="async" />}<span class="k">{s.destaque}</span><b>{s.titulo}</b><p>{s.descricao}</p>{s.preco && <span class={classesPreco(s.preco)}>{s.preco.texto}</span>}<span class="ir">Chamar no Zap →</span>
+              {s.foto && <img class="foto" src={s.foto} alt="" loading="lazy" decoding="async" />}<span class="k">{s.destaque}</span><b>{s.titulo}</b><p>{s.descricao}</p>{s.preco && <span class={classesPreco(s.preco)}>{textoPreco(s.preco.texto)}</span>}<span class="ir">Chamar no Zap →</span>
             </a>
           ))}
         </div>

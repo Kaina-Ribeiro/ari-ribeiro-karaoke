@@ -215,7 +215,7 @@ mark{background:var(--luz);color:inherit;padding:0 1px}
 .cz p{margin:0;flex:1}
 .cz span.ir{font:800 .78rem var(--f-texto);text-transform:uppercase;letter-spacing:.08em;border-top:2px solid var(--tinta);padding-top:10px}
 /* preço opcional: etiqueta colada no cartaz, fundo na cor escolhida e a letra que dá contraste (src/lib/painel/preco.ts) */
-.cz .preco{align-self:flex-start;max-width:100%;font-family:var(--f-texto);line-height:1.1;padding:.28em .5em .32em;border:2px solid var(--tinta);overflow-wrap:anywhere;transform:rotate(-1.5deg)}
+.cz .preco{align-self:flex-start;max-width:100%;font-family:var(--f-texto);line-height:1.1;padding:.28em .5em .32em;border:2px solid var(--tinta);overflow-wrap:anywhere;text-wrap:balance;transform:rotate(-1.5deg)}
 .preco.cor-tinta{background:var(--tinta);color:var(--papel)}
 .preco.cor-gravata{background:var(--gravata);color:#fff}
 .preco.cor-brasa{background:var(--brasa-texto);color:#fff}

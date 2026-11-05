@@ -268,7 +268,7 @@ input[type=file]::file-selector-button{font:800 .95rem var(--f-texto);border:2px
 .cz p{margin:0;flex:1;overflow-wrap:anywhere}
 .cz .ir{font:800 .78rem var(--f-texto);text-transform:uppercase;letter-spacing:.08em;border-top:2px solid var(--tinta);padding-top:10px}
 /* preço opcional: etiqueta colada no cartaz, fundo na cor escolhida e a letra que dá contraste (igual ao global.css) */
-.cz .preco{align-self:flex-start;max-width:100%;font-family:var(--f-texto);line-height:1.1;padding:.28em .5em .32em;border:2px solid var(--tinta);overflow-wrap:anywhere;transform:rotate(-1.5deg)}
+.cz .preco{align-self:flex-start;max-width:100%;font-family:var(--f-texto);line-height:1.1;padding:.28em .5em .32em;border:2px solid var(--tinta);overflow-wrap:anywhere;text-wrap:balance;transform:rotate(-1.5deg)}
 .preco.cor-tinta{background:var(--tinta);color:var(--papel)}
 .preco.cor-gravata{background:var(--gravata);color:#fff}
 .preco.cor-brasa{background:var(--brasa-texto);color:#fff}
@@ -305,6 +305,7 @@ input[type=file]::file-selector-button{font:800 .95rem var(--f-texto);border:2px
 .previa-fundo{background:var(--tinta);padding:22px 20px;border:2px solid var(--tinta)}
 .previa-fundo .cz{max-width:340px;margin-inline:auto}
 .previa-zap{margin:8px 0 0;font-size:.88rem;font-weight:700;color:var(--tinta-2);overflow-wrap:anywhere}
+.sem-quebra{white-space:nowrap}
 .cartao-acoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
 .mini{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;padding:0 10px;border:2px solid var(--papel);background:transparent;color:var(--papel);font:800 .86rem/1 var(--f-texto);cursor:pointer;transition:background-color .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .mini:hover{background:var(--noite);color:#fff}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   campoDoErro, formataZap, idDaPlanilha, mascaraZap, normalizaUsuario, normalizaZap, validaBanner, validaCartao, validaContato, validaNovidades,
 } from "../src/lib/painel/valida.ts";
+import { textoPreco } from "../src/lib/painel/preco.ts";
 import { CONFIG_PADRAO } from "../src/lib/painel/padrao.ts";
 
 const ok = <T>(r: { ok: boolean; valor?: T; erro?: string }) => {
@@ -185,5 +186,13 @@ describe("link da planilha", () => {
     expect(idDaPlanilha("https://evil.com/spreadsheets/d/1kTKJlUTVK0CX6pM_mRugkmqIu9Hz9Wpx")).toBeNull();
     expect(idDaPlanilha("http://docs.google.com.evil.com/spreadsheets/d/1kTKJlUTVK0CX6pM_mRugkmqIu9Hz9Wpx")).toBeNull();
     expect(idDaPlanilha("não é link")).toBeNull();
+  });
+});
+
+describe("textoPreco", () => {
+  it("cola o R$ no número pra não quebrar a linha entre os dois", () => {
+    expect(textoPreco("a partir de R$ 350")).toBe("a partir de R$ 350");
+    expect(textoPreco("R$  1.350 ou R$ 99")).toBe("R$ 1.350 ou R$ 99");
+    expect(textoPreco("Sob consulta")).toBe("Sob consulta");
   });
 });

@@ -1,5 +1,5 @@
 import { numeroDoZap } from "../../../lib/painel/contato.ts";
-import { classesPreco, CORES_PRECO, ESTILO_PRECO_PADRAO, PESOS_PRECO, TAMANHOS_PRECO } from "../../../lib/painel/preco.ts";
+import { classesPreco, CORES_PRECO, textoPreco, ESTILO_PRECO_PADRAO, PESOS_PRECO, TAMANHOS_PRECO } from "../../../lib/painel/preco.ts";
 import type { Cartao, Contato, PrecoCartao } from "../../../lib/painel/tipos.ts";
 import { formataZap, LIMITES, validaCartao, validaPreco } from "../../../lib/painel/valida.ts";
 import { api } from "../api.ts";
@@ -23,7 +23,7 @@ const htmlCartaz = (c: DadosCartaz, cor: string, ir: string, src = c.fotoChave ?
   `<div class="cz${cor}">`
   + (src ? `<img class="foto" src="${escapa(src)}" alt="" />` : "")
   + `<span class="k">${escapa(c.destaque)}</span><b>${escapa(c.titulo)}</b><p>${escapa(c.descricao)}</p>`
-  + (c.preco ? `<span class="${classesPreco(c.preco)}">${escapa(c.preco.texto)}</span>` : "")
+  + (c.preco ? `<span class="${classesPreco(c.preco)}">${escapa(textoPreco(c.preco.texto))}</span>` : "")
   + ir + `</div>`;
 
 /** Cor da prévia: as 4 dos cartazes do site (global.css .cz:nth-child), pela posição entre os ligados. */
@@ -148,7 +148,8 @@ export function montaFesta(el: HTMLElement, e: Estado) {
         fotoChave, preco: precoDoForm(),
       }, corDaPosicao(posicao), `<span class="ir" aria-hidden="true">Chamar no Zap →</span>`, fotoSrc);
       const z = destinoZap(contato, zapDoForm());
-      previaZap.textContent = `Abre o ${z.nome}${z.geral ? " (geral)" : ""} · ${formataZap(z.numero)}`;
+      // o número não quebra no meio
+      previaZap.innerHTML = `Abre o ${escapa(z.nome)}${z.geral ? " (geral)" : ""} · <span class="sem-quebra">${formataZap(z.numero)}</span>`;
     };
     const confere = () => { salvar.disabled = !atualizaContadores(form); };
     form.addEventListener("input", () => { confere(); desenhaPrevia(); });
