@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  formataZap, idDaPlanilha, normalizaUsuario, normalizaZap, validaBanner, validaCartao, validaContato, validaNovidades,
+  campoDoErro, formataZap, idDaPlanilha, mascaraZap, normalizaUsuario, normalizaZap, validaBanner, validaCartao, validaContato, validaNovidades,
 } from "../src/lib/painel/valida.ts";
 import { CONFIG_PADRAO } from "../src/lib/painel/padrao.ts";
 
@@ -24,8 +24,26 @@ describe("Zap", () => {
   });
 });
 
+describe("máscara do telefone (enquanto digita)", () => {
+  it.each([
+    ["", ""], ["1", "(1"], ["12", "(12"], ["129", "(12) 9"], ["1299119", "(12) 99119"], ["12991196", "(12) 99119-6"],
+    ["12991196050", "(12) 99119-6050"], ["129911960509", "(12) 99119-6050"],
+    ["+55 12 99119-6050", "(12) 99119-6050"], ["5512991196050", "(12) 99119-6050"], ["012991196050", "(12) 99119-6050"],
+    ["(12) 99119-6050", "(12) 99119-6050"], ["(12", "(12"], ["(12) ", "(12"], ["abc", ""],
+  ])("%j → %j", (entrada, saida) => {
+    expect(mascaraZap(entrada)).toBe(saida);
+  });
+  it("DDD 55 não é confundido com o +55", () => {
+    expect(mascaraZap("55991196050")).toBe("(55) 99119-6050");
+  });
+});
+
 describe("redes", () => {
-  it.each(["@ariribeirokaraoke", "https://www.instagram.com/ariribeirokaraoke/", "ariribeirokaraoke", "facebook.com/AriRibeiroKaraoke"])("%s vira só o usuário", (s) => {
+  it.each([
+    "@ariribeirokaraoke", "https://www.instagram.com/ariribeirokaraoke/", "ariribeirokaraoke", "facebook.com/AriRibeiroKaraoke",
+    "https://x.com/ariribeirokaraoke", "twitter.com/ariribeirokaraoke", "https://www.tiktok.com/@ariribeirokaraoke?lang=pt-BR",
+    "youtube.com/@AriRibeiroKaraoke", "m.facebook.com/ariribeirokaraoke/",
+  ])("%s vira só o usuário", (s) => {
     expect(ok(normalizaUsuario(s)).toLowerCase()).toBe("ariribeirokaraoke");
   });
   it("recusa nome com espaço", () => {
@@ -34,15 +52,66 @@ describe("redes", () => {
 });
 
 describe("contato", () => {
-  const base = { zapContato: "12991167274", zapKj: "", instagram: "@ariribeirokaraoke", facebook: "" };
-  it("Zap do KJ vazio vira null", () => {
-    expect(ok(validaContato(base))).toEqual({ zapContato: "5512991167274", zapKj: null, instagram: "ariribeirokaraoke", facebook: null });
+  const base = {
+    zaps: [
+      { id: "z1", nome: " WhatsApp - Ana Paula ", numero: "(12) 99119-6050", ativo: true },
+      { id: "z2", nome: "WhatsApp - Ari", numero: "12991167274", ativo: false },
+    ],
+    geral: "z1", kj: "z2", pedido: "",
+    redes: [
+      { id: "r1", rede: "instagram", usuario: "@ariribeirokaraoke", ativo: true },
+      { id: "r2", rede: "facebook", usuario: "facebook.com/ariribeiro", ativo: false },
+    ],
+  };
+  const comZap = (i: number, mudanca: object) => ({ ...base, zaps: base.zaps.map((z, j) => (j === i ? { ...z, ...mudanca } : z)) });
+  const erro = (x: unknown) => campoDoErro(erroDe(validaContato(x))!);
+
+  it("normaliza números, nomes e usuários; pedido vazio vira null (= geral)", () => {
+    expect(ok(validaContato(base))).toEqual({
+      zaps: [
+        { id: "z1", nome: "WhatsApp - Ana Paula", numero: "5512991196050", ativo: true },
+        { id: "z2", nome: "WhatsApp - Ari", numero: "5512991167274", ativo: false },
+      ],
+      geral: "z1", kj: "z2", pedido: null,
+      redes: [
+        { id: "r1", rede: "instagram", usuario: "ariribeirokaraoke", ativo: true },
+        { id: "r2", rede: "facebook", usuario: "ariribeiro", ativo: false },
+      ],
+    });
   });
-  it("Zap de contato é obrigatório", () => {
-    expect(validaContato({ ...base, zapContato: "" }).ok).toBe(false);
+  it("o geral sempre aparece no rodapé, e escolher o geral como destino vira null", () => {
+    const c = ok<{ zaps: { ativo: boolean }[]; kj: string | null; pedido: string | null }>(validaContato({ ...comZap(0, { ativo: false }), kj: "z1", pedido: "z1" }));
+    expect(c.zaps[0].ativo).toBe(true);
+    expect([c.kj, c.pedido]).toEqual([null, null]);
   });
-  it("Zap do KJ inválido é recusado", () => {
-    expect(validaContato({ ...base, zapKj: "1234" }).ok).toBe(false);
+  it("número inválido aponta o campo do número certo", () => {
+    expect(erro(comZap(1, { numero: "1234" }))).toEqual({ campo: "zap-numero-z2", mensagem: "Use um celular com DDD: (12) 99999-9999" });
+  });
+  it("nome é obrigatório e tem limite", () => {
+    expect(erro(comZap(1, { nome: "  " })).campo).toBe("zap-nome-z2");
+    expect(erro(comZap(1, { nome: "x".repeat(41) })).mensagem).toBe("O nome pode ter até 40 letras");
+  });
+  it("número repetido é recusado", () => {
+    expect(erro(comZap(1, { numero: "12991196050" }))).toEqual({ campo: "zap-numero-z2", mensagem: "Esse número já está na lista" });
+  });
+  it("precisa de pelo menos um WhatsApp e de um geral que exista", () => {
+    expect(erroDe(validaContato({ ...base, zaps: [] }))).toBe("Cadastre pelo menos um WhatsApp");
+    expect(erroDe(validaContato({ ...base, geral: "z9" }))).toBe("Escolha qual WhatsApp é o geral");
+  });
+  it("destino que sumiu da lista é recusado no campo do destino", () => {
+    expect(erro({ ...base, pedido: "z9" })).toEqual({ campo: "pedido", mensagem: "Escolha de novo quem recebe o pedido de música nova" });
+  });
+  it("ids repetidos ou rede desconhecida: lista errada", () => {
+    expect(erroDe(validaContato(comZap(1, { id: "z1" })))).toBe("A lista de WhatsApp veio errada. Recarregue a página.");
+    expect(erroDe(validaContato({ ...base, redes: [{ id: "r1", rede: "orkut", usuario: "ari", ativo: true }] }))).toBe("A lista de redes veio errada. Recarregue a página.");
+  });
+  it("usuário de rede inválido aponta o campo e diz qual rede", () => {
+    expect(erro({ ...base, redes: [{ id: "r7", rede: "tiktok", usuario: "ari ribeiro", ativo: true }] }))
+      .toEqual({ campo: "rede-r7", mensagem: "TikTok: Use só o nome de usuário, sem espaços (ex.: ariribeirokaraoke)" });
+  });
+  it("mais de um perfil da mesma rede", () => {
+    const c = ok<{ redes: { usuario: string }[] }>(validaContato({ ...base, redes: [{ id: "a", rede: "youtube", usuario: "@um", ativo: true }, { id: "b", rede: "youtube", usuario: "dois", ativo: true }] }));
+    expect(c.redes.map((r) => r.usuario)).toEqual(["um", "dois"]);
   });
 });
 

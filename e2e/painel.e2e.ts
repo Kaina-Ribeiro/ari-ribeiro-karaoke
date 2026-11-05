@@ -49,29 +49,105 @@ test.describe("estrutura", () => {
 });
 
 test.describe("contato", () => {
-  test("salva o Zap e mostra formatado ao voltar", async ({ page }) => {
+  // banco local: importado da fixture (Contato para locação = 12991167274, o do Ari)
+  const zaps = (page: Page) => page.locator(".zap-item");
+  const salva = async (page: Page) => {
+    await page.getByRole("button", { name: "Salvar contato" }).click();
+    await expect(page.locator("#aviso")).toContainText("Salvo");
+  };
+
+  test("o contato importado vira o WhatsApp geral, com o Instagram", async ({ page }) => {
     await abre(page, "contato");
     await expect(page.locator("h1")).toHaveText("Contato");
-    await page.getByLabel("Zap de contato").fill("(12) 98888-7777");
-    await page.getByRole("button", { name: "Salvar contato" }).click();
-    await expect(page.locator("#aviso")).toContainText("Salvo");
+    await expect(zaps(page)).toHaveCount(1);
+    await expect(zaps(page).first().getByLabel("Nome no rodapé")).toHaveValue("WhatsApp - Ari");
+    await expect(zaps(page).first().getByLabel("Número")).toHaveValue("(12) 99116-7274");
+    await expect(zaps(page).first().getByRole("radio", { name: "É o geral" })).toBeChecked();
+    await expect(zaps(page).first().getByRole("button", { name: /^Remover/ })).toBeDisabled();
+    await expect(page.getByLabel("Usuário do Instagram")).toHaveValue("ariribeirokaraoke");
+    await expect(page.locator("#previaRodape small")).toHaveText(["WhatsApp - Ari", "Instagram", "Catálogo"]);
+    await semProblemaGrave(page);
+  });
+
+  test("telefone formata enquanto digita e apagar não trava", async ({ page }) => {
+    await abre(page, "contato");
+    await page.getByRole("button", { name: "Adicionar WhatsApp" }).click();
+    const num = zaps(page).last().getByLabel("Número");
+    await num.pressSequentially("12988887777");
+    await expect(num).toHaveValue("(12) 98888-7777");
+    await num.press("Backspace");
+    await num.press("Backspace");
+    await num.press("Backspace");
+    await num.press("Backspace");
+    await expect(num).toHaveValue("(12) 98888");
+    // Backspace logo depois do ") " apaga o dígito antes dele
+    await num.fill("");
+    await num.pressSequentially("12988887777");
+    await num.evaluate((i: HTMLInputElement) => i.setSelectionRange(5, 5));
+    await num.press("Backspace");
+    await expect(num).toHaveValue("(19) 88887-777");
+    // colar com +55 também formata
+    await num.fill("+55 12 99119-6050");
+    await expect(num).toHaveValue("(12) 99119-6050");
+  });
+
+  test("vários WhatsApp, quem recebe o quê e redes: salva, aparece na prévia e volta igual", async ({ page }) => {
+    await abre(page, "contato");
+    await page.getByRole("button", { name: "Adicionar WhatsApp" }).click();
+    const novo = zaps(page).last();
+    await expect(novo.getByLabel("Nome no rodapé")).toBeFocused();
+    await novo.getByLabel("Nome no rodapé").fill("WhatsApp - Ana Paula");
+    await novo.getByLabel("Número").pressSequentially("12991196050");
+    await page.getByLabel("Zap do “Pedir música nova”").selectOption({ label: "WhatsApp - Ana Paula" });
+    await page.getByRole("button", { name: "Adicionar YouTube" }).click();
+    await page.getByLabel("Usuário do YouTube").fill("https://www.youtube.com/@AriRibeiro");
+    await page.getByRole("button", { name: "Adicionar TikTok" }).click();
+    await page.getByLabel("Usuário do TikTok").fill("ariribeirokaraoke");
+    await page.locator(".perfil", { has: page.getByLabel("Usuário do TikTok") }).getByRole("checkbox", { name: "Mostrar no rodapé" }).uncheck();
+    // a prévia acompanha: a Ana Paula, o YouTube; o TikTok desligado não
+    await expect(page.locator("#previaRodape small")).toHaveText(["WhatsApp - Ari", "WhatsApp - Ana Paula", "Instagram", "YouTube", "Catálogo"]);
+    await expect(page.locator("#previaRodape")).toContainText("(12) 99119-6050");
+    await expect(page.locator("#previaRodape")).toContainText("@AriRibeiro");
+    // Ana Paula sobe pro primeiro lugar
+    await novo.getByRole("button", { name: "Subir WhatsApp - Ana Paula" }).click();
+    await expect(zaps(page).first().getByLabel("Nome no rodapé")).toHaveValue("WhatsApp - Ana Paula");
+    await salva(page);
     await expect(page.locator("#status")).toContainText("No ar ✅");
+
     await page.reload();
-    await expect(page.getByLabel("Zap de contato")).toHaveValue("(12) 98888-7777");
-    // volta ao número de antes pros outros testes
-    await page.getByLabel("Zap de contato").fill("12991167274");
-    await page.getByRole("button", { name: "Salvar contato" }).click();
-    await expect(page.locator("#aviso")).toContainText("Salvo");
+    await expect(zaps(page)).toHaveCount(2);
+    await expect(zaps(page).first().getByLabel("Número")).toHaveValue("(12) 99119-6050");
+    await expect(page.getByLabel("Zap do “Pedir música nova”")).toHaveValue(/.+/);
+    await expect(page.getByLabel("Zap do “Pedir música nova”").locator("option:checked")).toHaveText("WhatsApp - Ana Paula");
+    await expect(page.getByLabel("Usuário do YouTube")).toHaveValue("AriRibeiro");
+    await expect(page.locator(".perfil", { has: page.getByLabel("Usuário do TikTok") }).getByRole("checkbox")).not.toBeChecked();
+    await semProblemaGrave(page);
+
+    // volta ao contato de antes pros outros testes
+    await zaps(page).first().getByRole("button", { name: "Remover WhatsApp - Ana Paula" }).click();
+    await page.getByRole("button", { name: "Remover YouTube" }).click();
+    await page.getByRole("button", { name: "Remover TikTok" }).click();
+    await expect(page.getByLabel("Zap do “Pedir música nova”")).toHaveValue("");
+    await salva(page);
   });
 
   test("Zap inválido mostra o erro no campo e não salva", async ({ page }) => {
     await abre(page, "contato");
     let salvou = false;
     page.on("request", (r) => { if (r.method() === "PUT") salvou = true; });
-    await page.getByLabel("Zap do KJ").fill("1234");
+    await page.getByRole("button", { name: "Adicionar WhatsApp" }).click();
+    const novo = zaps(page).last();
+    await novo.getByLabel("Nome no rodapé").fill("WhatsApp do KJ");
+    await novo.getByLabel("Número").fill("1234");
     await page.getByRole("button", { name: "Salvar contato" }).click();
-    await expect(page.locator("#erro-zapKj")).toHaveText("Use um celular com DDD: (12) 99999-9999");
-    await expect(page.getByLabel("Zap do KJ")).toHaveAttribute("aria-invalid", "true");
+    await expect(novo.locator(".campo").nth(1).locator(".erro")).toHaveText("Use um celular com DDD: (12) 99999-9999");
+    await expect(novo.getByLabel("Número")).toHaveAttribute("aria-invalid", "true");
+    await expect(novo.getByLabel("Número")).toBeFocused();
+    // sem nome também avisa no campo
+    await novo.getByLabel("Número").fill("12981234567");
+    await novo.getByLabel("Nome no rodapé").fill("");
+    await page.getByRole("button", { name: "Salvar contato" }).click();
+    await expect(novo.getByLabel("Nome no rodapé")).toHaveAttribute("aria-invalid", "true");
     expect(salvou).toBe(false);
     await semProblemaGrave(page);
   });

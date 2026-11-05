@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { CONFIG_PADRAO } from "../../src/lib/painel/padrao.ts";
-import { criaAmbiente, reqAdmin } from "./ambiente.ts";
+import { criaAmbiente, reqAdmin, reqBuild } from "./ambiente.ts";
 
 type Amb = Awaited<ReturnType<typeof criaAmbiente>>;
 let amb: Amb;
@@ -13,7 +13,11 @@ const chama = async (metodo: string, caminho: string, corpo?: unknown) => {
 };
 const estado = async () => (await chama("GET", "/api/admin/estado")).corpo;
 const publicacoes = async () => (await amb.env.DB.prepare("SELECT motivo FROM publicacoes").all<{ motivo: string }>()).results.map((p) => p.motivo);
-const contatoOk = { zapContato: "+55 (12) 98888-7777", zapKj: "", instagram: "@ariribeirokaraoke", facebook: "" };
+const contatoOk = {
+  zaps: [{ id: "z1", nome: "WhatsApp - Ari", numero: "+55 (12) 98888-7777", ativo: true }],
+  geral: "z1", kj: "", pedido: "",
+  redes: [{ id: "r1", rede: "instagram", usuario: "@ariribeirokaraoke", ativo: true }],
+};
 
 describe("estado", () => {
   it("banco vazio devolve o site de hoje", async () => {
@@ -39,14 +43,34 @@ describe("contato", () => {
     const r = await chama("PUT", "/api/admin/contato", contatoOk);
     expect(r.status).toBe(200);
     expect(r.corpo.publicacao.motivo).toBe("contato");
-    expect((await estado()).contato).toEqual({ zapContato: "5512988887777", zapKj: null, instagram: "ariribeirokaraoke", facebook: null });
+    expect((await estado()).contato).toEqual({
+      zaps: [{ id: "z1", nome: "WhatsApp - Ari", numero: "5512988887777", ativo: true }],
+      geral: "z1", kj: null, pedido: null,
+      redes: [{ id: "r1", rede: "instagram", usuario: "ariribeirokaraoke", ativo: true }],
+    });
     expect(await publicacoes()).toEqual(["contato"]);
   });
-  it("inválido: 400 com a mensagem e nada publicado", async () => {
-    const r = await chama("PUT", "/api/admin/contato", { ...contatoOk, zapContato: "1234" });
+  it("inválido: 400 com a mensagem (sem o campo do painel) e nada publicado", async () => {
+    const r = await chama("PUT", "/api/admin/contato", { ...contatoOk, zaps: [{ ...contatoOk.zaps[0], numero: "1234" }] });
     expect(r.status).toBe(400);
-    expect(r.corpo.erro).toBe("Zap de contato: Use um celular com DDD: (12) 99999-9999");
+    expect(r.corpo.erro).toBe("Use um celular com DDD: (12) 99999-9999");
     expect(await publicacoes()).toEqual([]);
+  });
+  it("contato gravado no formato antigo (produção) chega no formato novo, sem rodar SQL", async () => {
+    await amb.env.DB.prepare("INSERT INTO config (chave, valor, atualizado_em) VALUES ('contato', ?, '2026-11-05T12:23:00Z')")
+      .bind(JSON.stringify({ zapContato: "5512991196050", zapKj: "5512991167274", instagram: "ariribeirokaraoke", facebook: null })).run();
+    const novo = {
+      zaps: [
+        { id: "z1", nome: "WhatsApp - Ana Paula", numero: "5512991196050", ativo: true },
+        { id: "z2", nome: "WhatsApp - Ari", numero: "5512991167274", ativo: false },
+      ],
+      geral: "z1", kj: "z2", pedido: null,
+      redes: [{ id: "r1", rede: "instagram", usuario: "ariribeirokaraoke", ativo: true }],
+    };
+    expect((await estado()).contato).toEqual(novo);
+    const build = await amb.chamar(reqBuild("GET", "/api/build/config"));
+    expect(build.status).toBe(200);
+    expect((await build.json()).contato).toEqual(novo);
   });
 });
 

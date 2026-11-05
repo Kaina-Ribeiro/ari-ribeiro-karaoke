@@ -1,3 +1,4 @@
+import { numeroDoZap } from "../../../lib/painel/contato.ts";
 import { formataZap } from "../../../lib/painel/valida.ts";
 import { carrega, type Estado } from "../estado.ts";
 import { MOTIVOS, quando, textoStatus, type TipoStatus } from "../status.ts";
@@ -32,7 +33,7 @@ function atalhos(e: Estado): [string, string, string][] {
     ["novidades", "Novidades", novas ? `${plural(novas, "pacote", "pacotes")} com a etiqueta nova` : "Nenhum pacote com a etiqueta nova"],
     ["banner", "Banner", `“${e.banner.linhas.join(" ").replace(/\s+/g, " ").trim()}”`],
     ["festa", "Pra sua festa", e.cartoes.length ? `${plural(ligados, "cartão ligado", "cartões ligados")} de ${numero(e.cartoes.length)}` : "Nenhum cartão ainda"],
-    ["contato", "Contato", `Zap ${formataZap(e.contato.zapContato)}`],
+    ["contato", "Contato", `Zap geral ${formataZap(numeroDoZap(e.contato, null))}`],
   ];
 }
 

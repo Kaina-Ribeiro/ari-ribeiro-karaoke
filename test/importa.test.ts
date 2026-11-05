@@ -26,7 +26,7 @@ const estado = async () => (await amb.chamar(await reqAdmin("GET", "/api/admin/e
 describe("dadosImportacao", () => {
   it("contato da linha 'Contato para locação', cartões sem ela e só os ativos", () => {
     const d = dadosImportacao(produtos, musicas, "2026-11-04");
-    expect(d.contato).toEqual({ ...CONFIG_PADRAO.contato, zapContato: "5512991167274" });
+    expect(d.contato).toEqual(CONFIG_PADRAO.contato);
     expect(d.cartoes.map((c) => c.titulo)).toEqual(["Aluguel de Karaoke", "Ari's Fotos"]);
     expect(d.pacotes).toEqual([{ nome: "13K", musicas: 2 }, { nome: "Ari Ribeiro karaoke", musicas: 1 }]);
     expect(d.banner).toEqual(CONFIG_PADRAO.banner);
@@ -38,7 +38,7 @@ describe("sqlImportacao", () => {
   it("grava o site de hoje: contato, cartões, pacotes automáticos com chegada na data da importação", async () => {
     await roda(sqlImportacao(dadosImportacao(produtos, musicas, "2026-11-04")));
     const e = await estado();
-    expect(e.contato.zapContato).toBe("5512991167274");
+    expect(e.contato.zaps[0].numero).toBe("5512991167274");
     expect(e.catalogo.fonte).toBe("link");
     expect(e.cartoes.map((c: { titulo: string; descricao: string }) => [c.titulo, c.descricao])).toEqual([
       ["Aluguel de Karaoke", "alugue para o final de semana"],
@@ -50,12 +50,12 @@ describe("sqlImportacao", () => {
   it("rodar duas vezes não duplica nem apaga o que o Ari mudou", async () => {
     const sql = sqlImportacao(dadosImportacao(produtos, musicas, "2026-11-04"));
     await roda(sql);
-    await amb.chamar(await reqAdmin("PUT", "/api/admin/contato", { zapContato: "12988887777", instagram: "ari" }));
+    await amb.chamar(await reqAdmin("PUT", "/api/admin/contato", { zaps: [{ id: "z1", nome: "WhatsApp", numero: "12988887777" }], geral: "z1", redes: [] }));
     await roda(sqlImportacao(dadosImportacao(produtos, musicas, "2026-12-01")));
     const e = await estado();
     expect(e.cartoes).toHaveLength(2);
     expect(e.pacotes).toHaveLength(2);
     expect(e.pacotes[0].chegouEm).toBe("2026-11-04");
-    expect(e.contato.zapContato).toBe("5512988887777");
+    expect(e.contato.zaps[0].numero).toBe("5512988887777");
   });
 });

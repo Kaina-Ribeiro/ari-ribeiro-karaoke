@@ -1,4 +1,5 @@
-import type { Banner, Cartao, Contato, Novidades, Resultado } from "./tipos.ts";
+import { REDES } from "./contato.ts";
+import type { Banner, Cartao, Contato, Novidades, PerfilRede, Resultado, ZapNomeado } from "./tipos.ts";
 
 const ok = <T>(valor: T): Resultado<T> => ({ ok: true, valor });
 const falha = <T = never>(erro: string): Resultado<T> => ({ ok: false, erro });
@@ -24,35 +25,95 @@ export function formataZap(z: string): string {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
-/** "@ari", "instagram.com/ari/" e "ari" viram "ari". */
+/**
+ * O que o Ari vê enquanto digita: "(12) 99119-6050". Separadores só aparecem quando vem o próximo dígito,
+ * assim apagar do fim nunca trava. "+55", "55" ou "0" na frente (número colado) somem.
+ */
+export function mascaraZap(s: string): string {
+  let d = s.replace(/\D/g, "").slice(0, 13);
+  if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
+  if (d.length > 11 && d.startsWith("0")) d = d.slice(1);
+  d = d.slice(0, 11);
+  if (!d) return "";
+  if (d.length <= 2) return "(" + d;
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+const HOSTS_REDES = /^(https?:\/\/)?(www\.|m\.|mobile\.|web\.)?(instagram\.com|facebook\.com|fb\.com|x\.com|twitter\.com|tiktok\.com|youtube\.com)\//i;
+
+/** "@ari", "instagram.com/ari/", "tiktok.com/@ari" e "ari" viram "ari". */
 export function normalizaUsuario(s: string): Resultado<string> {
   const u = s.trim()
-    .replace(/^(https?:\/\/)?(www\.|m\.)?(instagram|facebook)\.com\//i, "")
+    .replace(HOSTS_REDES, "")
     .replace(/^@/, "")
     .replace(/[/?#].*$/, "");
-  if (!/^[A-Za-z0-9._]{1,50}$/.test(u)) return falha("Use só o nome de usuário, sem espaços (ex.: ariribeirokaraoke)");
+  if (!/^[A-Za-z0-9._-]{1,50}$/.test(u)) return falha("Use só o nome de usuário, sem espaços (ex.: ariribeirokaraoke)");
   return ok(u);
 }
 
+export const MAX_ZAPS = 10;
+export const MAX_REDES = 20;
+export const LIMITE_NOME_ZAP = 40;
+const ID = /^[a-z0-9]{1,24}$/;
+
+/**
+ * Erros com o campo do painel na frente ("zap-numero:z1|mensagem"), pra tela pôr a mensagem no lugar certo.
+ * `campoDoErro` separa os dois.
+ */
+const falhaEm = (campo: string, erro: string) => falha<Contato>(`${campo}|${erro}`);
+export const campoDoErro = (erro: string): { campo: string | null; mensagem: string } => {
+  const i = erro.indexOf("|");
+  return i < 0 ? { campo: null, mensagem: erro } : { campo: erro.slice(0, i), mensagem: erro.slice(i + 1) };
+};
+
 export function validaContato(x: unknown): Resultado<Contato> {
   const o = objeto(x);
-  const contato = normalizaZap(texto(o.zapContato));
-  if (!contato.ok) return falha("Zap de contato: " + contato.erro);
-  let zapKj: string | null = null;
-  if (texto(o.zapKj)) {
-    const kj = normalizaZap(texto(o.zapKj));
-    if (!kj.ok) return falha("Zap do KJ: " + kj.erro);
-    zapKj = kj.valor;
+  const zs = Array.isArray(o.zaps) ? o.zaps : [];
+  if (!zs.length) return falha("Cadastre pelo menos um WhatsApp");
+  if (zs.length > MAX_ZAPS) return falha(`Cabem até ${MAX_ZAPS} WhatsApp`);
+  const zaps: ZapNomeado[] = [];
+  for (const [i, z] of zs.entries()) {
+    const zo = objeto(z);
+    const id = texto(zo.id);
+    if (!ID.test(id) || zaps.some((y) => y.id === id)) return falha("A lista de WhatsApp veio errada. Recarregue a página.");
+    const nome = texto(zo.nome);
+    const qual = `WhatsApp ${i + 1}`;
+    if (!nome) return falhaEm(`zap-nome-${id}`, `Dê um nome pro ${qual} (ex.: WhatsApp - Ana Paula)`);
+    if (tamanho(nome) > LIMITE_NOME_ZAP) return falhaEm(`zap-nome-${id}`, `O nome pode ter até ${LIMITE_NOME_ZAP} letras`);
+    const numero = normalizaZap(texto(zo.numero));
+    if (!numero.ok) return falhaEm(`zap-numero-${id}`, numero.erro);
+    if (zaps.some((y) => y.numero === numero.valor)) return falhaEm(`zap-numero-${id}`, "Esse número já está na lista");
+    zaps.push({ id, nome, numero: numero.valor, ativo: zo.ativo !== false });
   }
-  const insta = normalizaUsuario(texto(o.instagram));
-  if (!insta.ok) return falha("Instagram: " + insta.erro);
-  let facebook: string | null = null;
-  if (texto(o.facebook)) {
-    const fb = normalizaUsuario(texto(o.facebook));
-    if (!fb.ok) return falha("Facebook: " + fb.erro);
-    facebook = fb.valor;
+  const existe = (v: unknown) => (typeof v === "string" && zaps.some((z) => z.id === v) ? v : null);
+  const geral = existe(o.geral);
+  if (!geral) return falha("Escolha qual WhatsApp é o geral");
+  // o geral sempre aparece no rodapé: é o padrão de todos os botões
+  zaps.find((z) => z.id === geral)!.ativo = true;
+  const destino = (v: unknown, campo: string, nome: string): Resultado<string | null> => {
+    if (v === null || v === undefined || v === "") return ok(null);
+    const id = existe(v);
+    return id ? ok(id === geral ? null : id) : falha(`${campo}|Escolha de novo quem recebe ${nome}`);
+  };
+  const kj = destino(o.kj, "kj", "a comanda");
+  if (!kj.ok) return falha(kj.erro);
+  const pedido = destino(o.pedido, "pedido", "o pedido de música nova");
+  if (!pedido.ok) return falha(pedido.erro);
+
+  const rs = Array.isArray(o.redes) ? o.redes : [];
+  if (rs.length > MAX_REDES) return falha(`Cabem até ${MAX_REDES} perfis de redes sociais`);
+  const redes: PerfilRede[] = [];
+  for (const r of rs) {
+    const ro = objeto(r);
+    const id = texto(ro.id);
+    const qual = REDES.find((x) => x.rede === ro.rede);
+    if (!ID.test(id) || redes.some((y) => y.id === id) || !qual) return falha("A lista de redes veio errada. Recarregue a página.");
+    const u = normalizaUsuario(texto(ro.usuario));
+    if (!u.ok) return falhaEm(`rede-${id}`, `${qual.rotulo}: ${u.erro}`);
+    redes.push({ id, rede: qual.rede, usuario: u.valor, ativo: ro.ativo !== false });
   }
-  return ok({ zapContato: contato.valor, zapKj, instagram: insta.valor, facebook });
+  return ok({ zaps, geral, kj: kj.valor, pedido: pedido.valor, redes });
 }
 
 export const LIMITES = { linha: 14, frase: 80, legenda: [16, 30], titulo: 40, destaque: 30, descricao: 160 } as const;

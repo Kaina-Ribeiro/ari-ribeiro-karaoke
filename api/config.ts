@@ -1,4 +1,5 @@
 /** Leitura e gravação do que o Ari edita: config (JSON por chave), cartões e pacotes. */
+import { migraContato } from "../src/lib/painel/contato.ts";
 import { CONFIG_PADRAO } from "../src/lib/painel/padrao.ts";
 import type { Cartao, FonteCatalogo, Modo, PacoteDb, Resultado } from "../src/lib/painel/tipos.ts";
 import { idDaPlanilha } from "../src/lib/painel/valida.ts";
@@ -6,10 +7,11 @@ import type { Env } from "./tipos.ts";
 
 export type ChaveConfig = keyof typeof CONFIG_PADRAO;
 
-/** Sem linha gravada, vale o site de antes do painel. */
+/** Sem linha gravada, vale o site de antes do painel. Contato gravado no formato antigo chega no novo. */
 export async function leConfig<K extends ChaveConfig>(env: Env, chave: K): Promise<(typeof CONFIG_PADRAO)[K]> {
   const r = await env.DB.prepare("SELECT valor FROM config WHERE chave = ?").bind(chave).first<{ valor: string }>();
-  return r ? JSON.parse(r.valor) : structuredClone(CONFIG_PADRAO[chave]);
+  const valor = r ? JSON.parse(r.valor) : structuredClone(CONFIG_PADRAO[chave]);
+  return chave === "contato" ? migraContato(valor) as (typeof CONFIG_PADRAO)[K] : valor;
 }
 
 export async function gravaConfig<K extends ChaveConfig>(env: Env, chave: K, valor: (typeof CONFIG_PADRAO)[K], agora: Date): Promise<void> {

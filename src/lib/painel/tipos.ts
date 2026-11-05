@@ -12,13 +12,32 @@ export interface PacoteDb {
   modo: Modo;
 }
 
-/** Zaps guardados como 55DDNNNNNNNNN; redes só com o nome de usuário. */
+/** Um WhatsApp da lista. `ativo` = aparece no rodapé; mesmo fora do rodapé ele pode receber a comanda ou os pedidos. */
+export interface ZapNomeado {
+  /** fixo: é por ele que a comanda, o "Pedir música nova" e (Fase 2) os cartões apontam */
+  id: string;
+  /** "WhatsApp - Ana Paula": o rótulo no rodapé */
+  nome: string;
+  /** 55DDNNNNNNNNN */
+  numero: string;
+  ativo: boolean;
+}
+
+export type Rede = "instagram" | "facebook" | "x" | "tiktok" | "youtube";
+
+/** Um perfil de rede social, só com o nome de usuário. `ativo` = aparece no rodapé. */
+export interface PerfilRede { id: string; rede: Rede; usuario: string; ativo: boolean }
+
+/** Ordem de `zaps` = ordem no rodapé. Destinos guardam o id de um WhatsApp da lista; null = o geral. */
 export interface Contato {
-  zapContato: string;
-  /** null = usa o Zap de contato */
-  zapKj: string | null;
-  instagram: string;
-  facebook: string | null;
+  zaps: ZapNomeado[];
+  /** obrigatório e sempre no rodapé: padrão de todos os botões */
+  geral: string;
+  /** recebe a comanda */
+  kj: string | null;
+  /** recebe o "Pedir música nova" (busca sem resultado) */
+  pedido: string | null;
+  redes: PerfilRede[];
 }
 
 export interface Banner {
