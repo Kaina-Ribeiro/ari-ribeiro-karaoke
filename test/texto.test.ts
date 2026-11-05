@@ -54,6 +54,8 @@ describe("tipoPacote", () => {
     expect(tipoPacote("Ari Ribeiro karaoke")).toBe("base");
     expect(tipoPacote("")).toBe("base");
     expect(tipoPacote("ARI EXCLUSIVO")).toBe("exc");
+    expect(tipoPacote("ARI RIBEIRO")).toBe("exc");
+    expect(tipoPacote("especial  ari")).toBe("exc");
     expect(tipoPacote("INTER 14G")).toBe("nova");
   });
 });
