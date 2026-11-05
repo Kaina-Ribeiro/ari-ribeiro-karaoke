@@ -266,6 +266,19 @@ test.describe("novidades", () => {
     await expect(linha(page, "13K").locator(".tag")).toHaveText("nova");
   });
 
+  test("ARI RIBEIRO e ESPECIAL ARI são só no Ari; só a novidade mostra até quando", async ({ page }) => {
+    await abre(page, "novidades");
+    for (const nome of ["ARI RIBEIRO", "ESPECIAL ARI", "ARI EXCLUSIVO"]) {
+      await expect(linha(page, nome).locator(".tag")).toHaveText("só no Ari");
+      await expect(linha(page, nome).locator(".ate")).toHaveCount(0);
+    }
+    await expect(linha(page, "Ari Ribeiro karaoke").locator(".ate")).toHaveCount(0);
+    // chegada + 60 dias de prazo: o 60º dia depois de chegar ainda é novidade
+    const [d, m, a] = (await linha(page, "13K").locator(".meta").textContent())!.match(/(\d\d)\/(\d\d)\/(\d{4})/)!.slice(1).map(Number);
+    const ate = new Date(Date.UTC(a, m - 1, d + 60)).toISOString().slice(0, 10).split("-").reverse().join("/");
+    await expect(linha(page, "13K").locator(".ate")).toHaveText(`Fica como novidade até ${ate}`);
+  });
+
   test("busca por nome e filtro de novidades", async ({ page }) => {
     await abre(page, "novidades");
     await page.getByLabel("Buscar pacote").fill("excl");

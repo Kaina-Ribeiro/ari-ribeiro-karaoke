@@ -1,4 +1,4 @@
-import type { Pacote } from "../texto.ts";
+import { classePeloNome, type Pacote } from "../texto.ts";
 import type { Modo } from "./tipos.ts";
 
 /** "13k " e "13K" são o mesmo pacote; "Ã" composto ou decomposto (Mac) também. */
@@ -15,13 +15,17 @@ export function diasEntre(de: string, ate: string): number {
 }
 
 /**
- * Novidade é o pacote que chegou há menos de `prazoDias`. A escolha manual do Ari vence tudo;
- * o catálogo base e os exclusivos seguem a regra de sempre.
+ * Novidade é o pacote que chegou há até `prazoDias` dias (o dia de chegada + `prazoDias`, inclusive). A escolha manual do Ari vence tudo;
+ * o catálogo base e os só no Ari (ver `classePeloNome`) não dependem da data.
  */
 export function classifica(p: { nome: string; chegouEm: string; modo: Modo }, prazoDias: number, hoje: string): Pacote {
   if (p.modo !== "auto") return p.modo;
-  const chave = chavePacote(p.nome);
-  if (chave === "" || chave === "ARI RIBEIRO KARAOKE") return "base";
-  if (chave.includes("EXCLUSIVO")) return "exc";
-  return diasEntre(p.chegouEm, hoje) < prazoDias ? "nova" : "base";
+  const fixa = classePeloNome(chavePacote(p.nome));
+  if (fixa) return fixa;
+  return diasEntre(p.chegouEm, hoje) <= prazoDias ? "nova" : "base";
+}
+
+/** Último dia em que o pacote ainda aparece como novidade (chegada + prazo), AAAA-MM-DD. */
+export function novidadeAte(chegouEm: string, prazoDias: number): string {
+  return new Date(Date.parse(chegouEm + "T00:00:00Z") + prazoDias * 86_400_000).toISOString().slice(0, 10);
 }
