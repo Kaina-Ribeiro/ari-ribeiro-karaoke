@@ -267,10 +267,44 @@ input[type=file]::file-selector-button{font:800 .95rem var(--f-texto);border:2px
 .cz b{font:900 2.4rem/.85 var(--d-cartaz);text-transform:uppercase;overflow-wrap:anywhere}
 .cz p{margin:0;flex:1;overflow-wrap:anywhere}
 .cz .ir{font:800 .78rem var(--f-texto);text-transform:uppercase;letter-spacing:.08em;border-top:2px solid var(--tinta);padding-top:10px}
+/* preço opcional: etiqueta colada no cartaz, fundo na cor escolhida e a letra que dá contraste (igual ao global.css) */
+.cz .preco{align-self:flex-start;max-width:100%;font-family:var(--f-texto);line-height:1.1;padding:.28em .5em .32em;border:2px solid var(--tinta);overflow-wrap:anywhere;transform:rotate(-1.5deg)}
+.preco.cor-tinta{background:var(--tinta);color:var(--papel)}
+.preco.cor-gravata{background:var(--gravata);color:#fff}
+.preco.cor-brasa{background:var(--brasa-texto);color:#fff}
+.preco.cor-luz{background:var(--luz);color:var(--tinta)}
+.preco.cor-papel{background:var(--papel);color:var(--tinta)}
+.preco.tam-p{font-size:.95rem}
+.preco.tam-m{font-size:1.25rem}
+.preco.tam-g{font-size:1.7rem}
+.preco.peso-normal{font-weight:500}
+.preco.peso-forte{font-weight:700}
+.preco.peso-extra{font-weight:800}
 .cartao-item.off .cz{background:var(--noite);color:#a49a8a;border:2px dashed #6b6457}
 .cartao-item.off .cz .ir{border-color:#6b6457;letter-spacing:.04em}
 .cartao-item.off .cz .foto{opacity:.45;border-color:#6b6457}
 .cartao-item.editando .cz{outline:3px dashed var(--luz);outline-offset:6px}
+.cartao-zap{margin:12px 0 0;font-size:.86rem;color:#cfc6b4;overflow-wrap:anywhere}
+.cartao-zap span{font-weight:800;color:var(--papel)}
+/* editor: Zap do cartão, estilo do preço e a prévia ao vivo */
+.editor .seletor{width:auto}
+.preco-estilo{border-left:4px solid var(--luz);padding-left:12px;margin:-6px 0 18px}
+.preco-estilo[hidden]{display:none}
+.escolha.compacta{gap:6px;margin-bottom:12px}
+.escolha.compacta legend{font-size:.92rem;margin-bottom:6px}
+.escolha.compacta label{flex:1 1 auto;min-height:44px;padding:0 10px;gap:7px;font-size:.92rem}
+.escolha.compacta input{width:18px;height:18px}
+.amostra{width:18px;height:18px;flex:none;border:2px solid var(--tinta)}
+.amostra.cor-tinta{background:var(--tinta)}
+.amostra.cor-gravata{background:var(--gravata)}
+.amostra.cor-brasa{background:var(--brasa-texto)}
+.amostra.cor-luz{background:var(--luz)}
+.amostra.cor-papel{background:var(--papel)}
+.previa-cartao{margin:0 0 18px}
+.previa-rot{margin:0 0 8px;font:italic 400 1.2rem/1 var(--d-serif);color:var(--gravata)}
+.previa-fundo{background:var(--tinta);padding:22px 20px;border:2px solid var(--tinta)}
+.previa-fundo .cz{max-width:340px;margin-inline:auto}
+.previa-zap{margin:8px 0 0;font-size:.88rem;font-weight:700;color:var(--tinta-2);overflow-wrap:anywhere}
 .cartao-acoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
 .mini{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;padding:0 10px;border:2px solid var(--papel);background:transparent;color:var(--papel);font:800 .86rem/1 var(--f-texto);cursor:pointer;transition:background-color .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .mini:hover{background:var(--noite);color:#fff}

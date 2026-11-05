@@ -341,6 +341,68 @@ test.describe("pra sua festa", () => {
     await semProblemaGrave(page);
   });
 
+  test("cartão escolhe o seu WhatsApp e ganha preço, com prévia ao vivo", async ({ page }) => {
+    await abre(page, "festa");
+    const origem = { Origin: new URL(page.url()).origin };
+    const antes = (await (await page.request.get("/api/admin/estado")).json()).contato;
+    // um segundo WhatsApp, fora do rodapé, só pra este teste
+    const contato = { ...antes, zaps: [...antes.zaps, { id: "ze2e", nome: "WhatsApp - Teste", numero: "5512988887777", ativo: false }] };
+    expect((await page.request.put("/api/admin/contato", { headers: origem, data: contato })).ok()).toBe(true);
+    try {
+      const titulo = `Preço e2e ${Date.now() % 100000}`;
+      await abre(page, "festa");
+      await page.reload();
+      await expect(page.locator("#status")).not.toHaveAttribute("data-tipo", "carregando");
+      await page.getByRole("button", { name: "Novo cartão" }).click();
+      const previa = page.locator("#previaCartao .cz");
+      await page.getByLabel("Título").fill(titulo);
+      await expect(previa.locator("b")).toHaveText(titulo);
+      await page.getByLabel("Descrição").fill("Teste de preço.");
+      // sem preço: nada de etiqueta nem de opções de estilo
+      await expect(previa.locator(".preco")).toHaveCount(0);
+      await expect(page.locator("#precoEstilo")).toBeHidden();
+      await expect(page.locator("#previaZap")).toContainText("(geral)");
+
+      await page.getByLabel("WhatsApp deste cartão").selectOption({ label: "WhatsApp - Teste · (12) 98888-7777" });
+      await expect(page.locator("#previaZap")).toHaveText("Abre o WhatsApp - Teste · (12) 98888-7777");
+      await page.getByLabel("Preço (opcional)").fill("a partir de R$ 350");
+      await expect(page.locator("#precoEstilo")).toBeVisible();
+      await expect(previa.locator(".preco")).toHaveText("a partir de R$ 350");
+      await expect(previa.locator(".preco")).toHaveClass("preco cor-tinta tam-m peso-forte");
+      await page.getByRole("radio", { name: "Verde" }).check();
+      await page.getByRole("radio", { name: "Grande" }).check();
+      await page.getByRole("radio", { name: "Extra" }).check();
+      await expect(previa.locator(".preco")).toHaveClass("preco cor-gravata tam-g peso-extra");
+      await semProblemaGrave(page);
+      await page.getByRole("button", { name: "Salvar cartão" }).click();
+      await expect(page.locator("#aviso")).toContainText("Salvo");
+
+      const item = page.locator(".cartao-item").filter({ hasText: titulo });
+      await expect(item.locator(".preco")).toHaveText("a partir de R$ 350");
+      await expect(item.locator(".cartao-zap")).toHaveText("Zap: WhatsApp - Teste");
+      const salvo = (await (await page.request.get("/api/admin/estado")).json()).cartoes.find((c: { titulo: string }) => c.titulo === titulo);
+      expect(salvo).toMatchObject({ zapId: "ze2e", preco: { texto: "a partir de R$ 350", cor: "gravata", tamanho: "g", peso: "extra" } });
+
+      // editar: volta pro geral e tira o preço
+      await page.getByRole("button", { name: `Editar ${titulo}` }).click();
+      await expect(page.getByLabel("WhatsApp deste cartão")).toHaveValue("ze2e");
+      await expect(page.getByRole("radio", { name: "Verde" })).toBeChecked();
+      await page.getByLabel("WhatsApp deste cartão").selectOption("");
+      await page.getByLabel("Preço (opcional)").fill("");
+      await expect(previa.locator(".preco")).toHaveCount(0);
+      await page.getByRole("button", { name: "Salvar cartão" }).click();
+      await expect(page.locator("#aviso")).toContainText("Salvo");
+      await expect(item.locator(".preco")).toHaveCount(0);
+      await expect(item.locator(".cartao-zap")).toContainText("(geral)");
+
+      await page.getByRole("button", { name: `Apagar ${titulo}` }).click();
+      await page.getByRole("dialog").getByRole("button", { name: "Apagar" }).click();
+      await expect(item).toHaveCount(0);
+    } finally {
+      await page.request.put("/api/admin/contato", { headers: origem, data: antes });
+    }
+  });
+
   test("limites do cartão travam o Salvar", async ({ page }) => {
     await abre(page, "festa");
     await page.getByRole("button", { name: "Novo cartão" }).click();

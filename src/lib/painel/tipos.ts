@@ -58,6 +58,14 @@ export interface FonteCatalogo {
 
 export interface Novidades { prazoDias: number }
 
+/** Cores do site pra etiqueta de preço (o fundo; a letra escolhe a que dá contraste). */
+export type CorPreco = "tinta" | "gravata" | "brasa" | "luz" | "papel";
+export type TamanhoPreco = "p" | "m" | "g";
+export type PesoPreco = "normal" | "forte" | "extra";
+
+/** Preço do cartão, texto livre ("a partir de R$ 350") numa etiqueta com o estilo escolhido. */
+export interface PrecoCartao { texto: string; cor: CorPreco; tamanho: TamanhoPreco; peso: PesoPreco }
+
 export interface Cartao {
   id: number;
   ordem: number;
@@ -66,6 +74,10 @@ export interface Cartao {
   destaque: string;
   descricao: string;
   fotoChave: string | null;
+  /** id de um WhatsApp do Contato; null = o geral (id que sumiu também vira o geral) */
+  zapId: string | null;
+  /** null = sem preço: o cartão fica como sempre foi */
+  preco: PrecoCartao | null;
 }
 
 export type Resultado<T> = { ok: true; valor: T } | { ok: false; erro: string };

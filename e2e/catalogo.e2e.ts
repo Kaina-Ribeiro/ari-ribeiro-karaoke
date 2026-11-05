@@ -75,11 +75,33 @@ test.describe("sem JavaScript", () => {
     })));
     expect(links.filter((l) => l.onde === "outro")).toEqual([]);
     expect(links.filter((l) => l.onde === "rodape").map((l) => l.numero)).toEqual([GERAL, ANA]);
-    const cartoes = links.filter((l) => l.onde === "cartao");
-    expect(cartoes.length).toBeGreaterThan(0);
-    expect(cartoes.every((l) => l.numero === GERAL)).toBe(true);
+    // fixture: cartão 2 escolheu a Ana Paula (z2); o 4 escolheu um Zap que saiu do Contato (z9) e vai pro geral
+    expect(links.filter((l) => l.onde === "cartao").map((l) => l.numero)).toEqual([GERAL, ANA, GERAL, GERAL]);
     expect(links.filter((l) => l.onde === "comanda").map((l) => l.numero)).toEqual([KJ]);
     expect(await zap(page, ".cz")).toMatch(new RegExp(`^https://wa\\.me/${GERAL}\\?text=Oi Ari! Quero saber sobre: `));
+    expect(await zap(page, ".cz:nth-child(2)")).toBe(`https://wa.me/${ANA}?text=Oi Ari! Quero saber sobre: Kit Festa tem Tudo`);
+  });
+
+  test("preço opcional: cartão sem preço fica como antes; com preço, etiqueta inteira dentro do cartão", async ({ page }) => {
+    await page.goto("/");
+    const cz = page.locator(".cz");
+    await expect(cz.locator(".preco")).toHaveCount(2);
+    // sem preço: as mesmas peças de sempre, na mesma ordem
+    for (const i of [0, 3]) {
+      expect(await cz.nth(i).evaluate((a) => [...a.children].map((f) => f.className || f.tagName.toLowerCase())))
+        .toEqual(i === 3 ? ["foto", "k", "b", "p", "ir"] : ["k", "b", "p", "ir"]);
+    }
+    const preco = cz.nth(1).locator(".preco");
+    await expect(preco).toHaveText("a partir de R$ 350");
+    await expect(preco).toHaveClass("preco cor-gravata tam-g peso-extra");
+    await expect(cz.nth(2).locator(".preco")).toHaveClass("preco cor-tinta tam-p peso-normal");
+    await preco.scrollIntoViewIfNeeded();
+    const c = (await cz.nth(1).boundingBox())!, p = (await preco.boundingBox())!;
+    expect(p.x).toBeGreaterThanOrEqual(c.x - 4);
+    expect(p.x + p.width).toBeLessThanOrEqual(c.x + c.width + 4);
+    // a etiqueta fica acima do "Chamar no Zap"
+    expect(p.y + p.height).toBeLessThanOrEqual((await cz.nth(1).locator(".ir").boundingBox())!.y + 4);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 });
 

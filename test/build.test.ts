@@ -7,8 +7,8 @@ import type { ConfigBuild } from "../src/lib/painel/tipos.ts";
 const config: ConfigBuild = {
   ...structuredClone(CONFIG_PADRAO),
   cartoes: [
-    { id: 1, ordem: 1, ativo: true, titulo: "Karaokê", destaque: "Pacotes", descricao: "Alugue", fotoChave: null },
-    { id: 2, ordem: 2, ativo: true, titulo: "Telão", destaque: "X BOX", descricao: "Data show", fotoChave: "fotos/telao.webp" },
+    { id: 1, ordem: 1, ativo: true, titulo: "Karaokê", destaque: "Pacotes", descricao: "Alugue", fotoChave: null, zapId: null, preco: null },
+    { id: 2, ordem: 2, ativo: true, titulo: "Telão", destaque: "X BOX", descricao: "Data show", fotoChave: "fotos/telao.webp", zapId: null, preco: null },
   ],
   pacotes: [],
   musicasNoAr: null,
@@ -72,10 +72,35 @@ describe("montaManifesto", () => {
       ["YouTube", ["https://www.youtube.com/@ari"]],
     ]);
   });
-  it("cartões com e sem foto", () => {
+  it("cartões com e sem foto; sem escolha de Zap nem preço, igual a antes", () => {
     expect(montaManifesto(base, config, fotos).servicos).toEqual([
-      { titulo: "Karaokê", destaque: "Pacotes", descricao: "Alugue", foto: null },
-      { titulo: "Telão", destaque: "X BOX", descricao: "Data show", foto: "/img/painel/bbb.webp" },
+      { titulo: "Karaokê", destaque: "Pacotes", descricao: "Alugue", foto: null, zap: "5512991167274", preco: null },
+      { titulo: "Telão", destaque: "X BOX", descricao: "Data show", foto: "/img/painel/bbb.webp", zap: "5512991167274", preco: null },
+    ]);
+  });
+  it("cada cartão vai pro seu WhatsApp: o geral, o escolhido, ou o geral se o escolhido saiu do Contato", () => {
+    const contato: ConfigBuild["contato"] = {
+      zaps: [
+        { id: "z1", nome: "WhatsApp - Ana Paula", numero: "5512991196050", ativo: true },
+        { id: "z2", nome: "WhatsApp - Ari", numero: "5512991167274", ativo: false },
+      ],
+      geral: "z1", kj: "z2", pedido: null, redes: [],
+    };
+    const cartao = config.cartoes[0];
+    const preco = { texto: "a partir de R$ 350", cor: "gravata", tamanho: "g", peso: "extra" } as const;
+    const cartoes = [
+      { ...cartao, id: 1, titulo: "Geral", zapId: null },
+      { ...cartao, id: 2, titulo: "Ari", zapId: "z2", preco },
+      { ...cartao, id: 3, titulo: "Apagado", zapId: "z9" },
+      // gravado antes da Fase 2: sem os campos novos
+      { id: 4, ordem: 4, ativo: true, titulo: "Antigo", destaque: "", descricao: "x", fotoChave: null } as unknown as ConfigBuild["cartoes"][number],
+    ];
+    const s = montaManifesto(base, { ...config, contato, cartoes }, fotos).servicos;
+    expect(s.map((x) => [x.titulo, x.zap, x.preco])).toEqual([
+      ["Geral", "5512991196050", null],
+      ["Ari", "5512991167274", preco],
+      ["Apagado", "5512991196050", null],
+      ["Antigo", "5512991196050", null],
     ]);
   });
   it("banner com a foto baixada e o rótulo pro leitor de tela", () => {

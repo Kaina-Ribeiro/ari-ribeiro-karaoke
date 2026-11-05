@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type JWTVerifyGetKey } from "jose";
 import { Miniflare } from "miniflare";
 import { handle } from "../../api/app.ts";
@@ -60,8 +60,12 @@ export async function criaAmbiente(opcoes: { env?: Partial<Env>; deps?: Partial<
   });
   const DB = (await mf.getD1Database("DB")) as unknown as Env["DB"];
   const ARQUIVOS = (await mf.getR2Bucket("ARQUIVOS")) as unknown as Env["ARQUIVOS"];
-  const sql = await readFile(new URL("../../migrations/0001_inicial.sql", import.meta.url), "utf8");
-  await DB.batch(instrucoes(sql).map((s) => DB.prepare(s)));
+  // todas as migrações, na ordem do nome (como o wrangler d1 migrations apply)
+  const pasta = new URL("../../migrations/", import.meta.url);
+  for (const arquivo of (await readdir(pasta)).filter((a) => a.endsWith(".sql")).sort()) {
+    const sql = await readFile(new URL(arquivo, pasta), "utf8");
+    await DB.batch(instrucoes(sql).map((s) => DB.prepare(s)));
+  }
   const env: Env = {
     DB, ARQUIVOS, ADMIN_EMAILS: `${ADMIN}, ari@painel.test`, ACCESS_TEAM: TIME, ACCESS_AUD: AUD, BUILD_TOKEN: BUILD_TOKEN_TESTE,
     ...opcoes.env,

@@ -1,5 +1,6 @@
 import { REDES } from "./contato.ts";
-import type { Banner, Cartao, Contato, Novidades, PerfilRede, Resultado, ZapNomeado } from "./tipos.ts";
+import { CORES_PRECO, ESTILO_PRECO_PADRAO, PESOS_PRECO, TAMANHOS_PRECO } from "./preco.ts";
+import type { Banner, Cartao, Contato, Novidades, PerfilRede, PrecoCartao, Resultado, ZapNomeado } from "./tipos.ts";
 
 const ok = <T>(valor: T): Resultado<T> => ({ ok: true, valor });
 const falha = <T = never>(erro: string): Resultado<T> => ({ ok: false, erro });
@@ -116,7 +117,7 @@ export function validaContato(x: unknown): Resultado<Contato> {
   return ok({ zaps, geral, kj: kj.valor, pedido: pedido.valor, redes });
 }
 
-export const LIMITES = { linha: 14, frase: 80, legenda: [16, 30], titulo: 40, destaque: 30, descricao: 160 } as const;
+export const LIMITES = { linha: 14, frase: 80, legenda: [16, 30], titulo: 40, destaque: 30, descricao: 160, preco: 30 } as const;
 
 export function validaBanner(x: unknown): Resultado<Banner> {
   const o = objeto(x);
@@ -148,7 +149,26 @@ export function validaCartao(x: unknown): Resultado<Omit<Cartao, "id" | "ordem">
   if (!descricao) return falha("A descrição do cartão é obrigatória");
   if (tamanho(descricao) > LIMITES.descricao) return falha(`A descrição pode ter até ${LIMITES.descricao} letras`);
   const fotoChave = typeof o.fotoChave === "string" && o.fotoChave ? o.fotoChave : null;
-  return ok({ ativo: o.ativo !== false, titulo, destaque, descricao, fotoChave });
+  // só o formato: um id que não está (ou deixou de estar) no Contato vai pro geral na hora de publicar
+  const zapId = typeof o.zapId === "string" && ID.test(o.zapId) ? o.zapId : null;
+  const preco = validaPreco(o.preco);
+  if (!preco.ok) return falha(preco.erro);
+  return ok({ ativo: o.ativo !== false, titulo, destaque, descricao, fotoChave, zapId, preco: preco.valor });
+}
+
+/** Preço vazio = sem preço. Estilo que não está na lista vira o padrão (nunca trava o Salvar). */
+export function validaPreco(x: unknown): Resultado<PrecoCartao | null> {
+  const o = objeto(x);
+  const t = texto(o.texto).replace(/\s+/g, " ");
+  if (!t) return ok(null);
+  if (tamanho(t) > LIMITES.preco) return falha(`O preço pode ter até ${LIMITES.preco} letras`);
+  const de = <T extends string>(lista: { valor: T }[], v: unknown, padrao: T): T => lista.find((i) => i.valor === v)?.valor ?? padrao;
+  return ok({
+    texto: t,
+    cor: de(CORES_PRECO, o.cor, ESTILO_PRECO_PADRAO.cor),
+    tamanho: de(TAMANHOS_PRECO, o.tamanho, ESTILO_PRECO_PADRAO.tamanho),
+    peso: de(PESOS_PRECO, o.peso, ESTILO_PRECO_PADRAO.peso),
+  });
 }
 
 export function validaNovidades(x: unknown): Resultado<Novidades> {

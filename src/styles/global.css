@@ -214,6 +214,19 @@ mark{background:var(--luz);color:inherit;padding:0 1px}
 .cz b{font:900 2.4rem/.85 var(--d-cartaz);text-transform:uppercase}
 .cz p{margin:0;flex:1}
 .cz span.ir{font:800 .78rem var(--f-texto);text-transform:uppercase;letter-spacing:.08em;border-top:2px solid var(--tinta);padding-top:10px}
+/* preço opcional: etiqueta colada no cartaz, fundo na cor escolhida e a letra que dá contraste (src/lib/painel/preco.ts) */
+.cz .preco{align-self:flex-start;max-width:100%;font-family:var(--f-texto);line-height:1.1;padding:.28em .5em .32em;border:2px solid var(--tinta);overflow-wrap:anywhere;transform:rotate(-1.5deg)}
+.preco.cor-tinta{background:var(--tinta);color:var(--papel)}
+.preco.cor-gravata{background:var(--gravata);color:#fff}
+.preco.cor-brasa{background:var(--brasa-texto);color:#fff}
+.preco.cor-luz{background:var(--luz);color:var(--tinta)}
+.preco.cor-papel{background:var(--papel);color:var(--tinta)}
+.preco.tam-p{font-size:.95rem}
+.preco.tam-m{font-size:1.25rem}
+.preco.tam-g{font-size:1.7rem}
+.preco.peso-normal{font-weight:500}
+.preco.peso-forte{font-weight:700}
+.preco.peso-extra{font-weight:800}
 
 /* RODAPÉ */
 footer{background:var(--gravata);color:var(--papel);overflow:hidden}

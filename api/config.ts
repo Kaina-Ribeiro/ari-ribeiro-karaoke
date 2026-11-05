@@ -19,10 +19,15 @@ export async function gravaConfig<K extends ChaveConfig>(env: Env, chave: K, val
     .bind(chave, JSON.stringify(valor), agora.toISOString()).run();
 }
 
-interface LinhaCartao { id: number; ordem: number; ativo: number; titulo: string; destaque: string; descricao: string; foto_chave: string | null }
+interface LinhaCartao {
+  id: number; ordem: number; ativo: number; titulo: string; destaque: string; descricao: string; foto_chave: string | null;
+  zap_id: string | null; preco: string | null;
+}
 const deCartao = (r: LinhaCartao): Cartao => ({
   id: r.id, ordem: r.ordem, ativo: r.ativo === 1, titulo: r.titulo, destaque: r.destaque, descricao: r.descricao, fotoChave: r.foto_chave,
+  zapId: r.zap_id, preco: r.preco ? JSON.parse(r.preco) : null,
 });
+const precoJson = (d: DadosCartao) => (d.preco ? JSON.stringify(d.preco) : null);
 
 export async function listaCartoes(env: Env, opcoes: { soAtivos?: boolean } = {}): Promise<Cartao[]> {
   const { results } = await env.DB.prepare(`SELECT * FROM cartoes ${opcoes.soAtivos ? "WHERE ativo = 1" : ""} ORDER BY ordem, id`).all<LinhaCartao>();
@@ -71,16 +76,16 @@ type DadosCartao = Omit<Cartao, "id" | "ordem">;
 
 export async function criaCartao(env: Env, d: DadosCartao, agora: Date): Promise<Cartao> {
   const r = await env.DB.prepare(
-    "INSERT INTO cartoes (ordem, ativo, titulo, destaque, descricao, foto_chave, atualizado_em) "
-    + "VALUES ((SELECT COALESCE(MAX(ordem), 0) + 1 FROM cartoes), ?, ?, ?, ?, ?, ?) RETURNING *",
-  ).bind(d.ativo ? 1 : 0, d.titulo, d.destaque, d.descricao, d.fotoChave, agora.toISOString()).first<LinhaCartao>();
+    "INSERT INTO cartoes (ordem, ativo, titulo, destaque, descricao, foto_chave, zap_id, preco, atualizado_em) "
+    + "VALUES ((SELECT COALESCE(MAX(ordem), 0) + 1 FROM cartoes), ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *",
+  ).bind(d.ativo ? 1 : 0, d.titulo, d.destaque, d.descricao, d.fotoChave, d.zapId, precoJson(d), agora.toISOString()).first<LinhaCartao>();
   return deCartao(r!);
 }
 
 /** false se o cartão não existe. */
 export async function atualizaCartao(env: Env, id: number, d: DadosCartao, agora: Date): Promise<boolean> {
-  const r = await env.DB.prepare("UPDATE cartoes SET ativo = ?, titulo = ?, destaque = ?, descricao = ?, foto_chave = ?, atualizado_em = ? WHERE id = ?")
-    .bind(d.ativo ? 1 : 0, d.titulo, d.destaque, d.descricao, d.fotoChave, agora.toISOString(), id).run();
+  const r = await env.DB.prepare("UPDATE cartoes SET ativo = ?, titulo = ?, destaque = ?, descricao = ?, foto_chave = ?, zap_id = ?, preco = ?, atualizado_em = ? WHERE id = ?")
+    .bind(d.ativo ? 1 : 0, d.titulo, d.destaque, d.descricao, d.fotoChave, d.zapId, precoJson(d), agora.toISOString(), id).run();
   return r.meta.changes > 0;
 }
 
