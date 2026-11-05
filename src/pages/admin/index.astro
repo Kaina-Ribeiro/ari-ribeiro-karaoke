@@ -32,6 +32,7 @@ const ABAS: [string, string, string][] = [
           <span><b>Ari Ribeiro</b><em>painel</em></span>
         </a>
         <nav class="abas" aria-label="Telas do painel">
+          <span class="marcador" aria-hidden="true"></span>
           {ABAS.map(([id, nome, icone]) => (
             <a href={`#${id}`}><svg viewBox="0 0 24 24" aria-hidden="true" set:html={icone} /><span>{nome}</span></a>
           ))}
