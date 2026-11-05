@@ -5,7 +5,7 @@ import { formataZap, LIMITES, validaCartao, validaPreco } from "../../../lib/pai
 import { api } from "../api.ts";
 import { carrega, type Estado } from "../estado.ts";
 import { enviaFoto } from "../foto.ts";
-import { $, atualizaContadores, aviso, cabecalho, campo, comCarregando, escapa, marcaSalvo, noSite } from "../ui.ts";
+import { $, atualizaContadores, aviso, cabecalho, campo, comCarregando, escapa, escolheArquivo, marcaSalvo, noSite } from "../ui.ts";
 
 const srcFoto = (chave: string) => `/api/admin/arquivos/${chave}`;
 
@@ -115,7 +115,7 @@ export function montaFesta(el: HTMLElement, e: Estado) {
       + `<div class="foto-atual">${fotoChave ? `<img class="mini16" src="${escapa(srcFoto(fotoChave))}" alt="Foto atual do cartão" />` : ""}`
       + `<p class="foto-info" aria-live="polite">${fotoChave ? "Com foto." : "Sem foto."}</p>`
       + `${fotoChave ? `<button class="bt claro pequeno-claro" type="button" id="tiraFoto">Tirar foto</button>` : ""}</div>`
-      + `<input type="file" id="fotoCartao" accept="image/*" aria-describedby="dica-fotoCartao" /></div>`
+      + escolheArquivo({ id: "fotoCartao", accept: "image/*", dica: "dica-fotoCartao", botao: "Escolher foto", vazio: "Nenhuma foto escolhida" }) + `</div>`
       + htmlEscolhaZap(contato, c?.zapId ?? null)
       + campo({ id: "preco", rotulo: "Preço (opcional)", valor: c?.preco?.texto ?? "", max: LIMITES.preco,
         dica: "Texto livre, ex.: a partir de R$ 350. Vazio = cartão sem preço." })

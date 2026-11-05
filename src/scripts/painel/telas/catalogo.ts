@@ -3,7 +3,7 @@ import { api } from "../api.ts";
 import { carrega, type Estado } from "../estado.ts";
 import { quando } from "../status.ts";
 import { validaDicas } from "../../../lib/painel/valida.ts";
-import { $, aviso, cabecalho, campo, comanda, comCarregando, erroNoCampo, escapa, limpaErros, linhaComanda, numero as n } from "../ui.ts";
+import { $, aviso, cabecalho, campo, comanda, comCarregando, erroNoCampo, escapa, escolheArquivo, limpaErros, linhaComanda, numero as n } from "../ui.ts";
 
 /** O catálogo que está no ar, em forma de comanda. */
 function fonteAtual(e: Estado): string {
@@ -48,7 +48,7 @@ export function montaCatalogo(el: HTMLElement, e: Estado) {
     // arquivo
     + `<section class="folha" data-fonte="arquivo"><h2>Enviar planilha</h2>`
     + `<div class="campo"><label for="arquivo">Escolha o arquivo</label><p class="dica" id="dica-arquivo">A planilha precisa ter a aba "Músicas" com as colunas codigo, cantor, titulo e pacote.</p>`
-    + `<input type="file" id="arquivo" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" aria-describedby="dica-arquivo" /></div>`
+    + escolheArquivo({ id: "arquivo", accept: ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", dica: "dica-arquivo", botao: "Escolher planilha", vazio: "Nenhuma planilha escolhida" }) + `</div>`
     + `<div class="previa" aria-live="polite"><p class="vazio">Escolha um arquivo pra ver quantas músicas ele tem antes de publicar.</p></div>`
     + `<div class="acoes"><button class="bt" type="button" id="confirmar" disabled>Confirmar e publicar</button></div></section>`
     // link

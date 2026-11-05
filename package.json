@@ -21,6 +21,7 @@
     "painel": "node scripts/painel-local.ts",
     "importa": "node scripts/importa.ts",
     "prints": "node scripts/prints.ts",
+    "prints:painel": "node scripts/prints-painel.ts",
     "bola": "node scripts/bola.ts",
     "segredos:preview": "node scripts/segredos-preview.ts",
     "segredos:producao": "node scripts/segredos-producao.ts"
