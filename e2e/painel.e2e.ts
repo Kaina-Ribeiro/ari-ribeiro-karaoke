@@ -273,9 +273,9 @@ test.describe("novidades", () => {
       await expect(linha(page, nome).locator(".ate")).toHaveCount(0);
     }
     await expect(linha(page, "Ari Ribeiro karaoke").locator(".ate")).toHaveCount(0);
-    // chegada + 60 dias de prazo: o último dia como novidade é o 59º depois de chegar
+    // chegada + 60 dias de prazo: o 60º dia depois de chegar ainda é novidade
     const [d, m, a] = (await linha(page, "13K").locator(".meta").textContent())!.match(/(\d\d)\/(\d\d)\/(\d{4})/)!.slice(1).map(Number);
-    const ate = new Date(Date.UTC(a, m - 1, d + 59)).toISOString().slice(0, 10).split("-").reverse().join("/");
+    const ate = new Date(Date.UTC(a, m - 1, d + 60)).toISOString().slice(0, 10).split("-").reverse().join("/");
     await expect(linha(page, "13K").locator(".ate")).toHaveText(`Fica como novidade até ${ate}`);
   });
 

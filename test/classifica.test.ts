@@ -33,15 +33,16 @@ describe("classifica", () => {
     expect(classifica(p("ARI EXCLUSIVO", HOJE, "base"), 60, HOJE)).toBe("base");
     expect(classifica(p("ARI RIBEIRO KARAOKE", HOJE, "exc"), 60, HOJE)).toBe("exc");
   });
-  it("os pacotes de 04/11 seguem novidade até 02/01/2027 e viram normais em 03/01/2027", () => {
+  it("os pacotes de 04/11 seguem novidade até 03/01/2027, inclusive, e viram normais em 04/01/2027", () => {
     const chegou = "2026-11-04";
-    expect(novidadeAte(chegou, 60)).toBe("2027-01-02");
-    expect(classifica(p("13K", chegou), 60, "2027-01-02")).toBe("nova");
-    expect(classifica(p("13K", chegou), 60, "2027-01-03")).toBe("base");
+    expect(novidadeAte(chegou, 60)).toBe("2027-01-03");
+    expect(classifica(p("13K", chegou), 60, "2027-01-03")).toBe("nova");
+    expect(classifica(p("13K", chegou), 60, "2027-01-04")).toBe("base");
   });
-  it("dentro do prazo é novidade; no prazo ou depois, base", () => {
+  it("até o último dia do prazo é novidade; no dia seguinte, base", () => {
     expect(classifica(p("13K", "2026-10-01"), 60, HOJE)).toBe("nova");
-    expect(classifica(p("13K", "2026-09-05"), 60, HOJE)).toBe("base");
+    expect(classifica(p("13K", "2026-09-05"), 60, HOJE)).toBe("nova");
+    expect(classifica(p("13K", "2026-09-04"), 60, HOJE)).toBe("base");
   });
 });
 
