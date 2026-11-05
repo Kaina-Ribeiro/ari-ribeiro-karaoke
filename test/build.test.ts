@@ -112,6 +112,11 @@ describe("montaManifesto", () => {
       foto: { src: "/img/painel/aaa.webp", recortada: true },
     });
   });
+  it("Tenta aí: tempo do painel; config antiga (sem dicas) usa o padrão de 4 s", () => {
+    expect(montaManifesto(base, { ...config, dicas: { segundos: 7 } }, fotos).dicas).toEqual({ segundos: 7 });
+    const { dicas: _, ...antiga } = config;
+    expect(montaManifesto(base, antiga as ConfigBuild, fotos).dicas).toEqual({ segundos: 4 });
+  });
   it("foto que não foi baixada é erro, não imagem quebrada", () => {
     expect(() => montaManifesto(base, config, new Map())).toThrow("fotos/ari-cantando.webp");
   });

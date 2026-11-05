@@ -58,6 +58,9 @@ export interface FonteCatalogo {
 
 export interface Novidades { prazoDias: number }
 
+/** "Tenta aí" embaixo da busca: de quantos em quantos segundos as sugestões trocam. */
+export interface Dicas { segundos: number }
+
 /** Cores do site pra etiqueta de preço (o fundo; a letra escolhe a que dá contraste). */
 export type CorPreco = "tinta" | "gravata" | "brasa" | "luz" | "papel";
 export type TamanhoPreco = "p" | "m" | "g";
@@ -88,6 +91,8 @@ export interface ConfigBuild {
   banner: Banner;
   catalogo: FonteCatalogo;
   novidades: Novidades;
+  /** ausente na config offline antiga e na API de antes da Fase 3: vale o padrão */
+  dicas?: Dicas;
   /** só os ativos, em ordem */
   cartoes: Cartao[];
   pacotes: PacoteDb[];

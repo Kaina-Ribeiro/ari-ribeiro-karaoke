@@ -45,7 +45,7 @@ describe("config do build", () => {
     await build("POST", "/api/build/status", { publicacao: st.publicacao, status: "ok", musicas: 1234 });
     const { status, corpo } = await build("GET", "/api/build/config");
     expect(status).toBe(200);
-    expect(Object.keys(corpo).sort()).toEqual(["banner", "cartoes", "catalogo", "contato", "hoje", "musicasNoAr", "novidades", "pacotes"]);
+    expect(Object.keys(corpo).sort()).toEqual(["banner", "cartoes", "catalogo", "contato", "dicas", "hoje", "musicasNoAr", "novidades", "pacotes"]);
     expect(corpo.cartoes.map((c: { titulo: string }) => c.titulo)).toEqual(["A", "C"]);
     expect(corpo.musicasNoAr).toBe(1234);
     expect(corpo.hoje).toBe("2026-11-04");

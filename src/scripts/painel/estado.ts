@@ -1,6 +1,6 @@
 /** Estado do painel (GET /api/admin/estado), com consulta a cada 10 s enquanto houver publicação aberta. */
 import type { Publicacao } from "../../../api/publicacoes.ts";
-import type { Banner, Cartao, Contato, FonteCatalogo, Novidades, PacoteDb } from "../../lib/painel/tipos.ts";
+import type { Banner, Cartao, Contato, Dicas, FonteCatalogo, Novidades, PacoteDb } from "../../lib/painel/tipos.ts";
 import type { Pacote } from "../../lib/texto.ts";
 import { api, ErroApi } from "./api.ts";
 
@@ -9,6 +9,7 @@ export interface Estado {
   banner: Banner;
   catalogo: FonteCatalogo;
   novidades: Novidades;
+  dicas: Dicas;
   cartoes: Cartao[];
   pacotes: (PacoteDb & { classe: Pacote })[];
   publicacao: Publicacao | null;

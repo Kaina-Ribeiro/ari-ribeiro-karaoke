@@ -1,7 +1,8 @@
 /** Partes puras do build: o manifesto que o site lê e a trava contra arquivo errado. */
 import { rotuloLetreiro } from "./painel/cartaz.ts";
 import { blocosRodape, migraContato, numeroDoZap, type BlocoRodape } from "./painel/contato.ts";
-import type { ConfigBuild, PrecoCartao } from "./painel/tipos.ts";
+import { CONFIG_PADRAO } from "./painel/padrao.ts";
+import type { ConfigBuild, Dicas, PrecoCartao } from "./painel/tipos.ts";
 import { formataZap } from "./painel/valida.ts";
 import type { Pacote } from "./texto.ts";
 import { abaixoDaMetade } from "./xlsx.ts";
@@ -21,6 +22,8 @@ export interface Manifesto extends BaseManifesto {
   banner: { linhas: string[]; rotulo: string; frase: string; legenda: [string, string]; foto: { src: string; recortada: boolean } };
   /** `zap`: número já resolvido (sem escolha ou escolha que sumiu = o geral); `preco` null = cartão como sempre foi */
   servicos: { titulo: string; destaque: string; descricao: string; foto: string | null; zap: string; preco: PrecoCartao | null }[];
+  /** "Tenta aí": tempo da troca das sugestões */
+  dicas: Dicas;
 }
 
 /** Mensagem de erro se o catálogo novo tem menos da metade das músicas no ar (e o Ari não confirmou). */
@@ -63,6 +66,7 @@ export function montaManifesto(base: BaseManifesto, config: ConfigBuild, fotos: 
       zap: numeroDoZap(contato, c.zapId ?? null),
       preco: c.preco ?? null,
     })),
+    dicas: config.dicas ?? CONFIG_PADRAO.dicas,
   };
 }
 

@@ -1,6 +1,6 @@
 import { REDES } from "./contato.ts";
 import { CORES_PRECO, ESTILO_PRECO_PADRAO, PESOS_PRECO, TAMANHOS_PRECO } from "./preco.ts";
-import type { Banner, Cartao, Contato, Novidades, PerfilRede, PrecoCartao, Resultado, ZapNomeado } from "./tipos.ts";
+import type { Banner, Cartao, Contato, Dicas, Novidades, PerfilRede, PrecoCartao, Resultado, ZapNomeado } from "./tipos.ts";
 
 const ok = <T>(valor: T): Resultado<T> => ({ ok: true, valor });
 const falha = <T = never>(erro: string): Resultado<T> => ({ ok: false, erro });
@@ -175,6 +175,13 @@ export function validaNovidades(x: unknown): Resultado<Novidades> {
   const p = objeto(x).prazoDias;
   if (typeof p !== "number" || !Number.isInteger(p) || p < 1 || p > 365) return falha("O prazo precisa ser de 1 a 365 dias");
   return ok({ prazoDias: p });
+}
+
+/** De 2 a 15 s, de meio em meio segundo: menos que isso não dá tempo de ler; mais, ninguém vê trocar. */
+export function validaDicas(x: unknown): Resultado<Dicas> {
+  const s = objeto(x).segundos;
+  if (typeof s !== "number" || !Number.isInteger(s * 2) || s < 2 || s > 15) return falha("O tempo precisa ser de 2 a 15 segundos");
+  return ok({ segundos: s });
 }
 
 /** Id da planilha só se o link for mesmo do Google Sheets. */
