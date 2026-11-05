@@ -51,12 +51,23 @@ export function nomeArtista(s: string): string {
 
 export type Pacote = "base" | "nova" | "exc";
 
-/** "Ari Ribeiro karaoke" é o catálogo base, "ARI EXCLUSIVO" é exclusiva, o resto (13K, INTER 14G…) são pacotes novos. */
+/** Pacotes que são do Ari sem ter "EXCLUSIVO" no nome (pedido de 2026-11-05). A planilha não muda. */
+const SO_NO_ARI = new Set(["ARI RIBEIRO", "ESPECIAL ARI"]);
+
+/**
+ * Classe que vem só do nome, sem olhar data: "Ari Ribeiro karaoke" (ou sem nome) é o catálogo base,
+ * "ARI RIBEIRO", "ESPECIAL ARI" e qualquer "…EXCLUSIVO…" são só no Ari. `null` = depende de quando chegou.
+ * Recebe o nome já normalizado (maiúsculo, espaços simples).
+ */
+export function classePeloNome(chave: string): "base" | "exc" | null {
+  if (chave === "" || chave === "ARI RIBEIRO KARAOKE") return "base";
+  if (SO_NO_ARI.has(chave) || chave.includes("EXCLUSIVO")) return "exc";
+  return null;
+}
+
+/** Sem o painel: o que não é base nem só no Ari (13K, INTER 14G…) é pacote novo. */
 export function tipoPacote(p: string): Pacote {
-  const u = p.toUpperCase().trim();
-  if (u === "" || u === "ARI RIBEIRO KARAOKE") return "base";
-  if (u.includes("EXCLUSIVO")) return "exc";
-  return "nova";
+  return classePeloNome(p.toUpperCase().trim().replace(/\s+/g, " ")) ?? "nova";
 }
 
 /** Letra que agrupa o artista no índice A–Z; números e símbolos vão pra "#". */

@@ -1,4 +1,5 @@
-import type { Modo } from "../../../lib/painel/tipos.ts";
+import { novidadeAte } from "../../../lib/painel/classifica.ts";
+import type { Modo, PacoteDb } from "../../../lib/painel/tipos.ts";
 import { validaNovidades } from "../../../lib/painel/valida.ts";
 import { normaliza } from "../../../lib/texto.ts";
 import { api } from "../api.ts";
@@ -15,13 +16,23 @@ const LEGENDA = noSite(`<ul class="musicas-site">`
   + `<li><span class="tit">Música de pacote só no Ari<span class="tag exc">só no Ari</span></span></li>`
   + `<li><span class="tit">Música de pacote normal</span></li></ul>`);
 
+/** Só pacote em novidade mostra até quando: no automático, chegada + prazo; escolhido à mão, até alguém trocar. */
+function ate(p: PacoteDb & { classe: string }, prazoDias: number): string {
+  if (p.classe !== "nova") return "";
+  if (p.modo === "nova") return `<span class="ate">Novidade escolhida aqui: fica até você trocar</span>`;
+  return `<span class="ate">Fica como novidade até <b>${data(novidadeAte(p.chegouEm, prazoDias))}</b></span>`;
+}
+
+const meta = (p: PacoteDb & { classe: string }, prazoDias: number) =>
+  `<span class="meta">Chegou em ${data(p.chegouEm)}, ${p.musicas.toLocaleString("pt-BR")} ${p.musicas === 1 ? "música" : "músicas"}</span>${ate(p, prazoDias)}`;
+
 const contaNovas = (e: Estado) => e.pacotes.filter((p) => p.classe === "nova").length;
 
 function linhas(e: Estado): string {
   if (!e.pacotes.length) return `<div class="vazio-bloco"><p><b>Nenhum pacote ainda.</b> Os pacotes aparecem aqui sozinhos depois que o catálogo for publicado pela primeira vez.</p><a class="bt claro" href="#catalogo">Ir pro Catálogo</a></div>`;
   return `<ul class="pacotes">` + e.pacotes.map((p) => `<li class="pacote" data-chave="${escapa(p.chave)}" data-busca="${escapa(normaliza(p.nome))}" data-classe="${p.classe}">`
     + `<div class="info"><b class="nome">${escapa(p.nome)}</b>${ETIQUETA[p.classe]}`
-    + `<span class="meta">Chegou em ${data(p.chegouEm)}, ${p.musicas.toLocaleString("pt-BR")} ${p.musicas === 1 ? "música" : "músicas"}</span></div>`
+    + `<div class="detalhe">${meta(p, e.novidades.prazoDias)}</div></div>`
     + `<div class="entrada seletor"><select aria-label="Classificação de ${escapa(p.nome)}">`
     + MODOS.map(([m, nome]) => `<option value="${m}"${p.modo === m ? " selected" : ""}>${nome}</option>`).join("")
     + `</select></div></li>`).join("") + `</ul>`;
@@ -31,6 +42,7 @@ export function montaNovidades(el: HTMLElement, e: Estado) {
   el.innerHTML = cabecalho("Novidades", "O que aparece no site com a etiqueta nova ou só no Ari.")
     + `<div class="duas esq-estreita"><div class="coluna"><form class="folha" id="formPrazo" novalidate><h2>Automático</h2>`
     + `<p>Pacote novo aparece como novidade por um tempo, contado do dia em que chegou. Depois vira normal sozinho.</p>`
+    + `<p class="nota">Música nova num pacote que já existia (mesmo nome) não vira novidade: conta a data em que o pacote chegou.</p>`
     + campo({ id: "prazo", rotulo: "Dias como novidade", valor: String(e.novidades.prazoDias), tipo: "number", inputmode: "numeric" })
     + `<div class="acoes"><button class="bt" type="submit">Salvar prazo</button></div></form>${LEGENDA}</div>`
     + `<section class="folha"><h2>Pacotes <span class="conta-tit">${numero(e.pacotes.length)}</span></h2>`
@@ -85,6 +97,7 @@ export function montaNovidades(el: HTMLElement, e: Estado) {
       if (p) {
         li.dataset.classe = p.classe;
         li.querySelector(".tag")!.outerHTML = ETIQUETA[p.classe];
+        li.querySelector(".detalhe")!.innerHTML = meta(p, novo!.novidades.prazoDias);
         $("#nNovas", el).textContent = `(${numero(contaNovas(novo!))})`;
       }
       li.classList.add("salvou");
