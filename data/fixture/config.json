@@ -1,5 +1,17 @@
 {
-  "contato": { "zapContato": "5512991167274", "zapKj": "5512981234567", "instagram": "ariribeirokaraoke", "facebook": null },
+  "contato": {
+    "zaps": [
+      { "id": "z1", "nome": "WhatsApp - Ari", "numero": "5512991167274", "ativo": true },
+      { "id": "z2", "nome": "WhatsApp - Ana Paula", "numero": "5512991196050", "ativo": true },
+      { "id": "z3", "nome": "WhatsApp do KJ", "numero": "5512981234567", "ativo": false }
+    ],
+    "geral": "z1", "kj": "z3", "pedido": "z2",
+    "redes": [
+      { "id": "r1", "rede": "instagram", "usuario": "ariribeirokaraoke", "ativo": true },
+      { "id": "r2", "rede": "facebook", "usuario": "ariribeirokaraoke", "ativo": true },
+      { "id": "r3", "rede": "tiktok", "usuario": "ariribeirokaraoke", "ativo": false }
+    ]
+  },
   "banner": {
     "linhas": ["Solta", "a voz,", "o palco é seu."],
     "frase": "Acha a música, anota o *código* e manda pro KJ.",

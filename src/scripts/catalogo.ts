@@ -2,7 +2,7 @@ import { busca, NOTA_CODIGO_EXATO, preparaItem, soDigitos, trechosQueBatem, type
 import { escapa, letraDe, normaliza, type Pacote } from "../lib/texto.ts";
 import type { Catalogo } from "../lib/planilha.ts";
 
-interface Manifesto { total: number; temLetras: boolean; catalogo: string; letras: string; zapKj: string; zapContato: string }
+interface Manifesto { total: number; temLetras: boolean; catalogo: string; letras: string; zapKj: string; zapPedido: string }
 
 const POR_PAGINA = 50;
 const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector<T>(s)!;
@@ -108,7 +108,7 @@ function desenhaAZ(filtro: (m: Item) => boolean) {
     .map((L) => (tem.has(L) ? `<a href="#letra-${L === "#" ? "num" : L}" data-letra="${L}">${L}</a>` : `<span>${L}</span>`)).join("");
 }
 
-// pedido de música vai pro KJ (quem opera o som); sem KJ no painel, o build já pôs o Zap de contato
+// pedido de música vai pro KJ (quem opera o som); sem KJ no painel, o build já pôs o Zap geral
 const zap = (ms: ItemComanda[], quem = "") =>
   `https://wa.me/${manifesto.zapKj}?text=` + encodeURIComponent(`Oi! ${quem ? quem + " quer" : "Quero"} cantar:\n` + ms.map((m) => `• ${m.cod} · ${m.tit} (${m.art})`).join("\n"));
 
@@ -139,7 +139,7 @@ function desenha() {
     const nome = ABAS.find(([k]) => k === st.filtro)![1];
     h += `<div class="vazio"><h3>Não tem em ${escapa(nome)}</h3><p>Nada com “${escapa(st.q)}” nesse filtro. Procura no catálogo inteiro.</p><button class="bt" data-f="todas">Procurar em todas</button></div>`;
   } else if (!rs.length && !exato) {
-    const pedido = `https://wa.me/${manifesto.zapContato}?text=` + encodeURIComponent(`Oi Ari! Procurei e não achei no catálogo: ${st.q}. Dá pra adicionar?`);
+    const pedido = `https://wa.me/${manifesto.zapPedido}?text=` + encodeURIComponent(`Oi Ari! Procurei e não achei no catálogo: ${st.q}. Dá pra adicionar?`);
     h += `<div class="vazio"><h3>Essa ainda não tem</h3><p>Não achamos “${escapa(st.q)}”. Pede pro Ari, ele vê se entra no próximo pacote.</p><a class="bt zap" target="_blank" rel="noopener" href="${pedido}">Pedir música nova</a></div>`;
   } else if (rs.length) { // só a telinha do código exato: sem tabela vazia embaixo
     const porArt = (a: Resultado, b: Resultado) => a.item.artista.localeCompare(b.item.artista, "pt") || a.item.titulo.localeCompare(b.item.titulo, "pt");

@@ -222,6 +222,9 @@ footer .in{padding-block:32px 96px;display:grid;gap:24px} /* 96px: o fim não fi
 .wordmark em{font:italic 400 .42em var(--d-serif);text-transform:none;color:var(--luz);letter-spacing:0}
 .contatos{display:grid;gap:14px 32px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));font-size:.95rem;border-top:2px solid var(--papel);padding-top:18px}
 .contatos small{display:block;font:700 .68rem var(--f-codigo);letter-spacing:.12em;text-transform:uppercase;color:var(--luz);margin-bottom:4px}
+.contatos > div{min-width:0}
+.contatos a{display:block;width:fit-content;max-width:100%;overflow-wrap:anywhere}
+.contatos a + a{margin-top:4px}
 .contatos .num{font:700 1.1rem var(--f-codigo);user-select:all}
 
 /* COMANDA */

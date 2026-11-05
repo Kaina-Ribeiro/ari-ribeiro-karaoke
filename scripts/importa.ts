@@ -12,6 +12,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
+import { numeroDoZap } from "../src/lib/painel/contato.ts";
 import { CONFIG_PADRAO } from "../src/lib/painel/padrao.ts";
 import { hojeSP } from "../src/lib/painel/classifica.ts";
 import { idDaPlanilha } from "../src/lib/painel/valida.ts";
@@ -60,4 +61,4 @@ try {
 } finally {
   await rm(pasta, { recursive: true, force: true });
 }
-console.log(`✅ Importado em ${alvo}: ${dados.cartoes.length} cartões, ${dados.pacotes.length} pacotes, Zap ${dados.contato.zapContato}.`);
+console.log(`✅ Importado em ${alvo}: ${dados.cartoes.length} cartões, ${dados.pacotes.length} pacotes, Zap ${numeroDoZap(dados.contato, null)}.`);

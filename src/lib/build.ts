@@ -1,5 +1,6 @@
 /** Partes puras do build: o manifesto que o site lê e a trava contra arquivo errado. */
 import { rotuloLetreiro } from "./painel/cartaz.ts";
+import { blocosRodape, migraContato, numeroDoZap, type BlocoRodape } from "./painel/contato.ts";
 import type { ConfigBuild } from "./painel/tipos.ts";
 import { formataZap } from "./painel/valida.ts";
 import type { Pacote } from "./texto.ts";
@@ -15,7 +16,8 @@ export interface BaseManifesto {
 }
 
 export interface Manifesto extends BaseManifesto {
-  contato: { zapContato: string; zapKj: string; zapTexto: string; instagram: string; facebook: string | null };
+  /** números já resolvidos (sem escolha = o geral) e o rodapé pronto */
+  contato: { zapGeral: string; zapKj: string; zapPedido: string; rodape: BlocoRodape[] };
   banner: { linhas: string[]; rotulo: string; frase: string; legenda: [string, string]; foto: { src: string; recortada: boolean } };
   servicos: { titulo: string; destaque: string; descricao: string; foto: string | null }[];
 }
@@ -33,15 +35,16 @@ export function montaManifesto(base: BaseManifesto, config: ConfigBuild, fotos: 
     if (!src) throw new Error(`A foto ${chave} não foi baixada.`);
     return src;
   };
-  const { contato, banner } = config;
+  const { banner } = config;
+  // a config offline (data/fixture) ou um build antigo ainda podem trazer o formato de antes
+  const contato = migraContato(config.contato);
   return {
     ...base,
     contato: {
-      zapContato: contato.zapContato,
-      zapKj: contato.zapKj ?? contato.zapContato,
-      zapTexto: formataZap(contato.zapContato),
-      instagram: contato.instagram,
-      facebook: contato.facebook,
+      zapGeral: numeroDoZap(contato, null),
+      zapKj: numeroDoZap(contato, contato.kj),
+      zapPedido: numeroDoZap(contato, contato.pedido),
+      rodape: blocosRodape(contato, formataZap),
     },
     banner: {
       linhas: banner.linhas,

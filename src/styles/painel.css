@@ -292,8 +292,50 @@ dialog p{font-weight:700;margin:0 0 16px}
 .rodape-site .wordmark em{font:italic 400 .42em var(--d-serif);text-transform:none;color:var(--luz);letter-spacing:0}
 .rodape-site .contatos{display:grid;gap:14px 32px;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));font-size:.95rem;border-top:2px solid var(--papel);padding-top:18px}
 .rodape-site small{display:block;font:700 .68rem var(--f-codigo);letter-spacing:.12em;text-transform:uppercase;color:var(--luz);margin-bottom:4px}
+.rodape-site .contatos > div{min-width:0}
+.rodape-site .num,.rodape-site .lk{display:block;width:fit-content;max-width:100%;overflow-wrap:anywhere}
+.rodape-site .num + .num,.rodape-site .lk + .lk{margin-top:4px}
 .rodape-site .num{font:700 1.1rem var(--f-codigo)}
-.rodape-site .lk{text-decoration:underline;overflow-wrap:anywhere}
+.rodape-site .lk{text-decoration:underline}
+
+/* ---------- contato: lista de WhatsApp e redes ---------- */
+.contato-form .folha h2{margin-bottom:6px}
+.dica-folha{margin:0 0 16px;font-size:.92rem;color:var(--tinta-2)}
+.zaps,.perfis{list-style:none;margin:0 0 16px;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.zap-item fieldset{margin:0;min-width:0;border:2px solid var(--tinta);background:#fff;padding:12px 14px 14px;transition:background-color .15s,border-color .15s}
+.zap-item.geral fieldset{border-width:3px;box-shadow:3px 3px 0 var(--gravata)}
+.zap-item.fora fieldset{background:var(--papel-2);border-style:dashed}
+.zap-item legend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 6px;margin-left:-6px;max-width:calc(100% + 6px);font-weight:800}
+.zap-n{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 4px;background:var(--tinta);color:var(--papel);font:700 .8rem var(--f-codigo)}
+.zap-tit{overflow-wrap:anywhere;min-width:0}
+.selo{font:700 .66rem/1 var(--f-codigo);letter-spacing:.08em;text-transform:uppercase;padding:4px 6px;background:var(--gravata);color:#fff}
+.selo.apagado{background:transparent;color:var(--tinta-2);border:1.5px dashed var(--tinta-2)}
+.zap-item .campo{margin-bottom:12px}
+.zap-opcoes{display:flex;flex-wrap:wrap;gap:0 22px;margin:-2px 0 8px}
+.zap-opcoes input[type=radio]{accent-color:var(--gravata)}
+.marcar:has(input:disabled){cursor:default;color:var(--tinta-2)}
+.item-acoes,.perfil-acoes{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.perfil-acoes .marcar{margin-right:auto}
+/* .mini nasceu pro fundo escuro (cartões); aqui fica na folha clara */
+.contato-form .mini{border-color:var(--tinta);color:var(--tinta)}
+.contato-form .mini:hover{background:var(--papel-2);color:var(--tinta)}
+.contato-form .mini:active{background:var(--tinta);color:var(--papel)}
+.contato-form .mini:disabled{background:transparent;color:var(--tinta)}
+.contato-form .mini[data-acao^=remover]{border-color:var(--brasa-texto);color:var(--brasa-texto)}
+.contato-form .mini[data-acao^=remover]:hover{background:#fff1eb}
+.contato-form .mini[data-acao^=remover]:disabled{border-color:var(--tinta-2);color:var(--tinta-2)}
+.contato-form .seletor{width:auto}
+.rede-grupo{padding:14px 0;border-top:2px dashed #b8ad95}
+.rede-grupo:first-child{border-top:0;padding-top:0}
+.rede-grupo:last-child{padding-bottom:0}
+.rede-grupo h3{font:900 1.25rem/1 var(--d-cartaz);text-transform:uppercase;margin:0 0 10px}
+.perfis{gap:12px;margin-bottom:12px}
+.perfil{padding:10px 12px;border:2px solid var(--tinta);background:#fff;transition:background-color .15s}
+.perfil.fora{background:var(--papel-2);border-style:dashed}
+.perfil .campo{margin-bottom:6px}
+.contato-form .erro-bloco{margin-top:12px}
+.contato-form .erro-bloco[hidden]{display:none}
+.contato-form .acoes.salvar{margin:0 0 22px}
 
 /* ---------- tablet: cartaz do Início vira folha ---------- */
 @media (min-width:768px){
