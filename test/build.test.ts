@@ -7,8 +7,8 @@ import type { ConfigBuild } from "../src/lib/painel/tipos.ts";
 const config: ConfigBuild = {
   ...structuredClone(CONFIG_PADRAO),
   cartoes: [
-    { id: 1, ordem: 1, ativo: true, titulo: "Karaokê", destaque: "Pacotes", descricao: "Alugue", fotoChave: null },
-    { id: 2, ordem: 2, ativo: true, titulo: "Telão", destaque: "X BOX", descricao: "Data show", fotoChave: "fotos/telao.webp" },
+    { id: 1, ordem: 1, ativo: true, titulo: "Karaokê", destaque: "Pacotes", descricao: "Alugue", fotoChave: null, zapId: null, preco: null },
+    { id: 2, ordem: 2, ativo: true, titulo: "Telão", destaque: "X BOX", descricao: "Data show", fotoChave: "fotos/telao.webp", zapId: null, preco: null },
   ],
   pacotes: [],
   musicasNoAr: null,
@@ -27,19 +27,80 @@ describe("confereTamanho", () => {
 });
 
 describe("montaManifesto", () => {
-  it("sem Zap do KJ, usa o de contato", () => {
+  it("sem KJ nem pedido escolhidos, tudo vai pro geral", () => {
     const m = montaManifesto(base, config, fotos);
-    expect(m.contato).toEqual({ zapContato: "5512991167274", zapKj: "5512991167274", zapTexto: "(12) 99116-7274", instagram: "ariribeirokaraoke", facebook: null });
+    expect(m.contato).toEqual({
+      zapGeral: "5512991167274", zapKj: "5512991167274", zapPedido: "5512991167274",
+      rodape: [
+        { rotulo: "WhatsApp - Ari", itens: [{ texto: "(12) 99116-7274", url: "https://wa.me/5512991167274", zap: true }] },
+        { rotulo: "Instagram", itens: [{ texto: "@ariribeirokaraoke", url: "https://www.instagram.com/ariribeirokaraoke/" }] },
+      ],
+    });
   });
-  it("com Zap do KJ, cada um no seu lugar", () => {
-    const m = montaManifesto(base, { ...config, contato: { ...config.contato, zapKj: "5512981234567" } }, fotos);
-    expect(m.contato.zapKj).toBe("5512981234567");
-    expect(m.contato.zapContato).toBe("5512991167274");
+  it("contato antigo de produção (D1 de 05/11): mesmos números, rodapé novo só com o geral", () => {
+    const antigo = { zapContato: "5512991196050", zapKj: "5512991167274", instagram: "ariribeirokaraoke", facebook: null };
+    const m = montaManifesto(base, { ...config, contato: antigo as unknown as ConfigBuild["contato"] }, fotos);
+    expect(m.contato).toEqual({
+      zapGeral: "5512991196050", zapKj: "5512991167274", zapPedido: "5512991196050",
+      rodape: [
+        { rotulo: "WhatsApp - Ana Paula", itens: [{ texto: "(12) 99119-6050", url: "https://wa.me/5512991196050", zap: true }] },
+        { rotulo: "Instagram", itens: [{ texto: "@ariribeirokaraoke", url: "https://www.instagram.com/ariribeirokaraoke/" }] },
+      ],
+    });
   });
-  it("cartões com e sem foto", () => {
+  it("vários WhatsApp: só os ligados no rodapé, na ordem; cada destino no seu número", () => {
+    const contato: ConfigBuild["contato"] = {
+      zaps: [
+        { id: "a", nome: "WhatsApp - Ana Paula", numero: "5512991196050", ativo: true },
+        { id: "k", nome: "KJ", numero: "5512981234567", ativo: false },
+        { id: "p", nome: "Pedidos", numero: "5512977776666", ativo: true },
+      ],
+      geral: "a", kj: "k", pedido: "p",
+      redes: [
+        { id: "1", rede: "youtube", usuario: "ari", ativo: true },
+        { id: "2", rede: "instagram", usuario: "um", ativo: true },
+        { id: "3", rede: "instagram", usuario: "dois", ativo: true },
+        { id: "4", rede: "tiktok", usuario: "desligado", ativo: false },
+      ],
+    };
+    const m = montaManifesto(base, { ...config, contato }, fotos);
+    expect([m.contato.zapGeral, m.contato.zapKj, m.contato.zapPedido]).toEqual(["5512991196050", "5512981234567", "5512977776666"]);
+    expect(m.contato.rodape.map((b) => [b.rotulo, b.itens.map((i) => i.url)])).toEqual([
+      ["WhatsApp - Ana Paula", ["https://wa.me/5512991196050"]],
+      ["Pedidos", ["https://wa.me/5512977776666"]],
+      ["Instagram", ["https://www.instagram.com/um/", "https://www.instagram.com/dois/"]],
+      ["YouTube", ["https://www.youtube.com/@ari"]],
+    ]);
+  });
+  it("cartões com e sem foto; sem escolha de Zap nem preço, igual a antes", () => {
     expect(montaManifesto(base, config, fotos).servicos).toEqual([
-      { titulo: "Karaokê", destaque: "Pacotes", descricao: "Alugue", foto: null },
-      { titulo: "Telão", destaque: "X BOX", descricao: "Data show", foto: "/img/painel/bbb.webp" },
+      { titulo: "Karaokê", destaque: "Pacotes", descricao: "Alugue", foto: null, zap: "5512991167274", preco: null },
+      { titulo: "Telão", destaque: "X BOX", descricao: "Data show", foto: "/img/painel/bbb.webp", zap: "5512991167274", preco: null },
+    ]);
+  });
+  it("cada cartão vai pro seu WhatsApp: o geral, o escolhido, ou o geral se o escolhido saiu do Contato", () => {
+    const contato: ConfigBuild["contato"] = {
+      zaps: [
+        { id: "z1", nome: "WhatsApp - Ana Paula", numero: "5512991196050", ativo: true },
+        { id: "z2", nome: "WhatsApp - Ari", numero: "5512991167274", ativo: false },
+      ],
+      geral: "z1", kj: "z2", pedido: null, redes: [],
+    };
+    const cartao = config.cartoes[0];
+    const preco = { texto: "a partir de R$ 350", cor: "gravata", tamanho: "g", peso: "extra" } as const;
+    const cartoes = [
+      { ...cartao, id: 1, titulo: "Geral", zapId: null },
+      { ...cartao, id: 2, titulo: "Ari", zapId: "z2", preco },
+      { ...cartao, id: 3, titulo: "Apagado", zapId: "z9" },
+      // gravado antes da Fase 2: sem os campos novos
+      { id: 4, ordem: 4, ativo: true, titulo: "Antigo", destaque: "", descricao: "x", fotoChave: null } as unknown as ConfigBuild["cartoes"][number],
+    ];
+    const s = montaManifesto(base, { ...config, contato, cartoes }, fotos).servicos;
+    expect(s.map((x) => [x.titulo, x.zap, x.preco])).toEqual([
+      ["Geral", "5512991196050", null],
+      ["Ari", "5512991167274", preco],
+      ["Apagado", "5512991196050", null],
+      ["Antigo", "5512991196050", null],
     ]);
   });
   it("banner com a foto baixada e o rótulo pro leitor de tela", () => {

@@ -3,13 +3,14 @@ import "../styles/global.css";
 import manifesto from "../data/gerado/manifesto.json";
 import { letraDe } from "../lib/texto.ts";
 import { htmlLetreiro, htmlPoster, negrito } from "../lib/painel/cartaz.ts";
+import { classesPreco, textoPreco } from "../lib/painel/preco.ts";
 
 const titulo = "Ari Ribeiro Karaokê · Catálogo de músicas";
 const descricao = "Catálogo oficial do Ari Ribeiro Karaokê. Busca por código, cantor, música ou pelo começo da letra e manda o pedido pro KJ no Zap.";
 const atualizado = new Date(manifesto.geradoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 const { contato, banner } = manifesto;
-// os Zaps vão pro script do navegador: o do KJ recebe a comanda, o de contato recebe pedido de música nova
-const cliente = { total: manifesto.total, temLetras: manifesto.temLetras, catalogo: manifesto.catalogo, letras: manifesto.letras, zapKj: contato.zapKj, zapContato: contato.zapContato };
+// os Zaps vão pro script do navegador: o do KJ recebe a comanda, o do pedido recebe "Pedir música nova" (sem escolha = o geral)
+const cliente = { total: manifesto.total, temLetras: manifesto.temLetras, catalogo: manifesto.catalogo, letras: manifesto.letras, zapKj: contato.zapKj, zapPedido: contato.zapPedido };
 const corta = (t: string) => (t.length > 110 ? t.slice(0, 110).replace(/\s\S*$/, "") + "…" : t);
 
 // letras das primeiras linhas, pra marcar onde começa cada letra do índice
@@ -109,8 +110,8 @@ const endereco = new URL("/", Astro.site);
         <p class="sub">Karaokê, telão, kit festa completo e fotografia. Chama no Zap e fecha direto com ele.</p>
         <div class="cartazes">
           {manifesto.servicos.map((s) => (
-            <a class="cz" target="_blank" rel="noopener" href={`https://wa.me/${contato.zapContato}?text=${encodeURIComponent("Oi Ari! Quero saber sobre: " + s.titulo)}`}>
-              {s.foto && <img class="foto" src={s.foto} alt="" loading="lazy" decoding="async" />}<span class="k">{s.destaque}</span><b>{s.titulo}</b><p>{s.descricao}</p><span class="ir">Chamar no Zap →</span>
+            <a class="cz" target="_blank" rel="noopener" href={`https://wa.me/${s.zap}?text=${encodeURIComponent("Oi Ari! Quero saber sobre: " + s.titulo)}`}>
+              {s.foto && <img class="foto" src={s.foto} alt="" loading="lazy" decoding="async" />}<span class="k">{s.destaque}</span><b>{s.titulo}</b><p>{s.descricao}</p>{s.preco && <span class={classesPreco(s.preco)}>{textoPreco(s.preco.texto)}</span>}<span class="ir">Chamar no Zap →</span>
             </a>
           ))}
         </div>
@@ -120,8 +121,10 @@ const endereco = new URL("/", Astro.site);
     <footer class="g" id="contato"><div class="in">
       <p class="wordmark">Ari Ribeiro <em>karaokê</em></p>
       <div class="contatos">
-        <div><small>WhatsApp</small><a class="num" href={`https://wa.me/${contato.zapContato}`} target="_blank" rel="noopener">{contato.zapTexto}</a></div>
-        <div><small>Instagram e Facebook</small><a href={`https://www.instagram.com/${contato.instagram}/`} target="_blank" rel="noopener">@{contato.instagram}</a>{contato.facebook && <Fragment><br /><a href={`https://www.facebook.com/${contato.facebook}`} target="_blank" rel="noopener">Facebook</a></Fragment>}</div>
+        {/* um bloco por WhatsApp ligado e por rede: rótulo em cima, link embaixo */}
+        {contato.rodape.map((b) => (
+          <div><small>{b.rotulo}</small>{b.itens.map((it) => <a class={it.zap ? "num" : "lk"} href={it.url} target="_blank" rel="noopener">{it.texto}</a>)}</div>
+        ))}
         <div><small>Catálogo</small>Atualizado em {atualizado}</div>
       </div>
     </div></footer>

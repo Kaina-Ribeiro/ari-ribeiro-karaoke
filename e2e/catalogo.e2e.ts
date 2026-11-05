@@ -45,12 +45,63 @@ test.describe("sem JavaScript", () => {
     expect(box.width / box.height).toBeCloseTo(16 / 9, 1);
   });
 
-  test("Zap de contato no rodapé e nos cartões", async ({ page }) => {
+  // fixture: geral = Ari (z1), Ana Paula (z2) recebe "Pedir música nova", KJ (z3) fora do rodapé recebe a comanda
+  const GERAL = "5512991167274", ANA = "5512991196050", KJ = "5512981234567";
+
+  test("rodapé: um bloco por WhatsApp ligado e por rede ligada, rótulo em cima e link embaixo", async ({ page }) => {
     await page.goto("/");
-    expect(await zap(page, "#contato a.num")).toBe("https://wa.me/5512991167274");
-    await expect(page.locator("#contato a.num")).toHaveText("(12) 99116-7274");
-    expect(await zap(page, ".cz")).toMatch(/^https:\/\/wa\.me\/5512991167274\?text=Oi Ari! Quero saber sobre: /);
-    await expect(page.locator('#contato a[href="https://www.instagram.com/ariribeirokaraoke/"]')).toHaveText("@ariribeirokaraoke");
+    const blocos = page.locator("#contato .contatos > div");
+    await expect(blocos.locator("small")).toHaveText(["WhatsApp - Ari", "WhatsApp - Ana Paula", "Instagram", "Facebook", "Catálogo"]);
+    await expect(page.locator("#contato a.num")).toHaveText(["(12) 99116-7274", "(12) 99119-6050"]);
+    await expect(blocos.nth(2).locator("a")).toHaveText("@ariribeirokaraoke");
+    await expect(blocos.nth(2).locator("a")).toHaveAttribute("href", "https://www.instagram.com/ariribeirokaraoke/");
+    await expect(blocos.nth(3).locator("a")).toHaveAttribute("href", "https://www.facebook.com/ariribeirokaraoke");
+    // TikTok desligado, Zap do KJ fora do rodapé e o rótulo antigo sumiram
+    await expect(page.locator("#contato")).not.toContainText("TikTok");
+    await expect(page.locator("#contato")).not.toContainText("Instagram e Facebook");
+    await expect(page.locator(`#contato a[href*="${KJ}"]`)).toHaveCount(0);
+    // rótulo em cima do link, no mesmo bloco
+    const rot = (await blocos.nth(3).locator("small").boundingBox())!, link = (await blocos.nth(3).locator("a").boundingBox())!;
+    expect(link.y).toBeGreaterThanOrEqual(rot.y + rot.height - 1);
+    // nada vaza pro lado
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
+  test("todos os links wa.me da página vão pro número certo", async ({ page }) => {
+    await page.goto("/");
+    const links = await page.locator('a[href*="wa.me/"]').evaluateAll((as) => as.map((a) => ({
+      onde: a.closest("#contato") ? "rodape" : a.closest(".cz") || a.classList.contains("cz") ? "cartao" : a.id === "mandar" ? "comanda" : "outro",
+      numero: /wa\.me\/(\d+)/.exec(a.getAttribute("href")!)![1],
+    })));
+    expect(links.filter((l) => l.onde === "outro")).toEqual([]);
+    expect(links.filter((l) => l.onde === "rodape").map((l) => l.numero)).toEqual([GERAL, ANA]);
+    // fixture: cartão 2 escolheu a Ana Paula (z2); o 4 escolheu um Zap que saiu do Contato (z9) e vai pro geral
+    expect(links.filter((l) => l.onde === "cartao").map((l) => l.numero)).toEqual([GERAL, ANA, GERAL, GERAL]);
+    expect(links.filter((l) => l.onde === "comanda").map((l) => l.numero)).toEqual([KJ]);
+    expect(await zap(page, ".cz")).toMatch(new RegExp(`^https://wa\\.me/${GERAL}\\?text=Oi Ari! Quero saber sobre: `));
+    expect(await zap(page, ".cz:nth-child(2)")).toBe(`https://wa.me/${ANA}?text=Oi Ari! Quero saber sobre: Kit Festa tem Tudo`);
+  });
+
+  test("preço opcional: cartão sem preço fica como antes; com preço, etiqueta inteira dentro do cartão", async ({ page }) => {
+    await page.goto("/");
+    const cz = page.locator(".cz");
+    await expect(cz.locator(".preco")).toHaveCount(2);
+    // sem preço: as mesmas peças de sempre, na mesma ordem
+    for (const i of [0, 3]) {
+      expect(await cz.nth(i).evaluate((a) => [...a.children].map((f) => f.className || f.tagName.toLowerCase())))
+        .toEqual(i === 3 ? ["foto", "k", "b", "p", "ir"] : ["k", "b", "p", "ir"]);
+    }
+    const preco = cz.nth(1).locator(".preco");
+    await expect(preco).toHaveText("a partir de R$ 350");
+    await expect(preco).toHaveClass("preco cor-gravata tam-g peso-extra");
+    await expect(cz.nth(2).locator(".preco")).toHaveClass("preco cor-tinta tam-p peso-normal");
+    await preco.scrollIntoViewIfNeeded();
+    const c = (await cz.nth(1).boundingBox())!, p = (await preco.boundingBox())!;
+    expect(p.x).toBeGreaterThanOrEqual(c.x - 4);
+    expect(p.x + p.width).toBeLessThanOrEqual(c.x + c.width + 4);
+    // a etiqueta fica acima do "Chamar no Zap"
+    expect(p.y + p.height).toBeLessThanOrEqual((await cz.nth(1).locator(".ir").boundingBox())!.y + 4);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 });
 
@@ -150,8 +201,8 @@ test.describe("busca", () => {
     await busca(page, "zzzzqqq");
     await expect(page.locator(".vazio h3")).toHaveText("Essa ainda não tem");
     expect(await zap(page, ".vazio a.zap")).toContain("não achei no catálogo: zzzzqqq");
-    // pedido de música nova vai pro Zap de contato, não pro KJ
-    expect(await zap(page, ".vazio a.zap")).toMatch(/^https:\/\/wa\.me\/5512991167274\?/);
+    // pedido de música nova vai pro WhatsApp escolhido no painel (na fixture, a Ana Paula), não pro KJ nem pro geral
+    expect(await zap(page, ".vazio a.zap")).toMatch(/^https:\/\/wa\.me\/5512991196050\?/);
   });
 
   test("busca vazia num filtro oferece procurar em todas", async ({ page }) => {

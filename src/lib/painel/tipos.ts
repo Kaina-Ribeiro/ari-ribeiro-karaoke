@@ -12,13 +12,32 @@ export interface PacoteDb {
   modo: Modo;
 }
 
-/** Zaps guardados como 55DDNNNNNNNNN; redes só com o nome de usuário. */
+/** Um WhatsApp da lista. `ativo` = aparece no rodapé; mesmo fora do rodapé ele pode receber a comanda ou os pedidos. */
+export interface ZapNomeado {
+  /** fixo: é por ele que a comanda, o "Pedir música nova" e (Fase 2) os cartões apontam */
+  id: string;
+  /** "WhatsApp - Ana Paula": o rótulo no rodapé */
+  nome: string;
+  /** 55DDNNNNNNNNN */
+  numero: string;
+  ativo: boolean;
+}
+
+export type Rede = "instagram" | "facebook" | "x" | "tiktok" | "youtube";
+
+/** Um perfil de rede social, só com o nome de usuário. `ativo` = aparece no rodapé. */
+export interface PerfilRede { id: string; rede: Rede; usuario: string; ativo: boolean }
+
+/** Ordem de `zaps` = ordem no rodapé. Destinos guardam o id de um WhatsApp da lista; null = o geral. */
 export interface Contato {
-  zapContato: string;
-  /** null = usa o Zap de contato */
-  zapKj: string | null;
-  instagram: string;
-  facebook: string | null;
+  zaps: ZapNomeado[];
+  /** obrigatório e sempre no rodapé: padrão de todos os botões */
+  geral: string;
+  /** recebe a comanda */
+  kj: string | null;
+  /** recebe o "Pedir música nova" (busca sem resultado) */
+  pedido: string | null;
+  redes: PerfilRede[];
 }
 
 export interface Banner {
@@ -39,6 +58,14 @@ export interface FonteCatalogo {
 
 export interface Novidades { prazoDias: number }
 
+/** Cores do site pra etiqueta de preço (o fundo; a letra escolhe a que dá contraste). */
+export type CorPreco = "tinta" | "gravata" | "brasa" | "luz" | "papel";
+export type TamanhoPreco = "p" | "m" | "g";
+export type PesoPreco = "normal" | "forte" | "extra";
+
+/** Preço do cartão, texto livre ("a partir de R$ 350") numa etiqueta com o estilo escolhido. */
+export interface PrecoCartao { texto: string; cor: CorPreco; tamanho: TamanhoPreco; peso: PesoPreco }
+
 export interface Cartao {
   id: number;
   ordem: number;
@@ -47,6 +74,10 @@ export interface Cartao {
   destaque: string;
   descricao: string;
   fotoChave: string | null;
+  /** id de um WhatsApp do Contato; null = o geral (id que sumiu também vira o geral) */
+  zapId: string | null;
+  /** null = sem preço: o cartão fica como sempre foi */
+  preco: PrecoCartao | null;
 }
 
 export type Resultado<T> = { ok: true; valor: T } | { ok: false; erro: string };

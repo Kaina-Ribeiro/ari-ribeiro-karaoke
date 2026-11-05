@@ -5,7 +5,11 @@ import type { Banner, Contato, FonteCatalogo, Novidades } from "./tipos.ts";
  * então no dia da troca o site fica igual.
  */
 export const CONFIG_PADRAO: { contato: Contato; banner: Banner; catalogo: FonteCatalogo; novidades: Novidades } = {
-  contato: { zapContato: "5512991167274", zapKj: null, instagram: "ariribeirokaraoke", facebook: null },
+  contato: {
+    zaps: [{ id: "z1", nome: "WhatsApp - Ari", numero: "5512991167274", ativo: true }],
+    geral: "z1", kj: null, pedido: null,
+    redes: [{ id: "r1", rede: "instagram", usuario: "ariribeirokaraoke", ativo: true }],
+  },
   banner: {
     linhas: ["Solta", "a voz,", "o palco é seu."],
     frase: "Acha a música, anota o *código* e manda pro KJ.",

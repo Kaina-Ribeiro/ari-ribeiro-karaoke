@@ -1,5 +1,17 @@
 {
-  "contato": { "zapContato": "5512991167274", "zapKj": "5512981234567", "instagram": "ariribeirokaraoke", "facebook": null },
+  "contato": {
+    "zaps": [
+      { "id": "z1", "nome": "WhatsApp - Ari", "numero": "5512991167274", "ativo": true },
+      { "id": "z2", "nome": "WhatsApp - Ana Paula", "numero": "5512991196050", "ativo": true },
+      { "id": "z3", "nome": "WhatsApp do KJ", "numero": "5512981234567", "ativo": false }
+    ],
+    "geral": "z1", "kj": "z3", "pedido": "z2",
+    "redes": [
+      { "id": "r1", "rede": "instagram", "usuario": "ariribeirokaraoke", "ativo": true },
+      { "id": "r2", "rede": "facebook", "usuario": "ariribeirokaraoke", "ativo": true },
+      { "id": "r3", "rede": "tiktok", "usuario": "ariribeirokaraoke", "ativo": false }
+    ]
+  },
   "banner": {
     "linhas": ["Solta", "a voz,", "o palco é seu."],
     "frase": "Acha a música, anota o *código* e manda pro KJ.",
@@ -9,10 +21,10 @@
   "catalogo": { "fonte": "link", "link": "https://docs.google.com/spreadsheets/d/1kTKJlUTVK0CX6pM_mRugkmqIu9Hz9Wpx", "arquivo": null },
   "novidades": { "prazoDias": 60 },
   "cartoes": [
-    { "id": 1, "ordem": 1, "ativo": true, "titulo": "Aluguel de Karaoke", "destaque": "Pacotes especiais", "descricao": "alugue para o final de semana- promoção com TV", "fotoChave": null },
-    { "id": 2, "ordem": 2, "ativo": true, "titulo": "Kit Festa tem Tudo", "destaque": "Kit Tem Tudo", "descricao": "Telão - Fotografia - DJ e baladinha Kids", "fotoChave": null },
-    { "id": 3, "ordem": 3, "ativo": true, "titulo": "Ari Ribeiro", "destaque": "Fotografo", "descricao": "Ensaios Fotograficos em geral", "fotoChave": null },
-    { "id": 4, "ordem": 4, "ativo": true, "titulo": "Aluguel de Telão", "destaque": "X BOX", "descricao": "Aluguel X BOX e data show para eventos em geral.", "fotoChave": "fotos/telao.webp" }
+    { "id": 1, "ordem": 1, "ativo": true, "titulo": "Aluguel de Karaoke", "destaque": "Pacotes especiais", "descricao": "alugue para o final de semana- promoção com TV", "fotoChave": null, "zapId": null, "preco": null },
+    { "id": 2, "ordem": 2, "ativo": true, "titulo": "Kit Festa tem Tudo", "destaque": "Kit Tem Tudo", "descricao": "Telão - Fotografia - DJ e baladinha Kids", "fotoChave": null, "zapId": "z2", "preco": { "texto": "a partir de R$ 350", "cor": "gravata", "tamanho": "g", "peso": "extra" } },
+    { "id": 3, "ordem": 3, "ativo": true, "titulo": "Ari Ribeiro", "destaque": "Fotografo", "descricao": "Ensaios Fotograficos em geral", "fotoChave": null, "zapId": null, "preco": { "texto": "Sessão R$ 200", "cor": "tinta", "tamanho": "p", "peso": "normal" } },
+    { "id": 4, "ordem": 4, "ativo": true, "titulo": "Aluguel de Telão", "destaque": "X BOX", "descricao": "Aluguel X BOX e data show para eventos em geral.", "fotoChave": "fotos/telao.webp", "zapId": "z9" }
   ],
   "pacotes": [],
   "musicasNoAr": null

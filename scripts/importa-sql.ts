@@ -1,5 +1,6 @@
 /** Partes puras da importação inicial: o que vai pro D1 e o SQL que grava, sem pisar no que o Ari já mudou. */
 import { chavePacote } from "../src/lib/painel/classifica.ts";
+import { migraContato } from "../src/lib/painel/contato.ts";
 import { CONFIG_PADRAO } from "../src/lib/painel/padrao.ts";
 import type { Banner, Cartao, Contato, FonteCatalogo, Novidades } from "../src/lib/painel/tipos.ts";
 import { normalizaZap } from "../src/lib/painel/valida.ts";
@@ -24,9 +25,10 @@ export function dadosImportacao(produtos: Record<string, string>[], musicas: Rec
   const zap = normalizaZap(linhaContato?.destaque ?? "");
   const cartoes = montaServicos(produtos)
     .filter((s) => normaliza(s.titulo) !== CONTATO_LOCACAO)
-    .map((s, i) => ({ ordem: i + 1, ativo: true, titulo: s.titulo, destaque: s.destaque, descricao: s.descricao, fotoChave: null }));
+    .map((s, i) => ({ ordem: i + 1, ativo: true, titulo: s.titulo, destaque: s.destaque, descricao: s.descricao, fotoChave: null, zapId: null, preco: null }));
   return {
-    contato: { ...CONFIG_PADRAO.contato, ...(zap.ok ? { zapContato: zap.valor } : {}) },
+    // o Zap da planilha vira o geral (com o nome de quem atende, se for um número conhecido); redes como no padrão
+    contato: zap.ok ? { ...migraContato({ zapContato: zap.valor }), redes: CONFIG_PADRAO.contato.redes } : CONFIG_PADRAO.contato,
     banner: CONFIG_PADRAO.banner,
     catalogo: CONFIG_PADRAO.catalogo,
     novidades: CONFIG_PADRAO.novidades,

@@ -1,6 +1,6 @@
 import { classifica, hojeSP } from "../../src/lib/painel/classifica.ts";
 import type { Resultado } from "../../src/lib/painel/tipos.ts";
-import { validaBanner, validaCartao, validaContato, validaNovidades } from "../../src/lib/painel/valida.ts";
+import { campoDoErro, validaBanner, validaCartao, validaContato, validaNovidades } from "../../src/lib/painel/valida.ts";
 import {
   apagaCartao, atualizaCartao, criaCartao, existeArquivo, gravaConfig, leConfig, listaCartoes, listaPacotes, mudaModoPacote, reordenaCartoes, validaCatalogo, type ChaveConfig,
 } from "../config.ts";
@@ -39,7 +39,12 @@ export function registraAdmin(rota: Rota) {
     });
   });
 
-  rota("PUT", "/api/admin/contato", async (c) => salvaEPublica(c, "contato", valorOu400(validaContato(await leJson(c.req)))));
+  rota("PUT", "/api/admin/contato", async (c) => {
+    const r = validaContato(await leJson(c.req));
+    // o campo do painel na frente da mensagem ("zap-numero-z1|...") só serve pra tela
+    if (!r.ok) throw new ErroHttp(campoDoErro(r.erro).mensagem, 400);
+    return salvaEPublica(c, "contato", r.valor);
+  });
 
   rota("PUT", "/api/admin/banner", async (c) => {
     const banner = valorOu400(validaBanner(await leJson(c.req)));

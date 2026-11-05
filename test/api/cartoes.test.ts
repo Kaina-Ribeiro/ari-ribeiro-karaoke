@@ -50,6 +50,17 @@ describe("cartões", () => {
     expect((await chama("POST", "/api/admin/cartoes", { titulo: "" })).status).toBe(400);
   });
 
+  it("Zap e preço gravam no D1 e voltam no estado; editar sem preço tira o preço", async () => {
+    const preco = { texto: "a partir de R$ 350", cor: "luz", tamanho: "p", peso: "normal" };
+    const { corpo } = await chama("POST", "/api/admin/cartoes", { ...novo("Karaokê"), zapId: "z2", preco });
+    expect(corpo.cartao).toMatchObject({ zapId: "z2", preco });
+    expect((await cartoes())[0]).toMatchObject({ zapId: "z2", preco });
+    const id = corpo.cartao.id;
+    expect((await chama("PUT", `/api/admin/cartoes/${id}`, { ...novo("Karaokê"), zapId: null, preco: { texto: "" } })).status).toBe(200);
+    expect((await cartoes())[0]).toMatchObject({ zapId: null, preco: null });
+    expect((await chama("POST", "/api/admin/cartoes", { ...novo("Caro"), preco: { texto: "x".repeat(31) } })).status).toBe(400);
+  });
+
   it("foto que não está no R2: 400; enviada: grava", async () => {
     expect((await chama("POST", "/api/admin/cartoes", { ...novo("Telão"), fotoChave: "fotos/nao.webp" })).status).toBe(400);
     await amb.env.ARQUIVOS.put("fotos/sim.webp", "RIFF0000WEBP");
