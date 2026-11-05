@@ -38,6 +38,7 @@ pnpm test               # vitest (inclui a API com D1/R2 locais do Miniflare)
 pnpm check              # TypeScript
 pnpm e2e                # navegador (Chrome, Android, iPhone e o painel) em cima do pnpm painel
 pnpm prints             # prints do site e do painel em 375/768/1024/1440 px em prints/ (precisa do pnpm painel no ar)
+pnpm prints:painel antes  # telas do painel + hover, toque e foco em prints/painel/antes/ (compare com outra pasta)
 ```
 
 - **`pnpm painel`** recria o banco local em `.wrangler/painel` a cada vez, importa a fixture (`data/fixture/`), gera o site offline e sobe o `wrangler pages dev`. O painel fica em http://localhost:8788/admin. O login de teste vem do `DEV_ADMIN_EMAIL` do `.dev.vars` (criado a partir do `.dev.vars.example`) e só vale em `localhost`. Em dev, "Salvar" não chama o GitHub: a publicação aparece como feita ("simulado em dev").

@@ -225,7 +225,8 @@ mark{background:var(--luz);color:inherit;padding:0 1px}
 .cz:hover{transform:rotate(0) translateY(-4px)}
 /* foto opcional do cartão: 16:9 de ponta a ponta no topo, como um recorte colado no cartaz */
 .cz .foto{display:block;width:calc(100% + 36px);max-width:none;margin:-20px -18px 2px;aspect-ratio:16/9;height:auto;object-fit:cover;border-bottom:2px solid var(--tinta)}
-.cz .k{font:700 .7rem var(--f-codigo);letter-spacing:.12em;text-transform:uppercase}
+/* peso 400, igual ao rótulo do rodapé: no Space Mono Bold pequeno o "W" maiúsculo vira um bloco em tela 1x */
+.cz .k{font:400 .72rem var(--f-codigo);letter-spacing:.12em;text-transform:uppercase}
 .cz b{font:900 2.4rem/.85 var(--d-cartaz);text-transform:uppercase}
 .cz p{margin:0;flex:1}
 .cz span.ir{font:800 .78rem var(--f-texto);text-transform:uppercase;letter-spacing:.08em;border-top:2px solid var(--tinta);padding-top:10px}

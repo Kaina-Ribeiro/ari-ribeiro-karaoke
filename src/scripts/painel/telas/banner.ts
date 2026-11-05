@@ -3,7 +3,7 @@ import type { Banner } from "../../../lib/painel/tipos.ts";
 import { api } from "../api.ts";
 import { carrega, type Estado } from "../estado.ts";
 import { enviaFoto } from "../foto.ts";
-import { $, atualizaContadores, aviso, cabecalho, campo, comCarregando, escapa } from "../ui.ts";
+import { $, atualizaContadores, aviso, cabecalho, campo, comCarregando, escapa, escolheArquivo } from "../ui.ts";
 
 /** Largura de verdade de cada prévia; o quadro é reduzido pra caber na coluna. */
 const PREVIAS: [string, string, number][] = [["celular", "Prévia no celular", 375], ["computador", "Prévia no computador", 1280]];
@@ -26,7 +26,7 @@ export function montaBanner(el: HTMLElement, e: Estado) {
     + campo({ id: "legenda2", rotulo: "Legenda em itálico", valor: b.legenda[1], max: LIMITES.legenda[1] })
     + `<div class="campo"><label for="foto">Trocar foto</label><p class="dica" id="dica-foto">JPG, PNG ou WebP. Com fundo transparente fica igual à de hoje.</p>`
     + `<div class="foto-atual"><img alt="Foto atual do banner" src="${escapa(foto.src)}" /><p class="foto-info" aria-live="polite">${infoFoto(foto.recortada)}</p></div>`
-    + `<input type="file" id="foto" accept="image/*" aria-describedby="dica-foto" /></div>`
+    + escolheArquivo({ id: "foto", accept: "image/*", dica: "dica-foto", botao: "Escolher foto", vazio: "Nenhuma foto escolhida" }) + `</div>`
     + `<div class="acoes"><button class="bt" type="submit">Salvar banner</button></div></form>`
     + `<section class="previas" aria-label="Prévia"><p class="no-site-rot" aria-hidden="true"><span>Assim fica no site</span></p>`
     + PREVIAS.map(([id, titulo, w]) => `<figure class="previa-quadro" data-largura="${w}"><figcaption>${titulo.replace("Prévia no ", "")}</figcaption>`

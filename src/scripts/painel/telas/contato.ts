@@ -236,7 +236,11 @@ export function montaContato(el: HTMLElement, e: Estado) {
       foco = `[data-acao=nova-rede][data-rede=${p.rede}]`;
     } else return;
     desenha();
-    form.querySelector<HTMLElement>(foco)?.focus();
+    const alvo = form.querySelector<HTMLElement>(foco);
+    // item novo entra subindo; o que trocou de lugar pisca de leve (CSS: .novo / .mexeu)
+    if (acao === "novo-zap" || acao === "nova-rede") alvo?.closest("li")?.classList.add("novo");
+    if (acao === "subir" || acao === "descer") form.querySelector(`.zap-item[data-id="${id}"]`)?.classList.add("mexeu");
+    alvo?.focus();
   });
 
   /** Mensagem no campo certo; sem campo (lista errada), no fim da lista de WhatsApp. */

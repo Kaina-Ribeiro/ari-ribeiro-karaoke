@@ -50,20 +50,36 @@ a{color:inherit}
 .quem-txt b{font-weight:500}
 .quem-rot{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .sair{grid-column:2;grid-row:1 / span 2;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 12px;
-  border:2px solid var(--papel);color:var(--papel);font:800 .9rem/1 var(--f-texto);text-decoration:none;transition:background-color .15s,color .15s;-webkit-tap-highlight-color:transparent}
-.sair svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.sair:hover{background:var(--gravata-2);color:#fff}
-.sair:active{background:var(--tinta);color:var(--luz);border-color:var(--luz)}
+  border:2px solid var(--papel);color:var(--papel);font:800 .9rem/1 var(--f-texto);text-decoration:none;box-shadow:0 0 0 var(--tinta);transition:transform .14s cubic-bezier(.3,.7,.3,1),box-shadow .14s,background-color .15s,color .15s;-webkit-tap-highlight-color:transparent}
+.sair svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
+.sair:focus-visible{outline-color:var(--luz)}
+@media (hover:hover){
+  .sair:hover{background:var(--gravata-2);color:#fff;transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--tinta)}
+  .sair:hover svg{transform:translateX(-2px)}
+}
+.sair:active{background:var(--tinta);color:var(--luz);border-color:var(--luz);transform:translate(1px,1px);box-shadow:0 0 0 var(--tinta);transition-duration:.05s}
 
-/* abas: barra fixa no pé da tela no celular */
+/* abas: barra fixa no pé da tela no celular. A aba atual ganha a etiqueta amarela do cartaz (.marcador),
+   que desliza até a aba nova; main.ts mede a posição e liga .pronto. Sem .pronto, a própria aba se pinta. */
 .abas{position:fixed;inset:auto 0 0;z-index:30;display:flex;background:var(--tinta);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 0 var(--tinta)}
-.abas a{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:var(--alto-abas);color:#cfc6b4;text-decoration:none;font:700 .68rem/1 var(--f-texto);position:relative;transition:color .15s,background-color .15s;-webkit-tap-highlight-color:transparent}
-.abas a svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.abas a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.abas a:hover{color:var(--papel)}
-.abas a:active{background:var(--noite)}
+.abas a{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:var(--alto-abas);color:#cfc6b4;text-decoration:none;position:relative;z-index:1;transition:color .15s,background-color .15s;-webkit-tap-highlight-color:transparent}
+.abas a svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s cubic-bezier(.3,.7,.3,1),color .15s}
+/* letra de cartaz; line-height com folga pro acento de "INÍCIO" e "CATÁLOGO" não ser cortado */
+.abas a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font:800 .8rem/1.2 var(--d-cartaz);text-transform:uppercase;letter-spacing:.03em;padding-top:1px;transition:transform .18s cubic-bezier(.3,.7,.3,1)}
+.abas a:focus-visible{outline:3px solid var(--luz);outline-offset:-3px}
+.abas a:active svg{transform:scale(.88)}
 .abas a[aria-current="page"]{color:var(--luz)}
-.abas a[aria-current="page"]::before{content:"";position:absolute;inset:0 22% auto;height:3px;background:var(--luz)}
+.abas a[aria-current="page"] svg{color:var(--tinta);stroke-width:2.2}
+.abas:not(.pronto) a[aria-current="page"] svg{background:var(--luz);width:44px;height:30px;padding:4px 11px;border:2px solid var(--tinta);box-shadow:2px 2px 0 var(--gravata);transform:rotate(-3deg)}
+.marcador{position:absolute;left:0;top:0;z-index:0;pointer-events:none;opacity:0;background:var(--luz);border:2px solid var(--tinta);box-shadow:2px 2px 0 var(--gravata);
+  width:calc(var(--w,0px) + 22px);height:calc(var(--h,0px) + 8px);transform:translate(calc(var(--x,0px) - 11px),calc(var(--y,0px) - 4px)) rotate(-3deg);
+  transition:transform .34s cubic-bezier(.3,.7,.25,1.2),width .34s,height .34s,opacity .2s}
+.abas.pronto .marcador{opacity:1}
+.abas.parado .marcador{transition:none}
+@media (hover:hover){
+  .abas a:hover{color:var(--papel)}
+  .abas a:hover:not([aria-current]) svg{transform:translateY(-2px)}
+}
 
 .conteudo{padding-bottom:calc(var(--alto-abas) + env(safe-area-inset-bottom) + 28px);min-width:0}
 main{max-width:720px;margin:0 auto;padding:22px 16px 0}
@@ -99,6 +115,10 @@ main{max-width:720px;margin:0 auto;padding:22px 16px 0}
 .campo .dica{margin:0 0 6px;font-size:.88rem;color:var(--tinta-2)}
 .entrada{display:flex;align-items:stretch;background:#fff;border:2px solid var(--tinta);border-radius:4px;transition:box-shadow .15s,border-color .15s}
 .entrada:hover{border-color:var(--gravata)}
+/* seletor (lista de opções) é um controle: sobe um pouco no hover, como os botões */
+.entrada:has(select){transition:box-shadow .14s,border-color .15s,transform .14s cubic-bezier(.3,.7,.3,1)}
+@media (hover:hover){.entrada:has(select:not(:disabled)):hover:not(:focus-within){transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--tinta)}}
+.entrada:has(select:not(:disabled)):active{transform:none;box-shadow:none}
 .entrada:focus-within{box-shadow:0 0 0 3px var(--luz);border-color:var(--tinta)}
 .entrada .prefixo{display:flex;align-items:center;padding:0 0 0 12px;color:var(--tinta-2);font-weight:500;white-space:nowrap}
 .entrada input,.entrada textarea,.entrada select{flex:1;min-width:0;border:0;background:transparent;font:500 1.05rem/1.3 var(--f-texto);color:var(--tinta);padding:12px;min-height:48px}
@@ -114,16 +134,20 @@ main{max-width:720px;margin:0 auto;padding:22px 16px 0}
 
 /* ---------- botões ---------- */
 .acoes{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:6px}
-.bt{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:2px solid var(--tinta);background:var(--luz);color:var(--tinta);font:800 1rem/1 var(--f-texto);text-decoration:none;cursor:pointer;box-shadow:3px 3px 0 var(--tinta);transition:transform .1s,box-shadow .1s,background-color .15s,color .15s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
-.bt svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-.bt:hover{background:#ffdc4d}
-.bt:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--tinta)}
+/* mesmo jeito dos botões do site (global.css): no hover sobe com a sombra crescendo, no toque afunda na sombra */
+.bt{--sombra-bt:var(--tinta);--d:3px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:2px solid var(--tinta);background:var(--luz);color:var(--tinta);font:800 1rem/1 var(--f-texto);text-decoration:none;cursor:pointer;box-shadow:var(--d) var(--d) 0 var(--sombra-bt);transition:transform .14s cubic-bezier(.3,.7,.3,1),box-shadow .14s cubic-bezier(.3,.7,.3,1),background-color .15s,color .15s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.bt svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.bt:active:not(:disabled){transform:translate(var(--d),var(--d));box-shadow:0 0 0 var(--sombra-bt);transition-duration:.05s}
 .bt.claro{background:var(--folha)}
-.bt.claro:hover{background:#fff}
 .bt.perigo{background:var(--brasa);color:var(--tinta)}
-.bt.perigo:hover{background:#ff7656}
-.bt.pequeno{min-height:38px;padding:0 14px;font-size:.9rem;box-shadow:2px 2px 0 var(--papel);border-color:var(--papel)}
-.bt.pequeno-claro{min-height:42px;padding:0 14px;font-size:.92rem;box-shadow:2px 2px 0 var(--tinta)}
+.bt.pequeno{--sombra-bt:var(--papel);--d:2px;min-height:38px;padding:0 14px;font-size:.9rem;border-color:var(--papel)}
+.bt.pequeno-claro{--d:2px;min-height:42px;padding:0 14px;font-size:.92rem}
+@media (hover:hover){
+  .bt:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:calc(var(--d) + 2px) calc(var(--d) + 2px) 0 var(--sombra-bt)}
+  .bt:not(.salvo):hover{background:#ffdc4d}
+  .bt.claro:not(.salvo):hover{background:#fff}
+  .bt.perigo:not(.salvo):hover{background:#ff7656}
+}
 .bt:disabled{cursor:not-allowed;opacity:.55;box-shadow:none;transform:none}
 .bt[aria-busy="true"]{opacity:1;cursor:progress}
 .bt[aria-busy="true"]::after,.mini[aria-busy="true"]::after{content:"";width:16px;height:16px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:gira .7s linear infinite}
@@ -186,28 +210,44 @@ main{max-width:720px;margin:0 auto;padding:22px 16px 0}
 .atalhos a > svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-top:1px}
 .atalhos a b{display:block;font:900 1.35rem/1 var(--d-cartaz);text-transform:uppercase;margin-bottom:4px}
 .atalhos a span span{font-size:.9rem;color:var(--tinta-2);overflow-wrap:anywhere}
-.atalhos a:hover{transform:translate(-2px,-2px);box-shadow:var(--sombra);background:#fff}
-.atalhos a:active{transform:none;box-shadow:none;background:var(--papel-2)}
+.atalhos a > svg{transition:transform .2s cubic-bezier(.3,.7,.25,1.3)}
+@media (hover:hover){
+  .atalhos a:hover{transform:translate(-2px,-2px);box-shadow:var(--sombra);background:#fff}
+  .atalhos a:hover > svg{transform:rotate(-8deg) scale(1.1)}
+}
+.atalhos a:active{transform:translate(1px,1px);box-shadow:0 0 0 var(--tinta);background:var(--papel-2);transition-duration:.05s}
 
 /* ---------- catálogo ---------- */
 .escolha{border:0;padding:0;margin:0 0 18px;display:flex;flex-wrap:wrap;gap:10px}
 .escolha legend{font-weight:800;margin-bottom:8px;padding:0}
-.escolha label{flex:1 1 140px;display:flex;align-items:center;gap:8px;min-height:52px;padding:0 12px;white-space:nowrap;border:2px solid var(--tinta);background:var(--papel-2);font-weight:800;cursor:pointer;transition:background-color .15s,box-shadow .15s}
+.escolha label{flex:1 1 140px;display:flex;align-items:center;gap:8px;min-height:52px;padding:0 12px;white-space:nowrap;border:2px solid var(--tinta);background:var(--papel-2);font-weight:800;cursor:pointer;box-shadow:0 0 0 var(--tinta);transition:transform .14s cubic-bezier(.3,.7,.3,1),box-shadow .14s cubic-bezier(.3,.7,.3,1),background-color .15s;-webkit-tap-highlight-color:transparent}
 .escolha label:has(:checked){background:var(--luz);box-shadow:var(--sombra)}
-.escolha label:hover{background:#efe3c6}
-.escolha label:has(:checked):hover{background:#ffdc4d}
+.escolha label:has(:focus-visible){outline:3px solid var(--brasa);outline-offset:3px}
+.escolha input:focus-visible{outline:none}
+@media (hover:hover){
+  .escolha label:hover{background:#efe3c6;transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--tinta)}
+  .escolha label:has(:checked):hover{background:#ffdc4d;box-shadow:6px 6px 0 var(--tinta)}
+}
+.escolha label:active{transform:translate(1px,1px);box-shadow:0 0 0 var(--tinta);transition-duration:.05s}
 .escolha input{width:20px;height:20px;accent-color:var(--tinta);margin:0}
 .folha[hidden]{display:none}
-input[type=file]{display:block;width:100%;font:500 1rem var(--f-texto);padding:12px;border:2px dashed var(--tinta);background:#fff;cursor:pointer}
-input[type=file]:hover{border-color:var(--gravata);background:#fbfff9}
-input[type=file]::file-selector-button{font:800 .95rem var(--f-texto);border:2px solid var(--tinta);background:var(--luz);padding:8px 14px;margin-right:12px;cursor:pointer}
+/* seletor de arquivo em pt-BR (ui.ts escolheArquivo): o input nativo fica invisível, o botão é um label */
+.arquivo{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px;border:2px dashed var(--tinta);background:#fff;transition:border-color .15s,background-color .15s}
+.arquivo:hover{border-color:var(--gravata);background:#fbfff9}
+.arquivo input{position:absolute;inset:0;width:1px;height:1px;opacity:0;pointer-events:none}
+.arquivo .bt{display:inline-flex;margin:0;cursor:pointer}
+.arquivo:has(input:focus-visible) .bt{outline:3px solid var(--brasa);outline-offset:3px}
+.arquivo-nome{min-width:0;flex:1 1 140px;font-size:.92rem;color:var(--tinta-2);font-style:italic;overflow-wrap:anywhere}
+.arquivo-nome.tem{font-style:normal;font-weight:700;color:var(--tinta)}
 .coluna > .acoes{margin:-8px 0 26px}
 .previa{margin:12px 0 16px}
 .previa .comanda{box-shadow:none;margin-bottom:12px}
 .alerta{border:2px solid var(--brasa-texto);background:#fff1eb;padding:12px 14px;margin-top:10px}
 .alerta p{margin:0 0 10px;font-weight:700;color:var(--brasa-texto)}
 .marcar{display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer;min-height:44px}
-.marcar input{width:22px;height:22px;accent-color:var(--brasa-texto);margin:0}
+.marcar input{width:22px;height:22px;accent-color:var(--brasa-texto);margin:0;transition:transform .14s cubic-bezier(.3,.7,.25,1.4)}
+@media (hover:hover){.marcar:hover input:not(:disabled){transform:scale(1.12)}}
+.marcar:active input:not(:disabled){transform:scale(.9);transition-duration:.05s}
 .marcar .n{font:400 .85rem var(--f-codigo);color:var(--tinta-2)}
 .erro-bloco{margin:0;color:var(--brasa-texto);font-weight:800;border-left:4px solid var(--brasa-texto);padding:6px 10px;background:#fff1eb}
 .teste-link{margin:-6px 0 12px;font-weight:700}
@@ -263,7 +303,8 @@ input[type=file]::file-selector-button{font:800 .95rem var(--f-texto);border:2px
 .cz.c3{background:var(--brasa);transform:rotate(-.6deg)}
 .cz.c4{background:var(--menta);transform:rotate(1.1deg)}
 .cz .foto{display:block;width:calc(100% + 36px);max-width:none;margin:-20px -18px 2px;aspect-ratio:16/9;height:auto;object-fit:cover;border-bottom:2px solid var(--tinta)}
-.cz .k{font:700 .7rem var(--f-codigo);letter-spacing:.12em;text-transform:uppercase}
+/* peso 400 (igual ao global.css): no Space Mono Bold pequeno o "W" vira um bloco em tela 1x */
+.cz .k{font:400 .72rem var(--f-codigo);letter-spacing:.12em;text-transform:uppercase}
 .cz b{font:900 2.4rem/.85 var(--d-cartaz);text-transform:uppercase;overflow-wrap:anywhere}
 .cz p{margin:0;flex:1;overflow-wrap:anywhere}
 .cz .ir{font:800 .78rem var(--f-texto);text-transform:uppercase;letter-spacing:.08em;border-top:2px solid var(--tinta);padding-top:10px}
@@ -307,14 +348,15 @@ input[type=file]::file-selector-button{font:800 .95rem var(--f-texto);border:2px
 .previa-zap{margin:8px 0 0;font-size:.88rem;font-weight:700;color:var(--tinta-2);overflow-wrap:anywhere}
 .sem-quebra{white-space:nowrap}
 .cartao-acoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
-.mini{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;padding:0 10px;border:2px solid var(--papel);background:transparent;color:var(--papel);font:800 .86rem/1 var(--f-texto);cursor:pointer;transition:background-color .15s,color .15s;-webkit-tap-highlight-color:transparent}
-.mini:hover{background:var(--noite);color:#fff}
-.mini:active{background:var(--papel);color:var(--tinta)}
+.mini{--sombra-mini:var(--papel);display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;padding:0 10px;border:2px solid var(--papel);background:transparent;color:var(--papel);font:800 .86rem/1 var(--f-texto);cursor:pointer;box-shadow:0 0 0 var(--sombra-mini);transition:transform .14s cubic-bezier(.3,.7,.3,1),box-shadow .14s cubic-bezier(.3,.7,.3,1),background-color .15s,color .15s;-webkit-tap-highlight-color:transparent}
+.mini:focus-visible{outline-color:var(--luz)}
+@media (hover:hover){.mini:hover:not(:disabled){background:var(--noite);color:#fff;transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--sombra-mini)}}
+.mini:active:not(:disabled){background:var(--papel);color:var(--tinta);transform:translate(1px,1px);box-shadow:0 0 0 var(--sombra-mini);transition-duration:.05s}
 .mini:disabled{opacity:.35;cursor:not-allowed;background:transparent;color:var(--papel)}
 .mini[aria-busy="true"]{opacity:1;cursor:progress}
 .mini.icone{padding:0;min-width:42px;font-size:1.15rem}
-.mini.perigo{border-color:var(--brasa);color:#ff8a6e}
-.mini.perigo:hover{background:#3a1209;color:#ffb3a1}
+.mini.perigo{--sombra-mini:var(--brasa);border-color:var(--brasa);color:#ff8a6e}
+@media (hover:hover){.mini.perigo:hover:not(:disabled){background:#3a1209;color:#ffb3a1}}
 .foto-atual .mini16{width:120px;aspect-ratio:16/9;object-fit:cover;border:2px solid var(--tinta);flex:none}
 dialog{border:2px solid var(--tinta);box-shadow:var(--sombra);background:var(--folha);color:var(--tinta);padding:20px;max-width:min(420px,calc(100vw - 32px))}
 dialog::backdrop{background:rgba(22,19,15,.55)}
@@ -326,7 +368,7 @@ dialog p{font-weight:700;margin:0 0 16px}
 .rodape-site .wordmark{font:900 clamp(2.6rem,16cqi,9rem)/.78 var(--d-cartaz);text-transform:uppercase;letter-spacing:-.02em;margin:0;white-space:nowrap}
 .rodape-site .wordmark em{font:italic 400 .42em var(--d-serif);text-transform:none;color:var(--luz);letter-spacing:0}
 .rodape-site .contatos{display:grid;gap:14px 32px;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));font-size:.95rem;border-top:2px solid var(--papel);padding-top:18px}
-.rodape-site small{display:block;font:700 .68rem var(--f-codigo);letter-spacing:.12em;text-transform:uppercase;color:var(--luz);margin-bottom:4px}
+.rodape-site small{display:block;font:400 .72rem var(--f-codigo);letter-spacing:.12em;text-transform:uppercase;color:var(--luz);margin-bottom:4px}
 .rodape-site .contatos > div{min-width:0}
 .rodape-site .num,.rodape-site .lk{display:block;width:fit-content;max-width:100%;overflow-wrap:anywhere}
 .rodape-site .num + .num,.rodape-site .lk + .lk{margin-top:4px}
@@ -352,12 +394,14 @@ dialog p{font-weight:700;margin:0 0 16px}
 .item-acoes,.perfil-acoes{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .perfil-acoes .marcar{margin-right:auto}
 /* .mini nasceu pro fundo escuro (cartões); aqui fica na folha clara */
-.contato-form .mini{border-color:var(--tinta);color:var(--tinta)}
-.contato-form .mini:hover{background:var(--papel-2);color:var(--tinta)}
-.contato-form .mini:active{background:var(--tinta);color:var(--papel)}
+.contato-form .mini{--sombra-mini:var(--tinta);border-color:var(--tinta);color:var(--tinta)}
+.contato-form .mini:focus-visible{outline-color:var(--brasa)}
+@media (hover:hover){.contato-form .mini:hover:not(:disabled){background:var(--papel-2);color:var(--tinta)}}
+.contato-form .mini:active:not(:disabled){background:var(--tinta);color:var(--papel)}
 .contato-form .mini:disabled{background:transparent;color:var(--tinta)}
-.contato-form .mini[data-acao^=remover]{border-color:var(--brasa-texto);color:var(--brasa-texto)}
-.contato-form .mini[data-acao^=remover]:hover{background:#fff1eb}
+.contato-form .mini[data-acao^=remover]{--sombra-mini:var(--brasa-texto);border-color:var(--brasa-texto);color:var(--brasa-texto)}
+@media (hover:hover){.contato-form .mini[data-acao^=remover]:hover:not(:disabled){background:#fff1eb;color:var(--brasa-texto)}}
+.contato-form .mini[data-acao^=remover]:active:not(:disabled){background:var(--brasa-texto);color:#fff}
 .contato-form .mini[data-acao^=remover]:disabled{border-color:var(--tinta-2);color:var(--tinta-2)}
 .contato-form .seletor{width:auto}
 .rede-grupo{padding:14px 0;border-top:2px dashed #b8ad95}
@@ -384,16 +428,23 @@ dialog p{font-weight:700;margin:0 0 16px}
 @media (min-width:1024px){
   /* a coluna verde vai até o fim da página, mesmo quando o conteúdo é comprido */
   .app{display:grid;grid-template-columns:var(--lado) minmax(0,1fr);background:linear-gradient(to right,var(--gravata) var(--lado),var(--papel) var(--lado))}
-  .lado{position:sticky;top:0;height:100dvh;padding:22px 16px;display:flex;flex-direction:column;gap:28px;overflow-y:auto}
+  /* align-items:stretch: sem isso a grade do celular deixava os itens centralizados e encolhidos */
+  .lado{position:sticky;top:0;height:100dvh;padding:22px 16px;display:flex;flex-direction:column;align-items:stretch;gap:30px;overflow-y:auto}
   .marca{align-items:center}
   .marca span{display:block;padding:0}
-  .marca img{width:44px;height:44px}
+  .marca img{width:44px;height:44px;transition:transform .25s cubic-bezier(.3,.7,.25,1.3)}
+  .marca:hover img{transform:rotate(-10deg) scale(1.06)}
   .marca b{font-size:1.5rem}
-  .abas{position:static;flex-direction:column;background:transparent;padding:0;box-shadow:none;gap:4px}
-  .abas a{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;height:48px;padding:0 14px;font-size:1rem;color:#d9ecdf;border-radius:4px}
-  .abas a:hover{background:var(--gravata-2);color:#fff}
-  .abas a[aria-current="page"]{background:var(--tinta);color:var(--luz)}
-  .abas a[aria-current="page"]::before{inset:10px auto 10px 0;width:4px;height:auto}
+  .abas{position:relative;flex-direction:column;background:transparent;padding:0;box-shadow:none;gap:6px;margin-right:6px}
+  .abas a{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;height:50px;padding:0 14px;color:#e6f1e9;border:2px solid transparent}
+  .abas a span{font-size:1.4rem;line-height:1.2}
+  .abas a:focus-visible{outline-offset:2px}
+  .abas a:active:not([aria-current]){background:rgba(0,0,0,.28)}
+  .abas a:active:not([aria-current]) svg,.abas a:active:not([aria-current]) span{transform:translateX(2px)}
+  .abas a[aria-current="page"]{color:var(--tinta)}
+  .abas:not(.pronto) a[aria-current="page"]{background:var(--luz);border-color:var(--tinta);box-shadow:4px 4px 0 var(--tinta);transform:rotate(-1.2deg);margin-right:-6px}
+  .abas:not(.pronto) a[aria-current="page"] svg{background:none;width:22px;height:22px;padding:0;border:0;box-shadow:none;transform:none}
+  .marcador{width:calc(var(--w,0px) + 6px);height:var(--h,0px);box-shadow:4px 4px 0 var(--tinta);transform:translateY(var(--y,0px)) rotate(-1.2deg)}
   .quem{display:block;margin-top:auto;border-top:2px solid var(--gravata-2);padding-top:16px}
   .quem-txt{margin:0 0 12px;white-space:normal;font-size:.9rem;color:var(--papel)}
   .quem-txt b{display:block;font-weight:700;overflow-wrap:anywhere}
@@ -403,6 +454,10 @@ dialog p{font-weight:700;margin:0 0 16px}
   main{padding:36px 32px 0}
   .status{padding:12px 32px}
   .aviso{bottom:28px}
+}
+@media (min-width:1024px) and (hover:hover){
+  .abas a:hover:not([aria-current]){background:rgba(0,0,0,.16);color:#fff}
+  .abas a:hover:not([aria-current]) svg,.abas a:hover:not([aria-current]) span{transform:translateX(4px)}
 }
 
 /* ---------- tela larga: duas colunas (o que você edita | o resultado) ---------- */
@@ -421,3 +476,21 @@ dialog p{font-weight:700;margin:0 0 16px}
   .banner-grade{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px;align-items:start}
   .previas{position:sticky;top:72px}
 }
+
+/* ---------- entrada: ao trocar de tela as peças sobem em cascata, discreto (main.ts liga .entra por 0,9 s).
+   Itens novos das listas (WhatsApp, rede) entram do mesmo jeito; o que mudou de lugar pisca de leve.
+   "Reduzir movimento" desliga tudo (regra lá no topo). ---------- */
+@keyframes entra{from{opacity:0;transform:translateY(12px)}}
+@keyframes entra-item{from{opacity:0;transform:translateY(10px) scale(.98)}}
+@keyframes mexeu{from{background-color:#fff6c2}}
+#tela.entra > :not(.inicio,.duas,.festa-grade),#tela.entra :is(.inicio,.duas,.festa-grade) > *{animation:entra .42s cubic-bezier(.2,.7,.2,1) both}
+#tela.entra > :nth-child(2),#tela.entra :is(.inicio,.duas,.festa-grade) > :nth-child(2){animation-delay:.07s}
+#tela.entra > :nth-child(n+3),#tela.entra :is(.inicio,.duas,.festa-grade) > :nth-child(n+3){animation-delay:.14s}
+#tela.entra :is(.cartoes,.pacotes,.zaps,.perfis,.atalhos,.comanda ul) > *{animation:entra-item .36s cubic-bezier(.2,.7,.2,1) both;animation-delay:.2s}
+#tela.entra :is(.cartoes,.pacotes,.zaps,.perfis,.atalhos,.comanda ul) > :nth-child(2){animation-delay:.24s}
+#tela.entra :is(.cartoes,.pacotes,.zaps,.perfis,.atalhos,.comanda ul) > :nth-child(3){animation-delay:.28s}
+#tela.entra :is(.cartoes,.pacotes,.zaps,.perfis,.atalhos,.comanda ul) > :nth-child(4){animation-delay:.32s}
+#tela.entra :is(.cartoes,.pacotes,.zaps,.perfis,.atalhos,.comanda ul) > :nth-child(5){animation-delay:.36s}
+#tela.entra :is(.cartoes,.pacotes,.zaps,.perfis,.atalhos,.comanda ul) > :nth-child(n+6){animation-delay:.4s}
+.zaps > .novo,.perfis > .novo,.cartoes > .novo{animation:entra-item .36s cubic-bezier(.2,.7,.2,1) both}
+.zap-item.mexeu fieldset{animation:mexeu .7s ease-out}

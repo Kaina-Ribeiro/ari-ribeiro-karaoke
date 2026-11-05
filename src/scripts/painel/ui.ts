@@ -126,3 +126,35 @@ export const comanda = (titulo: string, lado: string, linhas: string, pe = "") =
   + `<ul>${linhas}</ul>${pe ? `<div class="comanda-pe">${pe}</div>` : ""}</section>`;
 
 export const numero = (x: number) => x.toLocaleString("pt-BR");
+
+export interface OpcoesArquivo {
+  id: string;
+  accept: string;
+  /** texto do botão ("Escolher foto") */
+  botao: string;
+  /** o que aparece antes de escolher ("Nenhuma foto escolhida") */
+  vazio: string;
+  /** id da dica que descreve o campo */
+  dica?: string;
+}
+
+/**
+ * Seletor de arquivo em pt-BR: o botão nativo vem na língua do navegador ("Choose File"), então o input fica
+ * invisível (mas focável e com o rótulo do campo) e um botão nosso abre a escolha. O nome do arquivo aparece ao lado.
+ */
+export const escolheArquivo = (o: OpcoesArquivo) =>
+  `<div class="arquivo"><input type="file" id="${o.id}" accept="${escapa(o.accept)}"${o.dica ? ` aria-describedby="${o.dica}"` : ""} />`
+  + `<label class="bt claro pequeno-claro" for="${o.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>${escapa(o.botao)}</label>`
+  + `<span class="arquivo-nome" data-vazio="${escapa(o.vazio)}" aria-hidden="true">${escapa(o.vazio)}</span></div>`;
+
+/** Mostra o nome do arquivo escolhido ao lado do botão, em qualquer tela (um ouvinte só, no documento). */
+export function ligaArquivos() {
+  document.addEventListener("change", (ev) => {
+    const input = ev.target as HTMLInputElement;
+    if (input.type !== "file" || !input.closest(".arquivo")) return;
+    const nome = input.closest(".arquivo")!.querySelector<HTMLElement>(".arquivo-nome")!;
+    const arquivo = input.files?.[0];
+    nome.textContent = arquivo?.name ?? nome.dataset.vazio ?? "";
+    nome.classList.toggle("tem", !!arquivo);
+  }, true);
+}

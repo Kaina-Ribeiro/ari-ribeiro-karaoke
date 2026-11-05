@@ -8,7 +8,7 @@ import { montaContato } from "./telas/contato.ts";
 import { montaFesta } from "./telas/festa.ts";
 import { montaInicio } from "./telas/inicio.ts";
 import { montaNovidades } from "./telas/novidades.ts";
-import { $, aviso, comCarregando, escapa } from "./ui.ts";
+import { $, aviso, comCarregando, escapa, ligaArquivos } from "./ui.ts";
 
 type Montador = (el: HTMLElement, e: Estado) => void;
 /** id da aba → tela. A ordem e os nomes das abas estão no HTML (admin/index.astro). */
@@ -26,22 +26,56 @@ const telaAtual = () => {
   return id in TELAS ? id : "inicio";
 };
 
+const abas = $("nav.abas");
+const computador = matchMedia("(min-width:1024px)");
+
+/**
+ * A etiqueta amarela (.marcador) vai até a aba atual: no computador cobre a linha inteira, no celular só o ícone.
+ * `animar = false` põe no lugar sem deslizar (primeira vez e quando a tela muda de tamanho).
+ */
+function posicionaMarcador(animar = true) {
+  const a = abas.querySelector<HTMLAnchorElement>("a[aria-current]");
+  if (!a) { abas.classList.remove("pronto"); return; }
+  if (!animar) abas.classList.add("parado");
+  // .pronto antes de medir: sem ele a aba atual se pinta sozinha (torta e mais larga) e a medida sai errada
+  abas.classList.add("pronto");
+  const alvo = computador.matches ? a : a.querySelector("svg")!;
+  const r = alvo.getBoundingClientRect(), base = abas.getBoundingClientRect();
+  abas.style.setProperty("--x", `${r.left - base.left}px`);
+  abas.style.setProperty("--y", `${r.top - base.top}px`);
+  abas.style.setProperty("--w", `${r.width}px`);
+  abas.style.setProperty("--h", `${r.height}px`);
+  if (!animar) { void abas.offsetWidth; abas.classList.remove("parado"); }
+}
+new ResizeObserver(() => posicionaMarcador(false)).observe(abas);
+document.fonts?.ready.then(() => posicionaMarcador(false));
+
 let montada = "";
+let tEntrada = 0;
 function mostraTela(forcar = false) {
   const { estado } = atual();
   const id = telaAtual();
   document.querySelectorAll<HTMLAnchorElement>("nav.abas a").forEach((a) => {
     if (a.hash === "#" + id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
+  posicionaMarcador(abas.classList.contains("pronto"));
   if (!estado) return;
   // o Início mostra o status em grande: redesenha a cada consulta (não tem campo pra perder)
   if (montada === id && !forcar) { if (id === "inicio") montaInicio($("#tela"), estado); return; }
   montada = id;
   const el = $("#tela");
   TELAS[id](el, estado);
+  // entrada da tela: as peças sobem em cascata uma vez (o Início redesenha sem repetir a animação)
+  el.classList.remove("entra");
+  void el.offsetWidth;
+  el.classList.add("entra");
+  clearTimeout(tEntrada);
+  tEntrada = window.setTimeout(() => el.classList.remove("entra"), 900);
   el.focus({ preventScroll: true });
   scrollTo(0, 0);
 }
+
+ligaArquivos();
 
 function desenhaQuem() {
   const email = atual().estado?.email;
