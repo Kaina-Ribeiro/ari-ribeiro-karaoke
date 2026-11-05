@@ -60,9 +60,14 @@ test.describe("sem JavaScript", () => {
     await expect(page.locator("#contato")).not.toContainText("TikTok");
     await expect(page.locator("#contato")).not.toContainText("Instagram e Facebook");
     await expect(page.locator(`#contato a[href*="${KJ}"]`)).toHaveCount(0);
-    // rótulo em cima do link, no mesmo bloco
-    const rot = (await blocos.nth(3).locator("small").boundingBox())!, link = (await blocos.nth(3).locator("a").boundingBox())!;
-    expect(link.y).toBeGreaterThanOrEqual(rot.y + rot.height - 1);
+    // rótulo em cima do link, no mesmo bloco. Mede os dois na mesma leitura e com as fontes já trocadas:
+    // em duas leituras separadas a página podia mudar de altura no meio (troca de fonte) e o link "subia" 200 px.
+    const [rotFim, linkTopo] = await blocos.nth(3).evaluate(async (bloco) => {
+      await document.fonts.ready;
+      const r = bloco.querySelector("small")!.getBoundingClientRect(), l = bloco.querySelector("a")!.getBoundingClientRect();
+      return [r.bottom, l.top];
+    });
+    expect(linkTopo).toBeGreaterThanOrEqual(rotFim - 1);
     // nada vaza pro lado
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
