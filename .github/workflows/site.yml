@@ -64,10 +64,30 @@ jobs:
       - run: pnpm check
       - run: pnpm test
       # e2e roda na planilha de exemplo (pnpm painel); fica de fora do que o painel e a checagem diária pedem (não muda nada lá)
-      - name: Testes e2e
+      # Navegadores e pacotes do Linux do Playwright ficam em cache: num dia ruim o espelho do Ubuntu levou 33 min
+      # pra entregar os 139 MB de pacotes (PR #10). A chave muda com a versão do Ubuntu e com o lockfile.
+      - name: Versão do Ubuntu
+        id: so
         if: github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.publicacao == '')
+        run: echo "nome=$(. /etc/os-release && echo "$VERSION_CODENAME")" >> "$GITHUB_OUTPUT"
+      - name: Cache do Playwright
+        if: steps.so.outcome == 'success'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/apt-playwright
+          key: playwright-${{ steps.so.outputs.nome }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Testes e2e
+        if: steps.so.outcome == 'success'
+        # travou? falha em 20 min (antes ficava preso até o limite de 6 h do Actions); normal é ~3 min
+        timeout-minutes: 20
         run: |
+          # pacotes .deb do cache vão pra pasta do apt: ele instala sem baixar de novo
+          if ls ~/.cache/apt-playwright/*.deb >/dev/null 2>&1; then sudo cp ~/.cache/apt-playwright/*.deb /var/cache/apt/archives/; fi
           pnpm exec playwright install --with-deps chromium webkit
+          mkdir -p ~/.cache/apt-playwright
+          cp /var/cache/apt/archives/*.deb ~/.cache/apt-playwright/ 2>/dev/null || true
           pnpm e2e
 
       - name: Gera o site
