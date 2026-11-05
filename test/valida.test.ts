@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   campoDoErro, formataZap, idDaPlanilha, mascaraZap, normalizaUsuario, normalizaZap, validaBanner, validaCartao, validaContato, validaNovidades,
 } from "../src/lib/painel/valida.ts";
+import { textoPreco } from "../src/lib/painel/preco.ts";
 import { CONFIG_PADRAO } from "../src/lib/painel/padrao.ts";
 
 const ok = <T>(r: { ok: boolean; valor?: T; erro?: string }) => {
@@ -140,9 +141,26 @@ describe("banner", () => {
 });
 
 describe("cartão", () => {
-  const c = { titulo: "Aluguel de Telão", destaque: "X BOX", descricao: "Data show para eventos.", ativo: true, fotoChave: null };
+  const c = { titulo: "Aluguel de Telão", destaque: "X BOX", descricao: "Data show para eventos.", ativo: true, fotoChave: null, zapId: null, preco: null };
   it("passa e guarda os campos", () => {
     expect(ok(validaCartao(c))).toEqual(c);
+  });
+  it("cartão de antes (sem Zap nem preço) continua igual: geral e sem preço", () => {
+    const { zapId: _z, preco: _p, ...antigo } = c;
+    expect(ok(validaCartao(antigo))).toEqual(c);
+  });
+  it("Zap do cartão: guarda o id; vazio ou formato estranho = o geral", () => {
+    expect(ok(validaCartao({ ...c, zapId: "z2" })).zapId).toBe("z2");
+    for (const zapId of ["", null, 5, "Z 2; drop", "x".repeat(25)]) expect(ok(validaCartao({ ...c, zapId })).zapId).toBeNull();
+  });
+  it("preço: texto livre com estilo; vazio = sem preço; estilo desconhecido = padrão", () => {
+    const preco = { texto: "  a partir de   R$ 350 ", cor: "brasa", tamanho: "g", peso: "extra" };
+    expect(ok(validaCartao({ ...c, preco })).preco).toEqual({ texto: "a partir de R$ 350", cor: "brasa", tamanho: "g", peso: "extra" });
+    expect(ok(validaCartao({ ...c, preco: { ...preco, texto: "   " } })).preco).toBeNull();
+    expect(ok(validaCartao({ ...c, preco: { texto: "R$ 99", cor: "rosa", tamanho: 3 } })).preco)
+      .toEqual({ texto: "R$ 99", cor: "tinta", tamanho: "m", peso: "forte" });
+    expect(erroDe(validaCartao({ ...c, preco: { texto: "x".repeat(31) } }))).toBe("O preço pode ter até 30 letras");
+    expect(ok(validaCartao({ ...c, preco: { texto: "ç".normalize("NFD").repeat(30) } })).preco?.texto).toHaveLength(30);
   });
   it("limites e obrigatórios", () => {
     expect(validaCartao({ ...c, titulo: "x".repeat(41) }).ok).toBe(false);
@@ -168,5 +186,13 @@ describe("link da planilha", () => {
     expect(idDaPlanilha("https://evil.com/spreadsheets/d/1kTKJlUTVK0CX6pM_mRugkmqIu9Hz9Wpx")).toBeNull();
     expect(idDaPlanilha("http://docs.google.com.evil.com/spreadsheets/d/1kTKJlUTVK0CX6pM_mRugkmqIu9Hz9Wpx")).toBeNull();
     expect(idDaPlanilha("não é link")).toBeNull();
+  });
+});
+
+describe("textoPreco", () => {
+  it("cola o R$ no número pra não quebrar a linha entre os dois", () => {
+    expect(textoPreco("a partir de R$ 350")).toBe("a partir de R$ 350");
+    expect(textoPreco("R$  1.350 ou R$ 99")).toBe("R$ 1.350 ou R$ 99");
+    expect(textoPreco("Sob consulta")).toBe("Sob consulta");
   });
 });

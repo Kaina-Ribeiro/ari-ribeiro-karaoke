@@ -25,7 +25,7 @@ export function dadosImportacao(produtos: Record<string, string>[], musicas: Rec
   const zap = normalizaZap(linhaContato?.destaque ?? "");
   const cartoes = montaServicos(produtos)
     .filter((s) => normaliza(s.titulo) !== CONTATO_LOCACAO)
-    .map((s, i) => ({ ordem: i + 1, ativo: true, titulo: s.titulo, destaque: s.destaque, descricao: s.descricao, fotoChave: null }));
+    .map((s, i) => ({ ordem: i + 1, ativo: true, titulo: s.titulo, destaque: s.destaque, descricao: s.descricao, fotoChave: null, zapId: null, preco: null }));
   return {
     // o Zap da planilha vira o geral (com o nome de quem atende, se for um número conhecido); redes como no padrão
     contato: zap.ok ? { ...migraContato({ zapContato: zap.valor }), redes: CONFIG_PADRAO.contato.redes } : CONFIG_PADRAO.contato,
