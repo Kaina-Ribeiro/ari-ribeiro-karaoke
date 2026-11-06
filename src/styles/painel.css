@@ -58,6 +58,21 @@ a{color:inherit}
   .sair:hover svg{transform:translateX(-2px)}
 }
 .sair:active{background:var(--tinta);color:var(--luz);border-color:var(--luz);transform:translate(1px,1px);box-shadow:0 0 0 var(--tinta);transition-duration:.05s}
+/* "Voltar ao site": mesmo botão do Sair, antes dele. No celular só "Site", pra caber na barra */
+.lado{grid-template-columns:minmax(0,1fr) auto auto}
+.sair{grid-column:3}
+.sair.site{grid-column:2}
+.sair.site .longo{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* celular estreito: dois botões não cabem do lado do "Ari Ribeiro painel"; viram ícone em cima e palavra embaixo, como as abas do pé */
+@media (max-width:479px){
+  .lado{column-gap:8px}
+  .sair{flex-direction:column;gap:3px;min-width:54px;padding:4px 8px;font-size:.72rem}
+}
+/* do tablet pra cima cabe o texto inteiro */
+@media (min-width:600px){
+  .sair.site .longo{position:static;width:auto;height:auto;overflow:visible;clip-path:none}
+  .sair.site .curto{display:none}
+}
 
 /* abas: barra fixa no pé da tela no celular. A aba atual ganha a etiqueta amarela do cartaz (.marcador),
    que desliza até a aba nova; main.ts mede a posição e liga .pronto. Sem .pronto, a própria aba se pinta. */
@@ -453,6 +468,7 @@ dialog p{font-weight:700;margin:0 0 16px}
   .quem-txt b{display:block;font-weight:700;overflow-wrap:anywhere}
   .quem-rot{position:static;width:auto;height:auto;overflow:visible;clip-path:none;display:block;font-size:.8rem;color:#b9dcc4}
   .sair{width:100%}
+  .sair.site{margin-bottom:10px}
   .conteudo{padding-bottom:48px}
   main{padding:36px 32px 0}
   .status{padding:12px 32px}

@@ -34,6 +34,15 @@ test.describe("sem JavaScript", () => {
     await expect(page.locator(".poster .area img")).toHaveAttribute("src", /^\/img\/painel\/\w+\.webp$/);
   });
 
+  test("o cabeçalho leva pro painel do Ari, no celular também", async ({ page }) => {
+    await page.goto("/");
+    const ari = page.locator("header.cab").getByRole("link", { name: "Área do Ari" });
+    await expect(ari).toBeVisible();
+    await expect(ari).toHaveAttribute("href", "/admin/");
+    const caixa = await ari.boundingBox();
+    expect(caixa!.x + caixa!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  });
+
   test("só o cartão com foto mostra foto, em 16:9", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator(".cz")).toHaveCount(4);

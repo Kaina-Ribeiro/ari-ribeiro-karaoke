@@ -39,6 +39,12 @@ header.cab{background:var(--papel);border-bottom:2px solid var(--tinta)}
 .cab nav a{text-decoration:none;border-bottom:2px solid transparent;padding-block:4px}
 .cab nav a:hover{border-color:var(--tinta)}
 @media (max-width:760px){.cab nav{display:none}}
+/* "Área do Ari": etiqueta preta com sombra verde, mesma família do botão da comanda (opção 1 do Gabriel) */
+.bt-ari{flex:none;display:inline-flex;align-items:center;gap:8px;margin-left:4px;padding:10px 14px;background:var(--tinta);color:var(--papel);font:800 .74rem/1 var(--f-texto);text-transform:uppercase;letter-spacing:.08em;text-decoration:none;box-shadow:3px 3px 0 var(--gravata);transition:transform .12s, box-shadow .12s}
+.bt-ari i{width:6px;height:6px;border-radius:50%;background:var(--luz)}
+.bt-ari:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--gravata)}
+.bt-ari:active{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--gravata)}
+@media (max-width:760px){.bt-ari{margin-left:auto}}
 /* comanda sempre na tela: botão dentro da barra da busca, que gruda no topo, então nunca tapa
    resultado nem botão da lista (escolha do Gabriel, opção B). Vale pro celular e pro computador. */
 .btn-comanda{flex:none;display:flex;align-items:center;justify-content:space-between;background:var(--tinta);color:var(--papel);font:800 .9rem var(--f-texto);text-transform:uppercase;letter-spacing:.06em;box-shadow:4px 4px 0 var(--gravata);transition:transform .12s, box-shadow .12s}
